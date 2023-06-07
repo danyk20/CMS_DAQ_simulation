@@ -2,7 +2,7 @@ import argparse
 import string
 
 
-def check_address(address: string):
+def check_address(address: string) -> string:
     """
     Validate whether address is in correct format, otherwise throw an error.
 

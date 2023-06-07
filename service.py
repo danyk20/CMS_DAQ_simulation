@@ -3,7 +3,7 @@ import argparse
 from utils import check_address
 
 
-def parse_input_arguments():
+def parse_input_arguments() -> argparse.Namespace:
     """
     Parse command line arguments from following format:
     `python service.py --port 21000 --levels 1 --children 3 --parent "127.0.0.1:20000"`
