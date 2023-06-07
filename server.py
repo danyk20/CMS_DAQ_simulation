@@ -1,4 +1,5 @@
 import time
+import random
 from typing import Union
 
 import uvicorn
@@ -32,7 +33,10 @@ async def change_state(Start: str = None, Stop: str = None):
     if Start:
         node.state = model.State.Starting
         time.sleep(10)
-        node.state = model.State.Running
+        if float(Start) > random.uniform(0, 1):
+            node.state = model.State.Error
+        else:
+            node.state = model.State.Running
     elif Stop:
         node.state = model.State.Stopped
     pass
