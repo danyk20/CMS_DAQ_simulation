@@ -1,6 +1,9 @@
 import argparse
 
+from model import Node, NodeAddress
 from utils import check_address
+
+IP_ADDRESS = '127.0.0.1'
 
 
 def parse_input_arguments() -> argparse.Namespace:
@@ -30,3 +33,14 @@ def parse_input_arguments() -> argparse.Namespace:
                         help='link to the parent node, keep empty')
     args = parser.parse_args()
     return args
+
+
+def create_nodes():
+    configuration: argparse.Namespace = parse_input_arguments()
+    root_address: str = IP_ADDRESS + ':' + str(configuration.port)
+    Node.arity = configuration.children
+    Node.depth = configuration.levels
+    Node(NodeAddress(root_address))
+
+
+create_nodes()
