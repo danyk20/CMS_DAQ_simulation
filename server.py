@@ -1,8 +1,10 @@
+import time
 from typing import Union
 
 import uvicorn
 from fastapi import FastAPI
 
+import model
 from model import Node
 
 node: Node | None = None
@@ -27,7 +29,12 @@ def get_state() -> dict[str, str]:
 
 @app.post("/statemachine/input")
 async def change_state(Start: str = None, Stop: str = None):
-    # print(service.node.state)
+    if Start:
+        node.state = model.State.Starting
+        time.sleep(10)
+        node.state = model.State.Running
+    elif Stop:
+        node.state = model.State.Stopped
     pass
 
 
