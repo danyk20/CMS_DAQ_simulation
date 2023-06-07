@@ -1,7 +1,14 @@
 import argparse
+import string
 
 
-def check_address(address):
+def check_address(address: string):
+    """
+    Validate whether address is in correct format, otherwise throw an error.
+
+    :param address: string in format IP:port
+    :return: unmodified address
+    """
     if len(address.split(':')) != 2:
         raise argparse.ArgumentTypeError("%s is not in correct IP:port format" % address)
     ip = address.split(':')[0]
