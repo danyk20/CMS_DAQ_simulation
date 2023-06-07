@@ -1,5 +1,7 @@
 import argparse
+from subprocess import Popen
 
+import server
 from model import Node, NodeAddress
 from utils import check_address
 
@@ -35,12 +37,31 @@ def parse_input_arguments() -> argparse.Namespace:
     return args
 
 
-def create_nodes():
+def create_node() -> Node:
+    """
+    Creates a node instance based on given arguments
+
+    :return: Node instance
+    """
     configuration: argparse.Namespace = parse_input_arguments()
     root_address: str = IP_ADDRESS + ':' + str(configuration.port)
     Node.arity = configuration.children
     Node.depth = configuration.levels
-    Node(NodeAddress(root_address))
+    return Node(NodeAddress(root_address))
 
 
-create_nodes()
+def create_children(parent: Node):
+    """
+    Recursively create child nodes which are defined in parent node attribute children
+
+    :return: None
+    """
+    for child_address in parent.children:
+        Popen(
+            ['python', 'service.py', '--port', str(child_address.get_port()), '--levels', str(Node.depth - 1),
+             '--children', str(Node.arity), '--parent', parent.address.get_full_address()])
+
+
+node: Node = create_node()
+create_children(node)
+server.run(node)

@@ -57,7 +57,6 @@ class Node:
         child_offset: int = child_number * (10 ** (Node.MAXIMUM_DEPTH - child_level))
         child_port: int = int(self.address.get_port()) + child_offset
         child_address: NodeAddress = NodeAddress(self.address.get_ip() + ':' + str(child_port))
-        Node(child_address, child_level, self.address)
         self.children.append(child_address)
 
     def build(self):
