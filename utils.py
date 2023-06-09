@@ -18,3 +18,16 @@ def check_address(address: string) -> string:
     if int(port) < 10000 or int(port) >= 60000:
         raise argparse.ArgumentTypeError("%s is out of range valid port values" % port)
     return address
+
+
+def compute_hierarchy_level(parent_port: str) -> int:
+    '''
+    Computes hierarchical node level based on given parent port number. In case of NONE value it return 0 (root node)
+
+    :param parent_port: port number represented by string
+    :return: integer number representing level from top to bottom where root is 0
+    '''
+    if parent_port:
+        return parent_port.index('0')
+    else:
+        return 0

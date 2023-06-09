@@ -47,7 +47,7 @@ def create_node() -> Node:
     root_address: str = IP_ADDRESS + ':' + str(configuration.port)
     Node.arity = configuration.children
     Node.depth = configuration.levels
-    return Node(NodeAddress(root_address))
+    return Node(NodeAddress(root_address), NodeAddress(configuration.parent))
 
 
 def create_children(parent: Node):

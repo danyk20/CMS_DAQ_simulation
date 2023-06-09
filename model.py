@@ -1,6 +1,8 @@
 import string
 from enum import Enum
 
+from utils import compute_hierarchy_level
+
 
 class State(Enum):
     Stopped = 0
@@ -15,10 +17,16 @@ class NodeAddress:
         self.address = address
 
     def get_ip(self) -> string:
-        return self.address.split(':')[0]
+        if self.address:
+            return self.address.split(':')[0]
+        else:
+            return None
 
     def get_port(self) -> string:
-        return self.address.split(':')[1]
+        if self.address:
+            return self.address.split(':')[1]
+        else:
+            return None
 
     def get_full_address(self) -> string:
         return self.address
@@ -36,9 +44,9 @@ class Node:
     depth: int
     arity: int
 
-    def __init__(self, address: NodeAddress, level: int = 0, parent: NodeAddress = None):
+    def __init__(self, address: NodeAddress, parent: NodeAddress = None):
         self.state: State = State.Stopped
-        self.level: int = level
+        self.level: int = compute_hierarchy_level(parent.get_port())
         self.address: NodeAddress = address
         self.parent: NodeAddress | None = parent
         self.children: list[NodeAddress] = []

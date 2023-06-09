@@ -15,3 +15,10 @@ async def post_stop(address: str):
         params = {'Stop': ''}
         async with session.post('http://' + address + CHANGE_STATE_ENDPOINT, params=params) as _:
             pass
+
+
+async def post_notification(address: str, state: str):
+    async with aiohttp.ClientSession() as session:
+        params = {'State': state}
+        async with session.post('http://' + address + CHANGE_STATE_ENDPOINT, params=params) as _:
+            pass

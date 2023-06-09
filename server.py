@@ -5,7 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 
 import model
-from client import post_start, post_stop
+from client import post_start, post_stop, post_notification
 from model import Node
 
 node: Node | None = None
@@ -38,7 +38,7 @@ async def change_state(Start: str = None, Stop: str = None):
 
 @app.post("/notifications")
 def notify():
-    pass
+    post_notification(node.parent.get_full_address(), str(node.state))
 
 
 def run(created_node: Node):
