@@ -5,6 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 
 import model
+from client import post_start, post_stop
 from model import Node
 
 node: Node | None = None
@@ -22,11 +23,15 @@ async def change_state(Start: str = None, Stop: str = None):
     if Start:
         node.state = model.State.Starting
         await asyncio.sleep(10)
+        for child_address in node.children:
+            await post_start(Start, child_address.get_full_address())
         if float(Start) > random.uniform(0, 1):
             node.state = model.State.Error
         else:
             node.state = model.State.Running
     elif Stop:
+        for child_address in node.children:
+            await post_stop(child_address.get_full_address())
         node.state = model.State.Stopped
     pass
 

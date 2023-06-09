@@ -1,16 +1,17 @@
 import aiohttp
-import asyncio
+
+CHANGE_STATE_ENDPOINT = '/statemachine/input'
 
 
-async def main():
+async def post_start(chance_to_fail: str, address: str):
     async with aiohttp.ClientSession() as session:
-        async with session.get('http://127.0.0.1:8000') as response:
-            print("Status:", response.status)
-            print("Content-type:", response.headers['content-type'])
-
-            html = await response.text()
-            print("Body:", html[:15], "...")
+        params = {'Start': str(chance_to_fail)}
+        async with session.post('http://' + address + CHANGE_STATE_ENDPOINT, params=params) as _:
+            pass
 
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+async def post_stop(address: str):
+    async with aiohttp.ClientSession() as session:
+        params = {'Stop': ''}
+        async with session.post('http://' + address + CHANGE_STATE_ENDPOINT, params=params) as _:
+            pass
