@@ -49,7 +49,7 @@ class Node:
         self.level: int = compute_hierarchy_level(parent.get_port())
         self.address: NodeAddress = address
         self.parent: NodeAddress | None = parent
-        self.children: list[NodeAddress] = []
+        self.children: dict[NodeAddress, [State]] = dict()
         self.chance_to_fail: float = 0
         self.build()
 
@@ -65,7 +65,7 @@ class Node:
         child_offset: int = child_number * (10 ** (Node.MAXIMUM_DEPTH - child_level))
         child_port: int = int(self.address.get_port()) + child_offset
         child_address: NodeAddress = NodeAddress(self.address.get_ip() + ':' + str(child_port))
-        self.children.append(child_address)
+        self.children[child_address] = []
 
     def build(self):
         """
