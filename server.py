@@ -37,8 +37,14 @@ async def change_state(Start: str = None, Stop: str = None):
 
 
 @app.post("/notifications")
-def notify():
-    post_notification(node.parent.get_full_address(), str(node.state))
+async def notify(State: str = None):
+    if node.parent.address is None:
+        return
+    if State:
+        await post_notification(node.parent.get_full_address(), State)
+    else:
+        await post_notification(node.parent.get_full_address(), str(node.state))
+
 
 
 def run(created_node: Node):
