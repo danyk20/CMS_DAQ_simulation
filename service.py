@@ -58,7 +58,7 @@ def create_children(parent: Node):
     """
     for child_address in parent.children:
         Popen(
-            ['python', 'service.py', '--port', str(child_address.get_port()), '--levels', str(Node.depth - 1),
+            ['python', 'service.py', '--port', str(child_address.get_port()), '--levels', str(Node.depth),
              '--children', str(Node.arity), '--parent', parent.address.get_full_address()])
 
 
