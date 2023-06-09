@@ -84,3 +84,27 @@ class Node:
         """
         while self.level < Node.depth and len(self.children) < Node.arity:
             self.add_child()
+
+    def update_state(self):
+        stopped: int = 0
+        starting: int = 0
+        running: int = 0
+        error: int = 0
+        for child in self.children:
+            child_status_list = self.children[child]
+            if not child_status_list or child_status_list[-1] == State.Stopped:
+                stopped += 1
+            elif child_status_list[-1] == State.Starting:
+                starting += 1
+            elif child_status_list[-1] == State.Running:
+                running += 1
+            elif child_status_list[-1] == State.Error:
+                error += 1
+        if error:
+            self.state = State.Error
+        elif stopped:
+            self.state = State.Stopped
+        elif starting:
+            self.state = State.Starting
+        elif running == len(self.children):
+            self.state = State.Running
