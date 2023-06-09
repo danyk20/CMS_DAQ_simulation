@@ -31,6 +31,15 @@ class NodeAddress:
     def get_full_address(self) -> string:
         return self.address
 
+    def __eq__(self, other):
+        return self.address == other.address
+
+    def __hash__(self):
+        return hash(self.address)
+
+    def __ne__(self, other):
+        return not (self == other)
+
 
 class Node:
     """
