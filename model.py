@@ -3,7 +3,6 @@ import string
 from enum import Enum
 import random
 
-import server
 from utils import compute_hierarchy_level
 
 SLEEPING_TIME_RUNNING = 10
