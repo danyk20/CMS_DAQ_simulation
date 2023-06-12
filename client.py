@@ -4,16 +4,20 @@ CHANGE_STATE_ENDPOINT = '/statemachine/input'
 NOTIFICATIONS_ENDPOINT = '/notifications'
 
 
-async def post_start(chance_to_fail: str, address: str):
+async def post_start(chance_to_fail: str, address: str, debug: bool):
     async with aiohttp.ClientSession() as session:
         params = {'Start': str(chance_to_fail)}
+        if debug:
+            params["Debug"] = 'True'
         async with session.post('http://' + address + CHANGE_STATE_ENDPOINT, params=params) as _:
             pass
 
 
-async def post_stop(address: str):
+async def post_stop(address: str, debug: bool):
     async with aiohttp.ClientSession() as session:
         params = {'Stop': ''}
+        if debug:
+            params["Debug"] = 'True'
         async with session.post('http://' + address + CHANGE_STATE_ENDPOINT, params=params) as _:
             pass
 

@@ -3,6 +3,7 @@ import random
 
 import uvicorn
 from fastapi import FastAPI
+from datetime import datetime
 
 import model
 from client import post_start, post_stop, post_notification
@@ -19,13 +20,16 @@ def get_state() -> dict[str, str]:
 
 
 @app.post("/statemachine/input")
-async def change_state(Start: str = None, Stop: str = None):
+async def change_state(Start: str = None, Stop: str = None, Debug: bool = False):
+    if Debug:
+        now = datetime.now()
+        print("Node " + node.address.get_port() + " is starting at" + now.strftime(" %H:%M:%S"))
     if Start:
         node.state = model.State.Starting
 
         tasks = []
         for child_address in node.children:
-            tasks.append(post_start(Start, child_address.get_full_address()))
+            tasks.append(post_start(Start, child_address.get_full_address(), Debug))
         await asyncio.sleep(10)
 
         for task in tasks:
@@ -41,11 +45,11 @@ async def change_state(Start: str = None, Stop: str = None):
 
     elif Stop:
         for child_address in node.children:
-            await post_stop(child_address.get_full_address())
+            await post_stop(child_address.get_full_address(), Debug)
         node.state = model.State.Stopped
-    from datetime import datetime
-    now = datetime.now()
-    print("Node " + node.address.get_port() + " is running at" + now.strftime(" %H:%M:%S"))
+    if Debug:
+        now = datetime.now()
+        print("Node " + node.address.get_port() + " is in " + str(node.state) + " at" + now.strftime(" %H:%M:%S"))
     return node.state
 
 
@@ -57,7 +61,6 @@ async def notify(State: str = None, Sender: str = None):
     if node.parent.address is None:
         return
     await post_notification(node.parent.get_full_address(), str(node.state), node.address.get_full_address())
-
 
 
 def run(created_node: Node):
