@@ -75,14 +75,12 @@ async def notify(state: str = None, sender: str = None) -> None:
     :param sender: child's address
     :return: None
     """
-    print("notification arrived " + str(state) + ' - ' + str(sender))
     if state:
         if model.NodeAddress(sender) not in node.children:
             node.children[model.NodeAddress(sender)] = [model.State[state.split('.')[-1]]]
         else:
             node.children[model.NodeAddress(sender)].append(model.State[state.split('.')[-1]])
         node.update_state()
-        print('node state after update is:' + str(node.state))
     if node.parent.address is None:
         return
     await post_notification(node.parent.get_full_address(), str(node.state), node.address.get_full_address())

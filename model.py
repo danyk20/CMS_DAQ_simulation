@@ -111,7 +111,6 @@ class Node:
 
         :return: None
         """
-        print("Start Updating !!!!!!!!!!!!!!!!!!!")
         stopped: int = 0
         starting: int = 0
         running: int = 0
@@ -134,15 +133,21 @@ class Node:
             self.state = State.Starting
         elif running == len(self.children):
             self.state = State.Running
-        print(self.address.get_port() + " is " + str(self.state))
 
-    async def run(self, notification, debug: bool = False):
+    async def run(self, notification, debug: bool = False) -> None:
+        """
+        Running loop while node is in running state it attempts to change to Error state with probability chance_to_fail
+
+        :param notification: callable function to notify the parent about the change
+        :param debug: optional boolean attribute to print when it changes state
+        :return: None
+        """
         while self.state == State.Running:
             await asyncio.sleep(SLEEPING_TIME_RUNNING)
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
                 await notification(state=str(self.state), sender=self.address)
                 if debug:
-                    print("Changing State")
+                    print('Changing State')
             if debug:
-                print(self.address.get_port() + " -> " + str(self.state))
+                print(self.address.get_port() + ' -> ' + str(self.state))
