@@ -15,6 +15,17 @@ IP_ADDRESS = '127.0.0.1'
 SLEEPING_TIME_STARTING = 1
 
 
+@app.on_event("shutdown")
+def shutdown_event() -> None:
+    """
+    All necessary calls that need to be executed before shutdown
+
+    :return: None
+    """
+    if node:
+        print(node.address.get_full_address() + " is going to be terminated!")
+
+
 @app.get("/statemachine/state")
 def get_state() -> dict[str, str]:
     return {"State": str(node.state)}
