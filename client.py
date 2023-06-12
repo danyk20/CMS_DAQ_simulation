@@ -15,9 +15,9 @@ async def post_start(chance_to_fail: str, address: str, debug: bool) -> None:
     :return: None
     """
     async with aiohttp.ClientSession() as session:
-        params = {'Start': str(chance_to_fail)}
+        params = {'start': str(chance_to_fail)}
         if debug:
-            params["Debug"] = 'True'
+            params["debug"] = 'True'
         async with session.post(PROTOCOL + address + CHANGE_STATE_ENDPOINT, params=params) as _:
             pass
 
@@ -31,9 +31,9 @@ async def post_stop(address: str, debug: bool) -> None:
     :return: None
     """
     async with aiohttp.ClientSession() as session:
-        params = {'Stop': ''}
+        params = {'stop': ''}
         if debug:
-            params["Debug"] = 'True'
+            params["debug"] = 'True'
         async with session.post(PROTOCOL + address + CHANGE_STATE_ENDPOINT, params=params) as _:
             pass
 
@@ -47,6 +47,6 @@ async def post_notification(receiver_address: str, state: str, sender_address: s
     :return: None
     """
     async with aiohttp.ClientSession() as session:
-        params = {'state': state, 'Sender': sender_address}
+        params = {'state': state, 'sender': sender_address}
         async with session.post(PROTOCOL + receiver_address + NOTIFICATIONS_ENDPOINT, params=params) as _:
             pass

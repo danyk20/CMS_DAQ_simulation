@@ -21,26 +21,26 @@ def get_state() -> dict[str, str]:
 
 
 @app.post("/statemachine/input")
-async def change_state(Start: str = None, Stop: str = None, Debug: bool = False) -> model.State:
+async def change_state(start: str = None, stop: str = None, debug: bool = False) -> model.State:
     """
     Endpoint to change node state.
 
-    :param Start: probability between 0 and 1 of getting into Error state
-    :param Stop: any non None input means stop
-    :param Debug: prints debug messages for each node (when started and when did transition)
+    :param start: probability between 0 and 1 of getting into Error state
+    :param stop: any non None input means stop
+    :param debug: prints debug messages for each node (when started and when did transition)
     :return: node state after transition
     """
     if node.state == model.State.Error:
         return node.state
-    if Debug:
+    if debug:
         now = datetime.now()
         print("Node " + node.address.get_port() + " is starting at" + now.strftime(" %H:%M:%S"))
-    if Start:
+    if start:
         node.state = model.State.Starting
 
         tasks = []
         for child_address in node.children:
-            tasks.append(post_start(Start, child_address.get_full_address(), Debug))
+            tasks.append(post_start(start, child_address.get_full_address(), debug))
         await asyncio.sleep(SLEEPING_TIME_STARTING)
 
         for task in tasks:
@@ -49,38 +49,38 @@ async def change_state(Start: str = None, Stop: str = None, Debug: bool = False)
                 node.state = model.State.Error
                 return node.state
 
-        if float(Start) > random.uniform(0, 1):
+        if float(start) > random.uniform(0, 1):
             node.state = model.State.Error
         else:
             node.state = model.State.Running
-            node.chance_to_fail = float(Start)
-            asyncio.create_task(node.run(notification=notify, debug=Debug))
+            node.chance_to_fail = float(start)
+            asyncio.create_task(node.run(notification=notify, debug=debug))
 
-    elif Stop:
+    elif stop:
         for child_address in node.children:
-            await post_stop(child_address.get_full_address(), Debug)
+            await post_stop(child_address.get_full_address(), debug)
         node.state = model.State.Stopped
-    if Debug:
+    if debug:
         now = datetime.now()
         print("Node " + node.address.get_port() + " is in " + str(node.state) + " at" + now.strftime(" %H:%M:%S"))
     return node.state
 
 
 @app.post("/notifications")
-async def notify(state: str = None, Sender: str = None) -> None:
+async def notify(state: str = None, sender: str = None) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
 
     :param state: state of the child that sent notification
-    :param Sender: child's address
+    :param sender: child's address
     :return: None
     """
-    print("notification arrived " + str(state) + ' - ' + str(Sender))
+    print("notification arrived " + str(state) + ' - ' + str(sender))
     if state:
-        if model.NodeAddress(Sender) not in node.children:
-            node.children[model.NodeAddress(Sender)] = [model.State[state.split('.')[-1]]]
+        if model.NodeAddress(sender) not in node.children:
+            node.children[model.NodeAddress(sender)] = [model.State[state.split('.')[-1]]]
         else:
-            node.children[model.NodeAddress(Sender)].append(model.State[state.split('.')[-1]])
+            node.children[model.NodeAddress(sender)].append(model.State[state.split('.')[-1]])
         node.update_state()
         print('node state after update is:' + str(node.state))
     if node.parent.address is None:

@@ -141,7 +141,7 @@ class Node:
             await asyncio.sleep(SLEEPING_TIME_RUNNING)
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
-                await notification(state=str(self.state), Sender=self.address)
+                await notification(state=str(self.state), sender=self.address)
                 if debug:
                     print("Changing State")
             if debug:
