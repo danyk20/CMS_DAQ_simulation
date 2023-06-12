@@ -12,6 +12,7 @@ from model import Node
 node: Node | None = None
 app = FastAPI()
 IP_ADDRESS = '127.0.0.1'
+SLEEPING_TIME_STARTING = 10
 
 
 @app.get("/statemachine/state")
@@ -40,7 +41,7 @@ async def change_state(Start: str = None, Stop: str = None, Debug: bool = False)
         tasks = []
         for child_address in node.children:
             tasks.append(post_start(Start, child_address.get_full_address(), Debug))
-        await asyncio.sleep(10)
+        await asyncio.sleep(SLEEPING_TIME_STARTING)
 
         for task in tasks:
             child_state = await task
