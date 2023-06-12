@@ -47,6 +47,6 @@ async def post_notification(receiver_address: str, state: str, sender_address: s
     :return: None
     """
     async with aiohttp.ClientSession() as session:
-        params = {'State': state, 'Sender': sender_address}
+        params = {'state': state, 'Sender': sender_address}
         async with session.post(PROTOCOL + receiver_address + NOTIFICATIONS_ENDPOINT, params=params) as _:
             pass

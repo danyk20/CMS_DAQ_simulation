@@ -1,7 +1,12 @@
+import asyncio
 import string
 from enum import Enum
+import random
 
+import server
 from utils import compute_hierarchy_level
+
+SLEEPING_TIME_RUNNING = 10
 
 
 class State(Enum):
@@ -15,7 +20,6 @@ class State(Enum):
 
 
 class NodeAddress:
-
     """
     Class representing node address consisting of IP address and port in following format: 127.0.0.1:20000
     """
@@ -107,6 +111,7 @@ class Node:
 
         :return: None
         """
+        print("Start Updating !!!!!!!!!!!!!!!!!!!")
         stopped: int = 0
         starting: int = 0
         running: int = 0
@@ -129,3 +134,15 @@ class Node:
             self.state = State.Starting
         elif running == len(self.children):
             self.state = State.Running
+        print(self.address.get_port() + " is " + str(self.state))
+
+    async def run(self, notification, debug: bool = False):
+        while self.state == State.Running:
+            await asyncio.sleep(SLEEPING_TIME_RUNNING)
+            if self.chance_to_fail > random.uniform(0, 1):
+                self.state = State.Error
+                await notification(state=str(self.state), Sender=self.address)
+                if debug:
+                    print("Changing State")
+            if debug:
+                print(self.address.get_port() + " -> " + str(self.state))

@@ -12,7 +12,7 @@ from model import Node
 node: Node | None = None
 app = FastAPI()
 IP_ADDRESS = '127.0.0.1'
-SLEEPING_TIME_STARTING = 10
+SLEEPING_TIME_STARTING = 1
 
 
 @app.get("/statemachine/state")
@@ -53,6 +53,8 @@ async def change_state(Start: str = None, Stop: str = None, Debug: bool = False)
             node.state = model.State.Error
         else:
             node.state = model.State.Running
+            node.chance_to_fail = float(Start)
+            asyncio.create_task(node.run(notification=notify, debug=Debug))
 
     elif Stop:
         for child_address in node.children:
@@ -65,17 +67,22 @@ async def change_state(Start: str = None, Stop: str = None, Debug: bool = False)
 
 
 @app.post("/notifications")
-async def notify(State: str = None, Sender: str = None) -> None:
+async def notify(state: str = None, Sender: str = None) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
 
-    :param State: state of the child that sent notification
+    :param state: state of the child that sent notification
     :param Sender: child's address
     :return: None
     """
-    if State:
-        node.children[model.NodeAddress(Sender)].append(model.State[State.split('.')[-1]])
+    print("notification arrived " + str(state) + ' - ' + str(Sender))
+    if state:
+        if model.NodeAddress(Sender) not in node.children:
+            node.children[model.NodeAddress(Sender)] = [model.State[state.split('.')[-1]]]
+        else:
+            node.children[model.NodeAddress(Sender)].append(model.State[state.split('.')[-1]])
         node.update_state()
+        print('node state after update is:' + str(node.state))
     if node.parent.address is None:
         return
     await post_notification(node.parent.get_full_address(), str(node.state), node.address.get_full_address())
