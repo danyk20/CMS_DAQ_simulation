@@ -21,6 +21,8 @@ def get_state() -> dict[str, str]:
 
 @app.post("/statemachine/input")
 async def change_state(Start: str = None, Stop: str = None, Debug: bool = False):
+    if node.state == model.State.Error:
+        return node.state
     if Debug:
         now = datetime.now()
         print("Node " + node.address.get_port() + " is starting at" + now.strftime(" %H:%M:%S"))
