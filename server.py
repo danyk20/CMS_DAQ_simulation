@@ -22,18 +22,31 @@ def get_state() -> dict[str, str]:
 async def change_state(Start: str = None, Stop: str = None):
     if Start:
         node.state = model.State.Starting
-        await asyncio.sleep(10)
+
+        tasks = []
         for child_address in node.children:
-            await post_start(Start, child_address.get_full_address())
+            tasks.append(post_start(Start, child_address.get_full_address()))
+        await asyncio.sleep(10)
+
+        for task in tasks:
+            child_state = await task
+            if child_state == model.State.Error:
+                node.state = model.State.Error
+                return node.state
+
         if float(Start) > random.uniform(0, 1):
             node.state = model.State.Error
         else:
             node.state = model.State.Running
+
     elif Stop:
         for child_address in node.children:
             await post_stop(child_address.get_full_address())
         node.state = model.State.Stopped
-    pass
+    from datetime import datetime
+    now = datetime.now()
+    print("Node " + node.address.get_port() + " is running at" + now.strftime(" %H:%M:%S"))
+    return node.state
 
 
 @app.post("/notifications")
