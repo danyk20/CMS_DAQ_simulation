@@ -5,6 +5,9 @@ from utils import compute_hierarchy_level
 
 
 class State(Enum):
+    """
+    Enum to represent Node states
+    """
     Stopped = 0
     Starting = 1
     Running = 2
@@ -12,6 +15,10 @@ class State(Enum):
 
 
 class NodeAddress:
+
+    """
+    Class representing node address consisting of IP address and port in following format: 127.0.0.1:20000
+    """
 
     def __init__(self, address: string):
         self.address = address
@@ -62,13 +69,18 @@ class Node:
         self.chance_to_fail: float = 0
         self.build()
 
-    def set_chance_to_fail(self, chance: float):
+    def set_chance_to_fail(self, chance: float) -> None:
         self.chance_to_fail = chance
 
-    def set_state(self, new_state: State):
+    def set_state(self, new_state: State) -> None:
         self.state = new_state
 
-    def add_child(self):
+    def add_child(self) -> None:
+        """
+        Creates new child for the current node
+
+        :return: None
+        """
         child_number: int = len(self.children) + 1
         child_level: int = self.level + 1
         child_offset: int = child_number * (10 ** (Node.MAXIMUM_DEPTH - child_level))
@@ -76,7 +88,7 @@ class Node:
         child_address: NodeAddress = NodeAddress(self.address.get_ip() + ':' + str(child_port))
         self.children[child_address] = []
 
-    def build(self):
+    def build(self) -> None:
         """
         Recursively build whole hierarchy of nodes based on Node.depth and Node.arity from root node.
 
@@ -85,7 +97,16 @@ class Node:
         while self.level < Node.depth and len(self.children) < Node.arity:
             self.add_child()
 
-    def update_state(self):
+    def update_state(self) -> None:
+        """
+        Update own state based on received notifications from the children with following rules:
+        At least 1 child in error state -> error
+        At least 1 child in stopped state -> stopped
+        At least 1 child in starting state -> starting
+        All children in running state -> running
+
+        :return: None
+        """
         stopped: int = 0
         starting: int = 0
         running: int = 0

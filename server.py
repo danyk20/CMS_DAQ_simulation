@@ -20,7 +20,15 @@ def get_state() -> dict[str, str]:
 
 
 @app.post("/statemachine/input")
-async def change_state(Start: str = None, Stop: str = None, Debug: bool = False):
+async def change_state(Start: str = None, Stop: str = None, Debug: bool = False) -> model.State:
+    """
+    Endpoint to change node state.
+
+    :param Start: probability between 0 and 1 of getting into Error state
+    :param Stop: any non None input means stop
+    :param Debug: prints debug messages for each node (when started and when did transition)
+    :return: node state after transition
+    """
     if node.state == model.State.Error:
         return node.state
     if Debug:
@@ -56,7 +64,14 @@ async def change_state(Start: str = None, Stop: str = None, Debug: bool = False)
 
 
 @app.post("/notifications")
-async def notify(State: str = None, Sender: str = None):
+async def notify(State: str = None, Sender: str = None) -> None:
+    """
+    Child current state notification that is recursively propagating to the root and updating states on the way
+
+    :param State: state of the child that sent notification
+    :param Sender: child's address
+    :return: None
+    """
     if State:
         node.children[model.NodeAddress(Sender)].append(model.State[State.split('.')[-1]])
         node.update_state()
@@ -65,7 +80,13 @@ async def notify(State: str = None, Sender: str = None):
     await post_notification(node.parent.get_full_address(), str(node.state), node.address.get_full_address())
 
 
-def run(created_node: Node):
+def run(created_node: Node) -> None:
+    """
+    Enable API
+
+    :param created_node: node instance that is serviced by the API
+    :return: None
+    """
     global node
     node = created_node
     uvicorn.run(app, host=IP_ADDRESS, port=int(node.address.get_port()))
