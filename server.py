@@ -50,9 +50,9 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
         node.state = model.State.Starting
 
         tasks = []
-        for child_address in node.children:
-            tasks.append(post_start(start, child_address.get_full_address(), debug))
         await asyncio.sleep(configuration['node']['time']['starting'])
+        for child_address in node.children:
+            tasks.append(asyncio.create_task(post_start(start, child_address.get_full_address(), debug)))
 
         for task in tasks:
             child_state = await task
