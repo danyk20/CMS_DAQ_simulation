@@ -2,6 +2,7 @@ import asyncio
 import string
 from enum import Enum
 import random
+from subprocess import Popen
 
 from utils import compute_hierarchy_level, get_configuration
 
@@ -69,6 +70,7 @@ class Node:
         self.address: NodeAddress = address
         self.parent: NodeAddress | None = parent
         self.children: dict[NodeAddress, [State]] = dict()
+        self.started_processes: [Popen] = []
         self.chance_to_fail: float = 0
         self.build()
 

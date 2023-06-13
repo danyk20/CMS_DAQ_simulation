@@ -64,9 +64,10 @@ def create_children(parent: Node):
     :return: None
     """
     for child_address in parent.children:
-        Popen(
+        process: Popen = Popen(
             ['python', 'service.py', '--port', str(child_address.get_port()), '--levels', str(Node.depth),
              '--children', str(Node.arity), '--parent', parent.address.get_full_address()])
+        node.started_processes.append(process)
 
 
 node: Node = create_node()

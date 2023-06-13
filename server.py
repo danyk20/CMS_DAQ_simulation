@@ -1,5 +1,6 @@
 import asyncio
 import random
+import signal
 
 import uvicorn
 from fastapi import FastAPI
@@ -18,11 +19,13 @@ configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 @app.on_event("shutdown")
 def shutdown_event() -> None:
     """
-    All necessary calls that need to be executed before shutdown
+    Send SIGTERM to all children before termination
 
     :return: None
     """
     if node:
+        for process in node.started_processes:
+            process.send_signal(signal.SIGTERM)
         print(node.address.get_full_address() + " is going to be terminated!")
 
 
