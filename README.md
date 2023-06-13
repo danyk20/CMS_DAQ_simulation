@@ -10,6 +10,7 @@ This script create tree hierarchy of nodes where each node is running as separat
   - "State": "State.Starting"
   - "State": "State.Running"
   - "State": "State.Error"
+- synchronous operation
 ### POST /statemachine/input
 - change state of the node
   - from stopped to starting and then running
@@ -23,6 +24,16 @@ This script create tree hierarchy of nodes where each node is running as separat
   - debug
     - true/false 
     - debug prints containing timestamps when changing state
+- asynchronous operation using asyncio
+  - start=x
+    1. immediately change state from State.Stopped to State.Starting
+    2. `await` sleep 10 s
+    3. propagate this request to all its children if any by creating tasks
+    4. `await` for all task
+    5. set own state based on x probability and children states
+  - stop=y
+    1. propagate immediately this request to all its children if any
+    2. stop itself
 ### POST /notifications
 - update parent about current state
 - it is propagated from origin to root node 
@@ -34,6 +45,8 @@ This script create tree hierarchy of nodes where each node is running as separat
   - sender
     - full URL of the sender
     - filled automatically
+- asynchronous operation using asyncio
+  - 'await' posting notification to its parent if not root
 
 # Prerequisite
 
