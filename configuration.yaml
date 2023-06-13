@@ -6,7 +6,7 @@ URL:
 
 node:
   time:
-    starting: 1
+    starting: 10
     running: 10
   port:
     min: 10000
