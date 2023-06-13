@@ -8,11 +8,11 @@ from datetime import datetime
 import model
 from client import post_start, post_stop, post_notification
 from model import Node
+from utils import get_configuration
 
 node: Node | None = None
 app = FastAPI()
-IP_ADDRESS = '127.0.0.1'
-SLEEPING_TIME_STARTING = 1
+configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
 
 @app.on_event("shutdown")
@@ -52,7 +52,7 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
         tasks = []
         for child_address in node.children:
             tasks.append(post_start(start, child_address.get_full_address(), debug))
-        await asyncio.sleep(SLEEPING_TIME_STARTING)
+        await asyncio.sleep(configuration['node']['time']['starting'])
 
         for task in tasks:
             child_state = await task
@@ -106,4 +106,4 @@ def run(created_node: Node) -> None:
     """
     global node
     node = created_node
-    uvicorn.run(app, host=IP_ADDRESS, port=int(node.address.get_port()))
+    uvicorn.run(app, host=configuration['URL']['address'], port=int(node.address.get_port()))

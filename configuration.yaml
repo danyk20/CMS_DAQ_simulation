@@ -1,0 +1,22 @@
+URL:
+  change_state: /statemachine/input
+  notification: /notifications
+  protocol: http://
+  address: 127.0.0.1
+
+node:
+  time:
+    starting: 1
+    running: 10
+  port:
+    min: 10000
+    max: 60000
+    default: 20000
+  depth:
+    min: 0
+    max: 5
+    default: 0
+  children:
+    min: 1
+    max: 10
+    default: 3

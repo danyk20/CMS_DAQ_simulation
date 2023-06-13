@@ -3,9 +3,9 @@ from subprocess import Popen
 
 import server
 from model import Node, NodeAddress
-from utils import check_address
+from utils import check_address, get_configuration
 
-IP_ADDRESS = '127.0.0.1'
+configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
 
 def parse_input_arguments() -> argparse.Namespace:
@@ -25,11 +25,18 @@ def parse_input_arguments() -> argparse.Namespace:
             - default: None
     """
     parser = argparse.ArgumentParser(description='Process node input arguments.')
-    parser.add_argument('--port', dest='port', action='store', type=int, choices=range(10000, 60000), default=20000,
+    parser.add_argument('--port', dest='port', action='store', type=int,
+                        choices=range(configuration['node']['port']['min'], configuration['node']['port']['max']),
+                        default=configuration['node']['port']['default'],
                         help='port for root node')
-    parser.add_argument('--levels', dest='levels', action='store', type=int, choices=range(0, 5), default=0,
+    parser.add_argument('--levels', dest='levels', action='store', type=int,
+                        choices=range(configuration['node']['depth']['min'], configuration['node']['depth']['max']),
+                        default=configuration['node']['depth']['default'],
                         help='number of hierarchies/levels in three structure')
-    parser.add_argument('--children', dest='children', action='store', type=int, choices=range(1, 10), default=3,
+    parser.add_argument('--children', dest='children', action='store', type=int,
+                        choices=range(configuration['node']['children']['min'],
+                                      configuration['node']['children']['max']),
+                        default=configuration['node']['children']['default'],
                         help='number of children per node except the leaves')
     parser.add_argument('--parent', dest='parent', action='store', type=check_address, default=None,
                         help='link to the parent node, keep empty')
@@ -43,11 +50,11 @@ def create_node() -> Node:
 
     :return: Node instance
     """
-    configuration: argparse.Namespace = parse_input_arguments()
-    root_address: str = IP_ADDRESS + ':' + str(configuration.port)
-    Node.arity = configuration.children
-    Node.depth = configuration.levels
-    return Node(NodeAddress(root_address), NodeAddress(configuration.parent))
+    cmd_arguments: argparse.Namespace = parse_input_arguments()
+    root_address: str = configuration['URL']['address'] + ':' + str(cmd_arguments.port)
+    Node.arity = cmd_arguments.children
+    Node.depth = cmd_arguments.levels
+    return Node(NodeAddress(root_address), NodeAddress(cmd_arguments.parent))
 
 
 def create_children(parent: Node):

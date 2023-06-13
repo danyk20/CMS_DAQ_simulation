@@ -1,6 +1,8 @@
 import argparse
 import string
 
+import yaml
+
 
 def check_address(address: string) -> string:
     """
@@ -31,3 +33,12 @@ def compute_hierarchy_level(parent_port: str) -> int:
         return parent_port.index('0')
     else:
         return 0
+
+
+def get_configuration() -> dict[str, str]:
+    with open("configuration.yaml", 'r') as stream:
+        try:
+            parsed_yaml = yaml.safe_load(stream)
+            return parsed_yaml
+        except yaml.YAMLError as exc:
+            print(exc)

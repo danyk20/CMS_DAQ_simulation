@@ -3,9 +3,9 @@ import string
 from enum import Enum
 import random
 
-from utils import compute_hierarchy_level
+from utils import compute_hierarchy_level, get_configuration
 
-SLEEPING_TIME_RUNNING = 10
+configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
 
 class State(Enum):
@@ -142,7 +142,7 @@ class Node:
         :return: None
         """
         while self.state == State.Running:
-            await asyncio.sleep(SLEEPING_TIME_RUNNING)
+            await asyncio.sleep(configuration['node']['time']['running'])
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
                 await notification(state=str(self.state), sender=self.address)
