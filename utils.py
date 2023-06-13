@@ -36,6 +36,11 @@ def compute_hierarchy_level(parent_port: str) -> int:
 
 
 def get_configuration() -> dict[str, str]:
+    """
+    Load all values from configuration.yaml into dictionary
+
+    :return: dictionary of configuration vales
+    """
     with open("configuration.yaml", 'r') as stream:
         try:
             parsed_yaml = yaml.safe_load(stream)
