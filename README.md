@@ -49,3 +49,9 @@ pipenv run python service.py --port 20000 --levels 2 --children 3
 # Configuration
 
 There is `configuration.yaml` file containing all variables that are possible to change.
+
+# Description
+
+After running there will be created tree hierarchy of nodes where each of them exposes REST API described above. Originally all nodes are in `State.Stopped` after initialization what can be verified by `GET` request to `/statemachine/state` endpoint. It's possible to sent `POST` request to `/statemachine/input endpoint` in order to change the state. There are two possible parameters `start` and `stop`. `start` parameter define probability of going into `State.Error` and it must be in range [0,1]. Node change state to `State.Starting` immediately after submitting the request and remains in that state until all it children change state as well. There are 2 possible scenarios: either all children nodes and also current node successfully transitioned into `State.Running` or at least one node (doesn't matter weather current or child) transitioned into `State.Error` - then current node's state is `State.Error`. Running node can transition into `State.Error` with probability defined in the start parameter and this process is periodically repeated with period defined in the `configuration.yaml` file. 
+
+`/notofications` endpoint is called automatically when node changes its state from `State.Running` to `State.Error` or `State.Stopped`. This way parent can be immediately updated about the change of children and also update its state as well and propagate this information to its parent until the root node is informed. 
