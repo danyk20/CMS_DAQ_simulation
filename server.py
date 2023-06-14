@@ -38,7 +38,7 @@ async def shutdown_event() -> None:
         else:
             print('Child process might still run!')
         print(node.address.get_full_address() + ' is going to be terminated!')
-    await asyncio.sleep(1)  # only to see termination messages from children
+    await asyncio.sleep(1)  # only to see termination messages from children in IDE
 
 
 @app.get("/statemachine/state")
