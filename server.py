@@ -17,16 +17,28 @@ configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
 
 @app.on_event("shutdown")
-def shutdown_event() -> None:
+async def shutdown_event() -> None:
     """
     Send SIGTERM to all children before termination
 
     :return: None
     """
     if node:
+        sleeping_time = 0
+        max_sleep = configuration['node']['time']['shutdown']
         for process in node.started_processes:
             process.send_signal(signal.SIGTERM)
-        print(node.address.get_full_address() + " is going to be terminated!")
+        for process in node.started_processes:
+            sleeping_time = 0
+            while process.poll is None and sleeping_time < max_sleep:
+                await asyncio.sleep(1)
+                sleeping_time += 1
+        if sleeping_time < max_sleep:
+            print('No running child processes')
+        else:
+            print('Child process might still run!')
+        print(node.address.get_full_address() + ' is going to be terminated!')
+    await asyncio.sleep(1)  # only to see termination messages from children
 
 
 @app.get("/statemachine/state")

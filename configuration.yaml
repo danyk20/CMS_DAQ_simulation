@@ -8,6 +8,7 @@ node:
   time:
     starting: 10
     running: 10
+    shutdown: 20
   port:
     min: 10000
     max: 60000
