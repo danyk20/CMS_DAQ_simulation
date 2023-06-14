@@ -1,9 +1,10 @@
 import asyncio
 import random
 import signal
+import time
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from datetime import datetime
 
 import model
@@ -43,6 +44,7 @@ async def shutdown_event() -> None:
 
 @app.get("/statemachine/state")
 def get_state() -> dict[str, str]:
+    time.sleep(configuration['node']['time']['get'])
     return {"State": str(node.state)}
 
 
@@ -61,7 +63,7 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
     if debug:
         now = datetime.now()
         print("Node " + node.address.get_port() + " is starting at" + now.strftime(" %H:%M:%S"))
-    if start:
+    if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
 
         tasks = []
@@ -81,11 +83,12 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
             node.state = model.State.Running
             node.chance_to_fail = float(start)
             asyncio.create_task(node.run(notification=notify, debug=debug))
-
-    elif stop:
+    elif stop and node.state == model.State.Running:
         for child_address in node.children:
             await post_stop(child_address.get_full_address(), debug)
         node.state = model.State.Stopped
+    else:
+        raise HTTPException(status_code=400, detail="Combination of current state and transition state is not allowed!")
     if debug:
         now = datetime.now()
         print("Node " + node.address.get_port() + " is in " + str(node.state) + " at" + now.strftime(" %H:%M:%S"))

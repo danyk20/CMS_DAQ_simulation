@@ -9,6 +9,7 @@ node:
     starting: 10
     running: 10
     shutdown: 20
+    get: 10
   port:
     min: 10000
     max: 60000
