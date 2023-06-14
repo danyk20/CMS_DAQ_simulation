@@ -19,7 +19,7 @@ configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
     """
-    Send SIGTERM to all children before termination
+    Send SIGTERM to all children before termination and wait up 20s for child termination if not set other limit
 
     :return: None
     """
