@@ -84,11 +84,7 @@ async def notify(state: str = None, sender: str = None) -> None:
     :return: None
     """
     if state:
-        if model.NodeAddress(sender) not in node.children:
-            # should not happen
-            node.children[model.NodeAddress(sender)] = [model.State[state.split('.')[-1]]]
-        else:
-            node.children[model.NodeAddress(sender)].append(model.State[state.split('.')[-1]])
+        node.children[model.NodeAddress(sender)].append(model.State[state.split('.')[-1]])
         node.update_state()
     if node.get_parent().address is None:
         return
