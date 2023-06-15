@@ -76,9 +76,6 @@ class Node:
         self.debug_mode: bool = False
         self.build()
 
-    def set_chance_to_fail(self, chance: float) -> None:
-        self.chance_to_fail = chance
-
     async def set_state(self, new_state: State, post_start, notify, probability_to_fail: float = 0,
                         debug: bool = False, transition_time: int = 0) -> None:
         if new_state == State.Running:
@@ -89,18 +86,14 @@ class Node:
 
             if len(self.children):
                 # propagate to children
-                tasks = []
                 for child_address in self.children:
-                    tasks.append(
-                        asyncio.create_task(post_start(probability_to_fail, child_address.get_full_address(), debug)))
+                    asyncio.create_task(post_start(probability_to_fail, child_address.get_full_address(), debug))
 
             else:
                 # change own state
                 if float(probability_to_fail) > random.uniform(0, 1):
-                    # Error
                     self.state = State.Error
                 else:
-                    # Running
                     self.state = State.Running
                     await self.notification_func(state=str(self.state), sender=self.address.get_full_address())
                     asyncio.create_task(self.run())
