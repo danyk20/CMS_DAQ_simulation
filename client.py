@@ -32,7 +32,7 @@ async def post_stop(address: str, debug: bool) -> None:
     :return: None
     """
     async with aiohttp.ClientSession() as session:
-        params = {'stop': ''}
+        params = {'stop': ' '}
         if debug:
             params["debug"] = 'True'
         async with session.post(configuration['URL']['protocol'] + address + configuration['URL']['change_state'],

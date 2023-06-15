@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from datetime import datetime
 
 import model
-from client import post_start, post_stop, post_notification
+from client import post_notification
 from model import Node
 from utils import get_configuration
 
@@ -64,12 +64,11 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
         print("Node " + node.address.get_port() + " received POST " + now.strftime(" %H:%M:%S"))
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
-        asyncio.create_task(node.set_state(model.State.Running, post_start, notify, float(start), debug,
+        asyncio.create_task(node.set_state(model.State.Running, float(start), debug,
                                            configuration['node']['time']['starting']))
     elif stop and node.state == model.State.Running:
-        for child_address in node.children:
-            await post_stop(child_address.get_full_address(), debug)
-        node.state = model.State.Stopped
+        asyncio.create_task(node.set_state(model.State.Stopped, debug=debug,
+                                           transition_time=configuration['node']['time']['starting']))
     else:
         raise HTTPException(status_code=400, detail="Combination of current state and transition state is not allowed!")
     return node.state
@@ -86,6 +85,7 @@ async def notify(state: str = None, sender: str = None) -> None:
     """
     if state:
         if model.NodeAddress(sender) not in node.children:
+            # should not happen
             node.children[model.NodeAddress(sender)] = [model.State[state.split('.')[-1]]]
         else:
             node.children[model.NodeAddress(sender)].append(model.State[state.split('.')[-1]])

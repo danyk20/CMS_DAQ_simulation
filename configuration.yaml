@@ -6,10 +6,10 @@ URL:
 
 node:
   time:
-    starting: 10
+    starting: 1
     running: 10
     shutdown: 20
-    get: 10
+    get: 0
   port:
     min: 10000
     max: 60000

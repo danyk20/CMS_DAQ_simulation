@@ -5,6 +5,7 @@ from enum import Enum
 import random
 from subprocess import Popen
 
+from client import post_stop, post_start, post_notification
 from utils import compute_hierarchy_level, get_configuration
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
@@ -72,22 +73,20 @@ class Node:
         self.children: dict[NodeAddress, [State]] = dict()
         self.started_processes: [Popen] = []
         self.chance_to_fail: float = 0
-        self.notification_func = None
         self.debug_mode: bool = False
         self.build()
 
-    async def set_state(self, new_state: State, post_start, notify, probability_to_fail: float = 0,
+    async def set_state(self, new_state: State, probability_to_fail: float = 0,
                         debug: bool = False, transition_time: int = 0) -> None:
         if new_state == State.Running:
             self.chance_to_fail = float(probability_to_fail)
-            self.notification_func = notify
             self.debug_mode = debug
             await asyncio.sleep(transition_time)
 
             if len(self.children):
                 # propagate to children
                 for child_address in self.children:
-                    asyncio.create_task(post_start(probability_to_fail, child_address.get_full_address(), debug))
+                    asyncio.create_task(post_start(str(probability_to_fail), child_address.get_full_address(), debug))
 
             else:
                 # change own state
@@ -95,13 +94,26 @@ class Node:
                     self.state = State.Error
                 else:
                     self.state = State.Running
-                    await self.notification_func(state=str(self.state), sender=self.address.get_full_address())
+                    await post_notification(receiver_address=self.get_parent().get_full_address(),
+                                            state=str(self.state),
+                                            sender_address=self.address.get_full_address())
                     asyncio.create_task(self.run())
 
             if debug:
                 now = datetime.now()
                 print(
                     "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(" %H:%M:%S"))
+        elif new_state == State.Stopped:
+            if len(self.children):
+                # propagate to children
+                for child_address in self.children:
+                    print(self.address.get_port() + ' is sending stop to ' + child_address.get_port())
+                    asyncio.create_task(post_stop(child_address.get_full_address(), debug))
+
+            else:
+                self.state = State.Stopped
+                await post_notification(receiver_address=self.get_parent().get_full_address(), state=str(self.state),
+                                        sender_address=self.address.get_full_address())
 
     def add_child(self) -> None:
         """
@@ -170,7 +182,8 @@ class Node:
             await asyncio.sleep(configuration['node']['time']['running'])
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
-                await self.notification_func(state=str(self.state), sender=self.address.get_full_address())
+                await post_notification(receiver_address=self.get_parent().get_full_address(),
+                                        state=str(self.state), sender_address=self.address.get_full_address())
                 if self.debug_mode:
                     print('Changing State')
             if self.debug_mode:
