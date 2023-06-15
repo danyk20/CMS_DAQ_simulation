@@ -22,17 +22,17 @@ def check_address(address: string) -> string:
     return address
 
 
-def compute_hierarchy_level(parent_port: str) -> int:
+def compute_hierarchy_level(port: str) -> int:
     """
     Computes hierarchical node level based on given parent port number. In case of NONE value it return 0 (root node)
 
-    :param parent_port: port number represented by string
+    :param port: port number represented by string
     :return: integer number representing level from top to bottom where root is 0
     """
-    if parent_port:
-        return parent_port.index('0')
+    if '0' in port:
+        return port.index('0') - 1
     else:
-        return 0
+        return 4
 
 
 def get_configuration() -> dict[str, str]:

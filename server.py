@@ -1,5 +1,4 @@
 import asyncio
-import random
 import signal
 import time
 
@@ -62,36 +61,17 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
         return node.state
     if debug:
         now = datetime.now()
-        print("Node " + node.address.get_port() + " is starting at" + now.strftime(" %H:%M:%S"))
+        print("Node " + node.address.get_port() + " received POST " + now.strftime(" %H:%M:%S"))
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
-
-        tasks = []
-        await asyncio.sleep(configuration['node']['time']['starting'])
-        for child_address in node.children:
-            tasks.append(asyncio.create_task(post_start(start, child_address.get_full_address(), debug)))
-
-        for task in tasks:
-            child_state = await task
-            if child_state == model.State.Error:
-                node.state = model.State.Error
-                return node.state
-
-        if float(start) > random.uniform(0, 1):
-            node.state = model.State.Error
-        else:
-            node.state = model.State.Running
-            node.chance_to_fail = float(start)
-            asyncio.create_task(node.run(notification=notify, debug=debug))
+        asyncio.create_task(node.set_state(model.State.Running, post_start, notify, float(start), debug,
+                                           configuration['node']['time']['starting']))
     elif stop and node.state == model.State.Running:
         for child_address in node.children:
             await post_stop(child_address.get_full_address(), debug)
         node.state = model.State.Stopped
     else:
         raise HTTPException(status_code=400, detail="Combination of current state and transition state is not allowed!")
-    if debug:
-        now = datetime.now()
-        print("Node " + node.address.get_port() + " is in " + str(node.state) + " at" + now.strftime(" %H:%M:%S"))
     return node.state
 
 
@@ -110,9 +90,9 @@ async def notify(state: str = None, sender: str = None) -> None:
         else:
             node.children[model.NodeAddress(sender)].append(model.State[state.split('.')[-1]])
         node.update_state()
-    if node.parent.address is None:
+    if node.get_parent().address is None:
         return
-    await post_notification(node.parent.get_full_address(), str(node.state), node.address.get_full_address())
+    await post_notification(node.get_parent().get_full_address(), str(node.state), node.address.get_full_address())
 
 
 def run(created_node: Node) -> None:

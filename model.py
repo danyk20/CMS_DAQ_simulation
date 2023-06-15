@@ -1,5 +1,6 @@
 import asyncio
 import string
+from datetime import datetime
 from enum import Enum
 import random
 from subprocess import Popen
@@ -64,21 +65,50 @@ class Node:
     depth: int
     arity: int
 
-    def __init__(self, address: NodeAddress, parent: NodeAddress = None):
+    def __init__(self, address: NodeAddress):
         self.state: State = State.Stopped
-        self.level: int = compute_hierarchy_level(parent.get_port())
+        self.level: int = compute_hierarchy_level(address.get_port())
         self.address: NodeAddress = address
-        self.parent: NodeAddress | None = parent
         self.children: dict[NodeAddress, [State]] = dict()
         self.started_processes: [Popen] = []
         self.chance_to_fail: float = 0
+        self.notification_func = None
+        self.debug_mode: bool = False
         self.build()
 
     def set_chance_to_fail(self, chance: float) -> None:
         self.chance_to_fail = chance
 
-    def set_state(self, new_state: State) -> None:
-        self.state = new_state
+    async def set_state(self, new_state: State, post_start, notify, probability_to_fail: float = 0,
+                        debug: bool = False, transition_time: int = 0) -> None:
+        if new_state == State.Running:
+            self.chance_to_fail = float(probability_to_fail)
+            self.notification_func = notify
+            self.debug_mode = debug
+            await asyncio.sleep(transition_time)
+
+            if len(self.children):
+                # propagate to children
+                tasks = []
+                for child_address in self.children:
+                    tasks.append(
+                        asyncio.create_task(post_start(probability_to_fail, child_address.get_full_address(), debug)))
+
+            else:
+                # change own state
+                if float(probability_to_fail) > random.uniform(0, 1):
+                    # Error
+                    self.state = State.Error
+                else:
+                    # Running
+                    self.state = State.Running
+                    await self.notification_func(state=str(self.state), sender=self.address.get_full_address())
+                    asyncio.create_task(self.run())
+
+            if debug:
+                now = datetime.now()
+                print(
+                    "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(" %H:%M:%S"))
 
     def add_child(self) -> None:
         """
@@ -133,22 +163,37 @@ class Node:
         elif starting:
             self.state = State.Starting
         elif running == len(self.children):
+            if self.state == State.Starting:
+                asyncio.create_task(self.run())
             self.state = State.Running
 
-    async def run(self, notification, debug: bool = False) -> None:
+    async def run(self) -> None:
         """
         Running loop while node is in running state it attempts to change to Error state with probability chance_to_fail
 
-        :param notification: callable function to notify the parent about the change
-        :param debug: optional boolean attribute to print when it changes state
         :return: None
         """
         while self.state == State.Running:
             await asyncio.sleep(configuration['node']['time']['running'])
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
-                await notification(state=str(self.state), sender=self.address)
-                if debug:
+                await self.notification_func(state=str(self.state), sender=self.address.get_full_address())
+                if self.debug_mode:
                     print('Changing State')
-            if debug:
+            if self.debug_mode:
                 print(self.address.get_port() + ' -> ' + str(self.state))
+
+    def get_parent(self) -> NodeAddress:
+        """
+        Compute parent node address based on current node port
+
+        :return: NodeAddress of the parent
+        """
+        port = self.address.get_port()
+        level = 4 - port.count('0')
+        if level == 0:
+            return NodeAddress(None)
+        parent_port = list(port)
+        parent_port[level] = '0'
+        parent_port = ''.join(parent_port)
+        return NodeAddress(self.address.get_ip() + ':' + parent_port)

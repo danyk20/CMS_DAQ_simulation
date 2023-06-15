@@ -51,10 +51,10 @@ def create_node() -> Node:
     :return: Node instance
     """
     cmd_arguments: argparse.Namespace = parse_input_arguments()
-    root_address: str = configuration['URL']['address'] + ':' + str(cmd_arguments.port)
+    new_node_address: str = configuration['URL']['address'] + ':' + str(cmd_arguments.port)
     Node.arity = cmd_arguments.children
     Node.depth = cmd_arguments.levels
-    return Node(NodeAddress(root_address), NodeAddress(cmd_arguments.parent))
+    return Node(NodeAddress(new_node_address))
 
 
 def create_children(parent: Node):
