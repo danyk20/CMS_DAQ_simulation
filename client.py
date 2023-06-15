@@ -48,8 +48,10 @@ async def post_notification(receiver_address: str, state: str, sender_address: s
     :param sender_address: from which node is notification coming from
     :return: None
     """
-    async with aiohttp.ClientSession() as session:
-        params = {'state': state, 'sender': sender_address}
-        async with session.post(configuration['URL']['protocol'] + receiver_address + configuration['URL']['notification'],
-                                params=params) as _:
-            pass
+    if receiver_address:
+        async with aiohttp.ClientSession() as session:
+            params = {'state': state, 'sender': sender_address}
+            async with session.post(
+                    configuration['URL']['protocol'] + receiver_address + configuration['URL']['notification'],
+                    params=params) as _:
+                pass

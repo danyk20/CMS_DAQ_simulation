@@ -15,10 +15,11 @@ class State(Enum):
     """
     Enum to represent Node states
     """
-    Stopped = 0
-    Starting = 1
-    Running = 2
-    Error = 3
+    Initialisation = 0
+    Stopped = 1
+    Starting = 2
+    Running = 3
+    Error = 4
 
 
 class NodeAddress:
@@ -67,7 +68,7 @@ class Node:
     arity: int
 
     def __init__(self, address: NodeAddress):
-        self.state: State = State.Stopped
+        self.state: State = State.Initialisation
         self.level: int = compute_hierarchy_level(address.get_port())
         self.address: NodeAddress = address
         self.children: dict[NodeAddress, [State]] = dict()
@@ -147,13 +148,16 @@ class Node:
 
         :return: None
         """
+        initialisation = 0
         stopped: int = 0
         starting: int = 0
         running: int = 0
         error: int = 0
         for child in self.children:
             child_status_list = self.children[child]
-            if not child_status_list or child_status_list[-1] == State.Stopped:
+            if not child_status_list:
+                initialisation += 1
+            elif child_status_list[-1] == State.Stopped:
                 stopped += 1
             elif child_status_list[-1] == State.Starting:
                 starting += 1
@@ -163,6 +167,8 @@ class Node:
                 error += 1
         if error:
             self.state = State.Error
+        elif initialisation:
+            self.state = State.Initialisation
         elif stopped:
             self.state = State.Stopped
         elif starting:

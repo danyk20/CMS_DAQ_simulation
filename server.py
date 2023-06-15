@@ -16,6 +16,12 @@ app = FastAPI()
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
 
+@app.on_event("startup")
+async def initialised() -> None:
+    await post_notification(node.get_parent().get_full_address(), str(model.State.Stopped),
+                            node.address.get_full_address())
+
+
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
     """
