@@ -48,6 +48,27 @@ This script create tree hierarchy of nodes where each node is running as separat
 - asynchronous operation using asyncio
   - 'await' posting notification to its parent if not root
 
+## Client
+This script contains manually created client however it is possible to generate client automatically for following languages:
+  -C++
+  -C#
+  -Java
+  -PHP
+  -Python
+  -Ruby
+  -Scala
+
+### Autogenerate python client
+```sh
+pipenv install
+pipenv run openapi-python-client generate --url http://127.0.0.1:20000/openapi.json
+```
+NOTE: You might have to change IP and port ich you have changed `configuration.yaml` file!
+
+Or use web generator https://editor.swagger.io/ where you just upload http://127.0.0.1:20000/openapi.json (much straightforward usage than offline generator because of good `README.md` containing personalised example).
+
+After execution of commands above, you should be able to see a new directory with generated client library.
+
 # Prerequisite
 
 Pipenv - https://pypi.org/project/pipenv/
@@ -57,7 +78,7 @@ Pipenv - https://pypi.org/project/pipenv/
 ```sh
 pipenv install
 pipenv run python service.py --port 20000 --levels 2 --children 3
-````
+```
 
 # Configuration
 
