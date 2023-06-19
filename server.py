@@ -18,6 +18,11 @@ configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
 @app.on_event("startup")
 async def initialised() -> None:
+    """
+    Method executed when API is fully initialized, notify its parent about being redy
+
+    :return: None
+    """
     await post_notification(node.get_parent().get_full_address(), str(model.State.Stopped),
                             node.address.get_full_address())
 
