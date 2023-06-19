@@ -90,6 +90,10 @@ After running there will be created tree hierarchy of nodes where each of them e
 
 `/notofications` endpoint is called automatically when node changes its state from `State.Running` to `State.Error` or `State.Stopped`. This way parent can be immediately updated about the change of children and also update its state as well and propagate this information to its parent until the root node is informed. 
 
+## State Diagram
+
+![State Diagram](state_diagram.png)
+
 # Shutdown
 
 Sending signal SIGTERM `kill -15 <PID>` will be propagated from node to all its children. Node waits for termination of its children and terminate itself after all children are terminated or after 20 s since SIGTERM signal arrived (what is earlier). 
