@@ -63,7 +63,7 @@ class Node:
     depth configuration number from range [0-4] referring to number of hierarchies
     arity configuration number from range [1-9] referring to number of children than each node except the leaves has
     """
-    MAXIMUM_DEPTH = 4
+    MAXIMUM_DEPTH = configuration['node']['depth']['max'] - 1  # maximum achievable depth
     depth: int
     arity: int
 
@@ -79,6 +79,15 @@ class Node:
 
     async def set_state(self, new_state: State, probability_to_fail: float = 0,
                         debug: bool = False, transition_time: int = 0) -> None:
+        """
+        Change state from current to new state or fail.
+
+        :param new_state:
+        :param probability_to_fail: percentage value between 0 and 1
+        :param debug: determine whether print or not additional info about changing state
+        :param transition_time: how long should transition last
+        :return: None
+        """
         if new_state == State.Running:
             self.chance_to_fail = float(probability_to_fail)
             self.debug_mode = debug
@@ -108,7 +117,8 @@ class Node:
             if len(self.children):
                 # propagate to children
                 for child_address in self.children:
-                    print(self.address.get_port() + ' is sending stop to ' + child_address.get_port())
+                    if debug:
+                        print(self.address.get_port() + ' is sending stop to ' + child_address.get_port())
                     asyncio.create_task(post_stop(child_address.get_full_address(), debug))
 
             else:
