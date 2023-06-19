@@ -17,7 +17,8 @@ def check_address(address: string) -> string:
     port = address.split(':')[1]
     if len(ip.split('.')) != 4 or any(0 > int(octet) or int(octet) > 255 for octet in ip.split('.')):
         raise argparse.ArgumentTypeError("%s is an invalid IP address value" % ip)
-    if int(port) < 10000 or int(port) >= 60000:
+    configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
+    if int(port) < configuration['node']['port']['min'] or int(port) >= configuration['node']['port']['max']:
         raise argparse.ArgumentTypeError("%s is out of range valid port values" % port)
     return address
 
@@ -35,7 +36,7 @@ def compute_hierarchy_level(port: str) -> int:
         return 4
 
 
-def get_configuration() -> dict[str, str]:
+def get_configuration() -> dict[str, str | dict[str, str | dict]]:
     """
     Load all values from configuration.yaml into dictionary
 
