@@ -51,14 +51,16 @@ This script create tree hierarchy of nodes where each node is running as separat
   - 'await' posting notification to its parent if not root
 
 ## Client
-This script contains manually created client however it is possible to generate client automatically for following languages:
-  -C++
-  -C#
-  -Java
-  -PHP
-  -Python
-  -Ruby
-  -Scala
+This script contains manually created client however it is possible to generate client automatically using Python pacakge for following languages:
+  - C++
+  - C#
+  - Java
+  - PHP
+  - Python
+  - Ruby
+  - Scala
+
+Note: Web generator support even wider range of languages. Current support of language might change during the time.   
 
 ### Autogenerate python client 
 
