@@ -94,11 +94,11 @@ After running there will be created tree hierarchy of nodes where each of them e
 
 ![State Diagram](state_diagram.png)
 
-legend:
-x = entered parameter while sending POST request to the endpoint
-w = node.time.starting from `configuration.yaml`
-y = randomly generated value from range (0,1)
-z = node.time.running from `configuration.yaml`
+### Legend:
+- x = chance to fail - entered parameter while sending POST request to the endpoint
+- w = node.time.starting from `configuration.yaml`
+- y = randomly generated value from range (0,1)
+- z = node.time.running from `configuration.yaml`
 
 # Shutdown
 
