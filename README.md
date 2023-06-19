@@ -91,6 +91,16 @@ pipenv run python service.py --port 20000 --levels 2 --children 3
 
 There is `configuration.yaml` file containing all variables that are possible to change. Range of some values is limited -> see individual comments.
 
+# Manual test
+
+Open `<IP>:<port>/docs#/` to manually try endpoints on the current node.
+
+e.g. http://127.0.0.1:20000/docs#/
+![node_endpoints](resources/node_endpoints.png)
+
+Note: There are no automated tests!
+
+
 # Description
 
 After running there will be created tree hierarchy of nodes where each of them exposes REST API described above. Originally all nodes are in `State.Stopped` after initialization what can be verified by `GET` request to `/statemachine/state` endpoint. It's possible to sent `POST` request to `/statemachine/input endpoint` in order to change the state. There are two possible parameters `start` and `stop`. `start` parameter define probability of going into `State.Error` and it must be in range [0,1]. Node change state to `State.Starting` immediately after submitting the request and remains in that state until all it children change state as well. There are 2 possible scenarios: either all children nodes and also current node successfully transitioned into `State.Running` or at least one node (doesn't matter weather current or child) transitioned into `State.Error` - then current node's state is `State.Error`. Running node can transition into `State.Error` with probability defined in the start parameter and this process is periodically repeated with period defined in the `configuration.yaml` file. 
