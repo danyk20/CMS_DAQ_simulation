@@ -57,7 +57,7 @@ def create_node() -> Node:
     return Node(NodeAddress(new_node_address))
 
 
-def create_children(parent: Node):
+def create_children(parent: Node) -> None:
     """
     Recursively create child nodes which are defined in parent node attribute children
 
