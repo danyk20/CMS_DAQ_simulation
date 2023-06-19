@@ -92,7 +92,7 @@ After running there will be created tree hierarchy of nodes where each of them e
 
 ## State Diagram
 
-![State Diagram](./resources/state_diagram.png)
+![State Diagram](resources/state_diagram.png)
 
 ### Legend:
 - x = chance to fail - entered parameter while sending POST request to the endpoint
