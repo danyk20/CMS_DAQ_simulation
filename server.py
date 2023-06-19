@@ -68,11 +68,11 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
     :param debug: prints debug messages for each node (when started and when did transition)
     :return: node state after transition
     """
-    if node.state == model.State.Error:
-        return node.state
     if debug:
         now = datetime.now()
         print("Node " + node.address.get_port() + " received POST " + now.strftime(" %H:%M:%S"))
+    if node.state == model.State.Error:
+        return node.state
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
         asyncio.create_task(node.set_state(model.State.Running, float(start), debug,
