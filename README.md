@@ -6,6 +6,7 @@ This script create tree hierarchy of nodes where each node is running as separat
 
 ### GET /statemachine/state
 - return current state of the node as one of the following:
+  - "State": "State.Initialization"
   - "State": "State.Stopped"
   - "State": "State.Starting"
   - "State": "State.Running"
@@ -15,7 +16,7 @@ This script create tree hierarchy of nodes where each node is running as separat
 - change state of the node
   - from stopped to starting and then running
   - from running immediately to stopped
-- 3 parameters;
+- 3 parameters:
   - start
     - decimal number between 0 and 1
     - probability of failure
@@ -36,6 +37,7 @@ This script create tree hierarchy of nodes where each node is running as separat
     2. stop itself
 ### POST /notifications
 - update parent about current state
+- automatically triggered in case of changing state
 - it is propagated from origin to root node 
   - update each node on the way
 - parameters:
@@ -58,14 +60,17 @@ This script contains manually created client however it is possible to generate 
   -Ruby
   -Scala
 
-### Autogenerate python client
+### Autogenerate python client 
+
+#### Python package
 ```sh
 pipenv install
 pipenv run openapi-python-client generate --url http://127.0.0.1:20000/openapi.json
 ```
 NOTE: You might have to change IP and port ich you have changed `configuration.yaml` file!
 
-Or use web generator https://editor.swagger.io/ where you just upload http://127.0.0.1:20000/openapi.json (much straightforward usage than offline generator because of good `README.md` containing personalised example).
+#### Web generator 
+Use following link: https://editor.swagger.io/ where you just upload http://127.0.0.1:20000/openapi.json (much straightforward usage than offline generator because of good `README.md` containing personalised example).
 
 After execution of commands above, you should be able to see a new directory with generated client library.
 
@@ -82,7 +87,7 @@ pipenv run python service.py --port 20000 --levels 2 --children 3
 
 # Configuration
 
-There is `configuration.yaml` file containing all variables that are possible to change.
+There is `configuration.yaml` file containing all variables that are possible to change. Range of some values is limited -> see individual comments.
 
 # Description
 
