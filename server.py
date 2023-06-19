@@ -52,13 +52,13 @@ async def shutdown_event() -> None:
     await asyncio.sleep(1)  # only to see termination messages from children in IDE
 
 
-@app.get("/statemachine/state")
+@app.get(configuration['URL']['get_state'])
 def get_state() -> dict[str, str]:
     time.sleep(configuration['node']['time']['get'])
     return {"State": str(node.state)}
 
 
-@app.post("/statemachine/input")
+@app.post(configuration['URL']['change_state'])
 async def change_state(start: str = None, stop: str = None, debug: bool = False) -> model.State:
     """
     Endpoint to change node state.
@@ -85,7 +85,7 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
     return node.state
 
 
-@app.post("/notifications")
+@app.post(configuration['URL']['notification'])
 async def notify(state: str = None, sender: str = None) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
