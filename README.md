@@ -6,24 +6,24 @@ This script create tree hierarchy of nodes where each node is running as separat
 
 ### GET /statemachine/state
 - return current state of the node as one of the following:
-  - "State": "State.Initialization"
-  - "State": "State.Stopped"
-  - "State": "State.Starting"
-  - "State": "State.Running"
-  - "State": "State.Error"
+  - `"State": "State.Initialization"`
+  - `"State": "State.Stopped"`
+  - `"State": "State.Starting"`
+  - `"State": "State.Running"`
+  - `"State": "State.Error"`
 - synchronous operation
 ### POST /statemachine/input
 - change state of the node
   - from stopped to starting and then running
   - from running immediately to stopped
 - 3 parameters:
-  - start
+  - `start`
     - decimal number between 0 and 1
     - probability of failure
-  - stop
+  - `stop`
     - any nonempty string
-  - debug
-    - true/false 
+  - `debug`
+    - boolean: True/False 
     - debug prints containing timestamps when changing state
 - asynchronous operation using asyncio
   - start=x
@@ -41,14 +41,14 @@ This script create tree hierarchy of nodes where each node is running as separat
 - it is propagated from origin to root node 
   - update each node on the way
 - parameters:
-  - state 
+  - `state`
     - current state of the sender
     - filled automatically
-  - sender
+  - `sender`
     - full URL of the sender
     - filled automatically
 - asynchronous operation using asyncio
-  - 'await' posting notification to its parent if not root
+  - `await` posting notification to its parent if not root
 
 ## Client
 This script contains manually created client however it is possible to generate client automatically using Python pacakge for following languages:
