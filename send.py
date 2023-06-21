@@ -28,6 +28,3 @@ def send_message(message: str, routing_key: str, exchange_name: str):
     # debug
     print(" [x] Sent %r:%r" % (routing_key, message))
     connection.close()
-
-
-post_state_change("hello world", '2.0.0.0.0')

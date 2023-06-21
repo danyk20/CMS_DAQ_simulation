@@ -51,4 +51,6 @@ def get_configuration() -> dict[str, str | dict[str, str | dict]]:
 
 
 def get_bounding_key(port: str) -> str:
-    return '.'.join(list(port))
+    if port:
+        return '.'.join(list(port))
+    return ''
