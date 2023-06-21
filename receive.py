@@ -8,7 +8,7 @@ import pika
 import model
 import send
 from model import Node
-from utils import get_configuration, get_bounding_key
+from utils import get_configuration, get_bounding_key, get_port
 
 STATE_EXCHANGE = 'state_change'
 NOTIFICATION_EXCHANGE = 'state_notification'
@@ -86,20 +86,23 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
     return node.state
 
 
-async def notify(state: str = None, sender: str = None) -> None:
+def notify(state: str = None, sender_port: str = None) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
 
     :param state: state of the child that sent notification
-    :param sender: child's address
+    :param sender_port: child's address
     :return: None
     """
+    full_address = configuration['URL']['address'] + ':' + sender_port
     if state:
-        node.children[model.NodeAddress(sender)].append(model.State[state.split('.')[-1]])
+        node.children[model.NodeAddress(full_address)].append(model.State[state.split('.')[-1]])
         node.update_state()
     if node.get_parent().address is None:
         return
-    # await post_notification(node.get_parent().get_full_address(), str(node.state), node.address.get_full_address())
+    send.post_state_notification(current_state=str(node.state),
+                                 routing_key=get_bounding_key(node.get_parent().get_port()),
+                                 sender_id=get_bounding_key(node.address.get_port()))
 
 
 def run(created_node: Node):
@@ -123,6 +126,13 @@ def run(created_node: Node):
     print(binding_key + ' - initialized')
 
     def callback(ch, method, properties, body):
+        message = body.decode("utf-8")
+        if ':' in message:
+            sender_id = get_port(message.split(':')[0])
+            current_state = message.split(':')[1]
+            notify(current_state, sender_id)
+        else:
+            change_state(start=None, stop=None, debug=True)
         print(" [x] %r:%r" % (method.routing_key, body))
 
     channel.basic_consume(

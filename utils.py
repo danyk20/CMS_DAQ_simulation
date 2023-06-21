@@ -54,3 +54,8 @@ def get_bounding_key(port: str) -> str:
     if port:
         return '.'.join(list(port))
     return ''
+
+def get_port(bounding_key: str) -> str:
+    if bounding_key:
+        return ''.join(bounding_key.split('.'))
+    return ''
