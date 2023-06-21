@@ -1,6 +1,7 @@
 import argparse
 from subprocess import Popen
 
+import receive
 import server
 from model import Node, NodeAddress
 from utils import check_address, get_configuration
@@ -72,4 +73,7 @@ def create_children(parent: Node) -> None:
 
 node: Node = create_node()
 create_children(node)
-server.run(node)
+if configuration['architecture'] == 'MOM':
+    receive.run(node)
+elif configuration['architecture'] == 'REST':
+    server.run(node)

@@ -25,3 +25,5 @@ node:
     min: 1 # cannot be smaller than 1
     max: 10 # cannot be bigger than 10
     default: 3
+
+architecture: MOM

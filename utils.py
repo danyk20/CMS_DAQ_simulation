@@ -48,3 +48,7 @@ def get_configuration() -> dict[str, str | dict[str, str | dict]]:
             return parsed_yaml
         except yaml.YAMLError as exc:
             print(exc)
+
+
+def get_bounding_key(port: str) -> str:
+    return '.'.join(list(port))
