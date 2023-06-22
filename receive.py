@@ -1,6 +1,7 @@
 import asyncio
 import signal
 import time
+from asyncio import AbstractEventLoop
 from datetime import datetime
 
 import pika
@@ -15,6 +16,7 @@ NOTIFICATION_EXCHANGE = 'state_notification'
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 node: Node | None = None
+loop = None
 
 
 def initialised() -> None:
@@ -59,20 +61,22 @@ def get_state() -> dict[str, str]:
     return {"State": str(node.state)}
 
 
-async def change_state(start: str = None, stop: str = None, debug: bool = False) -> model.State:
+async def change_state(start: str = None, stop: str = None, debug: bool = False) -> None:
     """
     Endpoint to change node state.
 
     :param start: probability between 0 and 1 of getting into Error state
     :param stop: any non None input means stop
     :param debug: prints debug messages for each node (when started and when did transition)
-    :return: node state after transition
+    :return: None
     """
+    print("I started change_state!")
     if debug:
         now = datetime.now()
-        print("Node " + node.address.get_port() + " received POST " + now.strftime(" %H:%M:%S"))
+        new_state = 'start' if start else 'stop'
+        print("Node " + node.address.get_port() + " received " + new_state + "at " + now.strftime(" %H:%M:%S"))
     if node.state == model.State.Error:
-        return node.state
+        return
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
         asyncio.create_task(node.set_state(model.State.Running, float(start), debug,
@@ -80,10 +84,8 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
     elif stop and node.state == model.State.Running:
         asyncio.create_task(node.set_state(model.State.Stopped, debug=debug,
                                            transition_time=configuration['node']['time']['starting']))
-    else:
-        # raise HTTPException(status_code=400, detail="Combination of current state and transition state is not allowed!")
-        pass
-    return node.state
+    elif debug:
+        print('Wrong operation!')
 
 
 def notify(state: str = None, sender_port: str = None) -> None:
@@ -105,7 +107,17 @@ def notify(state: str = None, sender_port: str = None) -> None:
                                  sender_id=get_bounding_key(node.address.get_port()))
 
 
-def run(created_node: Node):
+async def just_print():
+    print("Hello World!")
+    return 0
+
+
+def simple_print():
+    print("Hello World!")
+    return 0
+
+
+def run(created_node: Node, async_loop: AbstractEventLoop):
     global node
     node = created_node
     binding_key = get_bounding_key(node.address.get_port())
@@ -128,14 +140,28 @@ def run(created_node: Node):
     def callback(ch, method, properties, body):
         message = body.decode("utf-8")
         if ':' in message:
+            # notification
             sender_id = get_port(message.split(':')[0])
             current_state = message.split(':')[1]
             notify(current_state, sender_id)
         else:
-            change_state(start=None, stop=None, debug=True)
-        print(" [x] %r:%r" % (method.routing_key, body))
+            # change state
+            start = True if message == 'start' else None
+            stop = True if message == 'stop' else None
+
+            # task = asyncio.run_coroutine_threadsafe(change_state(start=start, stop=stop, debug=True), my_loop)
+            print("I should print Hello World!: ")
+            task = asyncio.run_coroutine_threadsafe(just_print(), async_loop)
+
+            print("But I cannot get here!")
+            """
+            RuntimeError: no running event loop
+            sys:1: RuntimeWarning: coroutine 'change_state' was never awaited
+            """
+        print(" [x] %r:%r" % (method.routing_key, message))
 
     channel.basic_consume(
         queue=queue_name, on_message_callback=callback, auto_ack=True)
 
-    channel.start_consuming()
+    channel.start_consuming()  # blocking
+    channel.stop_consuming()

@@ -1,4 +1,6 @@
 import argparse
+import asyncio
+import concurrent.futures
 from subprocess import Popen
 
 import receive
@@ -71,9 +73,19 @@ def create_children(parent: Node) -> None:
         node.started_processes.append(process)
 
 
+async def setup():
+    loop = asyncio.get_running_loop()
+    my_fun = lambda: receive.run(node, loop)
+    with concurrent.futures.ThreadPoolExecutor() as pool:
+        result = await loop.run_in_executor(pool, my_fun)
+        print('custom process pool', result)
+
+
 node: Node = create_node()
 create_children(node)
 if configuration['architecture'] == 'MOM':
-    receive.run(node)
+    async_loop = asyncio.get_event_loop()
+    async_loop.create_task(setup())
+    async_loop.run_forever()
 elif configuration['architecture'] == 'REST':
     server.run(node)
