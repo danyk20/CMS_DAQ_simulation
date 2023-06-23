@@ -70,22 +70,21 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
     :param debug: prints debug messages for each node (when started and when did transition)
     :return: None
     """
-    print("I started change_state!")
     if debug:
         now = datetime.now()
-        new_state = 'start' if start else 'stop'
-        print("Node " + node.address.get_port() + " received " + new_state + "at " + now.strftime(" %H:%M:%S"))
+        new_state = 'State.Running' if start else 'State.Stopped'
+        print("Node " + node.address.get_port() + " received " + new_state + " at " + now.strftime(" %H:%M:%S"))
     if node.state == model.State.Error:
         return
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
         asyncio.create_task(node.set_state(model.State.Running, float(start), debug,
-                                           configuration['node']['time']['starting']))
+                                           transition_time=configuration['node']['time']['starting']))
     elif stop and node.state == model.State.Running:
         asyncio.create_task(node.set_state(model.State.Stopped, debug=debug,
                                            transition_time=configuration['node']['time']['starting']))
     elif debug:
-        print('Wrong operation!')
+        print('Wrong operation! %r -> %r' % (node.state, new_state))
 
 
 def notify(state: str = None, sender_port: str = None) -> None:
@@ -146,19 +145,19 @@ def run(created_node: Node, async_loop: AbstractEventLoop):
             notify(current_state, sender_id)
         else:
             # change state
-            start = True if message == 'start' else None
-            stop = True if message == 'stop' else None
+            start = None
+            stop = None
+            if 'State.Running' in message:
+                start = message.split()[-1]
+            elif message == 'State.Stopped':
+                stop = True
 
-            # task = asyncio.run_coroutine_threadsafe(change_state(start=start, stop=stop, debug=True), my_loop)
-            print("I should print Hello World!: ")
-            task = asyncio.run_coroutine_threadsafe(just_print(), async_loop)
-
-            print("But I cannot get here!")
+            task = asyncio.run_coroutine_threadsafe(change_state(start=start, stop=stop, debug=True), async_loop)
             """
             RuntimeError: no running event loop
             sys:1: RuntimeWarning: coroutine 'change_state' was never awaited
             """
-        print(" [x] %r:%r" % (method.routing_key, message))
+        print("Node %r received message: %r" % (method.routing_key, message))
 
     channel.basic_consume(
         queue=queue_name, on_message_callback=callback, auto_ack=True)

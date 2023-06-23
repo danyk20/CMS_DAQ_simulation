@@ -5,8 +5,10 @@ from enum import Enum
 import random
 from subprocess import Popen
 
+import send
 from client import post_stop, post_start, post_notification
-from utils import compute_hierarchy_level, get_configuration
+from send import post_state_change
+from utils import compute_hierarchy_level, get_configuration, get_bounding_key
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
@@ -88,6 +90,10 @@ class Node:
         :param transition_time: how long should transition last
         :return: None
         """
+        if debug:
+            now = datetime.now()
+            print(
+                "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(" %H:%M:%S"))
         if new_state == State.Running:
             self.chance_to_fail = float(probability_to_fail)
             self.debug_mode = debug
@@ -96,35 +102,62 @@ class Node:
             if len(self.children):
                 # propagate to children
                 for child_address in self.children:
-                    asyncio.create_task(post_start(str(probability_to_fail), child_address.get_full_address(), debug))
-
+                    if configuration['architecture'] == 'MOM':
+                        routing_key = get_bounding_key(child_address.get_port())
+                        message = str(new_state) + " " + str(probability_to_fail)
+                        post_state_change(message, routing_key)
+                    else:
+                        asyncio.create_task(
+                            post_start(str(probability_to_fail), child_address.get_full_address(), debug))
             else:
                 # change own state
                 if float(probability_to_fail) > random.uniform(0, 1):
                     self.state = State.Error
                 else:
                     self.state = State.Running
-                    await post_notification(receiver_address=self.get_parent().get_full_address(),
-                                            state=str(self.state),
-                                            sender_address=self.address.get_full_address())
-                    asyncio.create_task(self.run())
+                    if configuration['architecture'] == 'MOM':
+                        routing_key = get_bounding_key(self.get_parent().get_port())
+                        sender_id = get_bounding_key(self.address.get_port())
+                        send.post_state_notification(current_state=str(self.state),
+                                                     routing_key=routing_key,
+                                                     sender_id=sender_id)
+                    else:
+                        await post_notification(receiver_address=self.get_parent().get_full_address(),
+                                                state=str(self.state),
+                                                sender_address=self.address.get_full_address())
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(self.run())
+                if debug:
+                    now = datetime.now()
+                    print(
+                        "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(
+                            " %H:%M:%S"))
 
-            if debug:
-                now = datetime.now()
-                print(
-                    "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(" %H:%M:%S"))
         elif new_state == State.Stopped:
             if len(self.children):
                 # propagate to children
                 for child_address in self.children:
                     if debug:
                         print(self.address.get_port() + ' is sending stop to ' + child_address.get_port())
-                    asyncio.create_task(post_stop(child_address.get_full_address(), debug))
+                    if configuration['architecture'] == 'MOM':
+                        routing_key = get_bounding_key(child_address.get_port())
+                        send.post_state_change(str(new_state),
+                                               routing_key=routing_key)
+                    else:
+                        asyncio.create_task(post_stop(child_address.get_full_address(), debug))
 
             else:
                 self.state = State.Stopped
-                await post_notification(receiver_address=self.get_parent().get_full_address(), state=str(self.state),
-                                        sender_address=self.address.get_full_address())
+                if configuration['architecture'] == 'MOM':
+                    routing_key = get_bounding_key(self.get_parent().get_port())
+                    sender_id = get_bounding_key(self.address.get_port())
+                    send.post_state_notification(current_state=str(self.state),
+                                                 routing_key=routing_key,
+                                                 sender_id=sender_id)
+                else:
+                    await post_notification(receiver_address=self.get_parent().get_full_address(),
+                                            state=str(self.state),
+                                            sender_address=self.address.get_full_address())
 
     def add_child(self) -> None:
         """
@@ -198,8 +231,15 @@ class Node:
             await asyncio.sleep(configuration['node']['time']['running'])
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
-                await post_notification(receiver_address=self.get_parent().get_full_address(),
-                                        state=str(self.state), sender_address=self.address.get_full_address())
+                if configuration['architecture'] == 'MOM':
+                    routing_key = get_bounding_key(self.get_parent().get_port())
+                    sender_id = get_bounding_key(self.address.get_port())
+                    send.post_state_notification(current_state=str(self.state),
+                                                 routing_key=routing_key,
+                                                 sender_id=sender_id)
+                else:
+                    await post_notification(receiver_address=self.get_parent().get_full_address(),
+                                            state=str(self.state), sender_address=self.address.get_full_address())
                 if self.debug_mode:
                     print('Changing State')
             if self.debug_mode:

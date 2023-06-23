@@ -26,5 +26,5 @@ def send_message(message: str, routing_key: str, exchange_name: str):
     channel.basic_publish(
         exchange=exchange_name, routing_key=routing_key, body=str.encode(message))
     # debug
-    print(" [x] Sent %r:%r" % (routing_key, message))
+    print(" [x] Sent message: %r -> %r" % (message, routing_key))
     connection.close()
