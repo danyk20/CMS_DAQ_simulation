@@ -115,16 +115,7 @@ class Node:
                     self.state = State.Error
                 else:
                     self.state = State.Running
-                    if configuration['architecture'] == 'MOM':
-                        routing_key = get_bounding_key(self.get_parent().get_port())
-                        sender_id = get_bounding_key(self.address.get_port())
-                        send.post_state_notification(current_state=str(self.state),
-                                                     routing_key=routing_key,
-                                                     sender_id=sender_id)
-                    else:
-                        await post_notification(receiver_address=self.get_parent().get_full_address(),
-                                                state=str(self.state),
-                                                sender_address=self.address.get_full_address())
+                    asyncio.get_running_loop().create_task(self.notify_parent())
                     asyncio.get_running_loop().create_task(self.run())
                 if debug:
                     now = datetime.now()
@@ -147,16 +138,7 @@ class Node:
 
             else:
                 self.state = State.Stopped
-                if configuration['architecture'] == 'MOM':
-                    routing_key = get_bounding_key(self.get_parent().get_port())
-                    sender_id = get_bounding_key(self.address.get_port())
-                    send.post_state_notification(current_state=str(self.state),
-                                                 routing_key=routing_key,
-                                                 sender_id=sender_id)
-                else:
-                    await post_notification(receiver_address=self.get_parent().get_full_address(),
-                                            state=str(self.state),
-                                            sender_address=self.address.get_full_address())
+                asyncio.get_running_loop().create_task(self.notify_parent())
 
     def add_child(self) -> None:
         """
@@ -231,19 +213,28 @@ class Node:
             await asyncio.sleep(configuration['node']['time']['running'])
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
-                if configuration['architecture'] == 'MOM':
-                    routing_key = get_bounding_key(self.get_parent().get_port())
-                    sender_id = get_bounding_key(self.address.get_port())
-                    send.post_state_notification(current_state=str(self.state),
-                                                 routing_key=routing_key,
-                                                 sender_id=sender_id)
-                else:
-                    await post_notification(receiver_address=self.get_parent().get_full_address(),
-                                            state=str(self.state), sender_address=self.address.get_full_address())
+                await self.notify_parent()
                 if self.debug_mode:
                     print('Changing State')
             if self.debug_mode:
                 print(self.address.get_port() + ' -> ' + str(self.state))
+
+    async def notify_parent(self):
+        """
+        Notify parent about current state based on selected architecture in  configuration.yaml
+
+        :return: None
+        """
+        if configuration['architecture'] == 'MOM':
+            routing_key = get_bounding_key(self.get_parent().get_port())
+            sender_id = get_bounding_key(self.address.get_port())
+            send.post_state_notification(current_state=str(self.state),
+                                         routing_key=routing_key,
+                                         sender_id=sender_id)
+        else:
+            # REST
+            await post_notification(receiver_address=self.get_parent().get_full_address(),
+                                    state=str(self.state), sender_address=self.address.get_full_address())
 
     def get_parent(self) -> NodeAddress:
         """
