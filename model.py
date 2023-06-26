@@ -100,59 +100,55 @@ class Node:
             await asyncio.sleep(transition_time)
 
             if len(self.children):
-                asyncio.get_running_loop().create_task(self.send_to_children(debug, new_state, probability_to_fail))
+                asyncio.get_running_loop().create_task(self.send_to_children(new_state))
             else:
-                asyncio.get_running_loop().create_task(self.enter_running_state(debug, probability_to_fail))
+                asyncio.get_running_loop().create_task(self.enter_running_state())
 
         elif new_state == State.Stopped:
             if len(self.children):
-                asyncio.get_running_loop().create_task(self.send_to_children(debug, new_state))
+                asyncio.get_running_loop().create_task(self.send_to_children(new_state))
             else:
                 self.state = State.Stopped
                 asyncio.get_running_loop().create_task(self.notify_parent())
 
-    async def enter_running_state(self, debug: bool, probability_to_fail: float) -> None:
+    async def enter_running_state(self) -> None:
         """
         Change state from Starting to Running
 
-        :param debug: show debug prints
-        :param probability_to_fail: value between 0 and 1
         :return: None
         """
-        if float(probability_to_fail) > random.uniform(0, 1):
+        if float(self.chance_to_fail) > random.uniform(0, 1):
             self.state = State.Error
         else:
             self.state = State.Running
             asyncio.get_running_loop().create_task(self.notify_parent())
             asyncio.get_running_loop().create_task(self.run())
-        if debug:
+        if self.debug_mode:
             now = datetime.now()
             print(
                 "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(
                     " %H:%M:%S"))
 
-    async def send_to_children(self, debug: bool, new_state: State, probability_to_fail: float = 0) -> None:
+    async def send_to_children(self, new_state: State) -> None:
         """
         Propagate received message to all children
 
-        :param debug: show debug prints
         :param new_state: propagated state
-        :param probability_to_fail: value between 0 and 1
         :return: None
         """
         for child_address in self.children:
-            if debug:
+            if self.debug_mode:
                 print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + child_address.get_port())
             if configuration['architecture'] == 'MOM':
                 routing_key = get_bounding_key(child_address.get_port())
-                message = str(new_state) + (" " + str(probability_to_fail) if new_state == State.Running else "")
+                message = str(new_state) + (" " + str(self.chance_to_fail) if new_state == State.Running else "")
                 post_state_change(message, routing_key)
             else:
                 if new_state == State.Running:
                     asyncio.create_task(
-                        post_start(str(probability_to_fail), child_address.get_full_address(), debug))
+                        post_start(str(self.chance_to_fail), child_address.get_full_address(), self.debug_mode))
                 elif new_state == State.Stopped:
-                    asyncio.create_task(post_stop(child_address.get_full_address(), debug))
+                    asyncio.create_task(post_stop(child_address.get_full_address(), self.debug_mode))
 
     def add_child(self) -> None:
         """
