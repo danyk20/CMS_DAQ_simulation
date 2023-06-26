@@ -125,8 +125,7 @@ class Node:
                         await post_notification(receiver_address=self.get_parent().get_full_address(),
                                                 state=str(self.state),
                                                 sender_address=self.address.get_full_address())
-                    loop = asyncio.get_running_loop()
-                    loop.create_task(self.run())
+                    asyncio.get_running_loop().create_task(self.run())
                 if debug:
                     now = datetime.now()
                     print(
@@ -217,8 +216,9 @@ class Node:
         elif starting:
             self.state = State.Starting
         elif running == len(self.children):
-            if self.state == State.Starting:
-                asyncio.create_task(self.run())
+            if self.state != State.Running:
+                self.state = State.Running
+                asyncio.get_running_loop().create_task(self.run())
             self.state = State.Running
 
     async def run(self) -> None:

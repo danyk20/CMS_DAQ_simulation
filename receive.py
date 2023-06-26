@@ -85,9 +85,10 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
                                            transition_time=configuration['node']['time']['starting']))
     elif debug:
         print('Wrong operation! %r -> %r' % (node.state, new_state))
+    # asyncio.get_running_loop() no problem
 
 
-def notify(state: str = None, sender_port: str = None) -> None:
+async def notify(state: str = None, sender_port: str = None) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
 
@@ -98,6 +99,7 @@ def notify(state: str = None, sender_port: str = None) -> None:
     full_address = configuration['URL']['address'] + ':' + sender_port
     if state:
         node.children[model.NodeAddress(full_address)].append(model.State[state.split('.')[-1]])
+        # asyncio.get_running_loop() exception
         node.update_state()
     if node.get_parent().address is None:
         return
@@ -142,7 +144,7 @@ def run(created_node: Node, async_loop: AbstractEventLoop):
             # notification
             sender_id = get_port(message.split(':')[0])
             current_state = message.split(':')[1]
-            notify(current_state, sender_id)
+            asyncio.run_coroutine_threadsafe(notify(current_state, sender_id), async_loop)
         else:
             # change state
             start = None
