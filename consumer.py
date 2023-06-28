@@ -30,10 +30,25 @@ class StateRpcClient(object):
         self.corr_id = None
 
     def on_response(self, _ch, _method, props, body):
+        """
+        Process received reply from rpc server
+
+        :param _ch:
+        :param _method:
+        :param props:
+        :param body:
+        :return:
+        """
         if self.corr_id == props.correlation_id:
             self.response = body
 
     def call(self, routing_key) -> bin:
+        """
+        Sends get_state request to rpc server
+
+        :param routing_key: rpc server ID
+        :return: state of the node
+        """
         self.response = None
         self.corr_id = str(uuid.uuid4())
         self.channel.basic_publish(
