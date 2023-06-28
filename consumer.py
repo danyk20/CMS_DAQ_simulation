@@ -1,9 +1,11 @@
+import sys
+
 import pika
 import uuid
 
 from utils import get_configuration
 
-NODE_ROUTING_KEY = '2.3.3.0.0'
+NODE_ROUTING_KEY = sys.argv[1] if len(sys.argv) else '2.3.3.0.0'
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
@@ -27,11 +29,11 @@ class StateRpcClient(object):
         self.response = None
         self.corr_id = None
 
-    def on_response(self, ch, method, props, body):
+    def on_response(self, _ch, _method, props, body):
         if self.corr_id == props.correlation_id:
             self.response = body
 
-    def call(self, routing_key) -> str:
+    def call(self, routing_key) -> bin:
         self.response = None
         self.corr_id = str(uuid.uuid4())
         self.channel.basic_publish(
@@ -48,6 +50,6 @@ class StateRpcClient(object):
 
 get_state = StateRpcClient()
 
-print(" [x] Requesting state from node " + NODE_ROUTING_KEY)
+print(" [->] Requesting state from node " + NODE_ROUTING_KEY)
 response = get_state.call(NODE_ROUTING_KEY)
-print(" [.] Received %r" % response)
+print(" [<-] Received %r" % response.decode('utf-8'))
