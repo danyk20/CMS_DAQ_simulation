@@ -61,27 +61,26 @@ def get_state() -> dict[str, str]:
 
 
 @app.post(configuration['URL']['change_state'])
-async def change_state(start: str = None, stop: str = None, debug: bool = False) -> model.State:
+async def change_state(start: str = None, stop: str = None) -> model.State:
     """
     Endpoint to change node state.
 
     :param start: probability between 0 and 1 of getting into Error state
     :param stop: any non None input means stop
-    :param debug: prints debug messages for each node (when started and when did transition)
     :return: node state after transition
     """
-    if debug:
+    if configuration['debug'] == 'True':
         now = datetime.now()
         print("Node " + node.address.get_port() + " received POST " + now.strftime(" %H:%M:%S"))
     if node.state == model.State.Error:
         return node.state
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
-        asyncio.create_task(node.set_state(model.State.Running, float(start), debug,
-                                           configuration['node']['time']['starting']))
+        asyncio.create_task(
+            node.set_state(model.State.Running, float(start), configuration['node']['time']['starting']))
     elif stop and node.state == model.State.Running:
-        asyncio.create_task(node.set_state(model.State.Stopped, debug=debug,
-                                           transition_time=configuration['node']['time']['starting']))
+        asyncio.create_task(
+            node.set_state(model.State.Stopped, transition_time=configuration['node']['time']['starting']))
     else:
         raise HTTPException(status_code=400, detail="Combination of current state and transition state is not allowed!")
     return node.state

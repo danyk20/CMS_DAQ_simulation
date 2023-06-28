@@ -60,16 +60,15 @@ def get_state() -> dict[str, str]:
     return {"State": str(node.state)}
 
 
-async def change_state(start: str = None, stop: str = None, debug: bool = False) -> None:
+async def change_state(start: str = None, stop: str = None) -> None:
     """
     Endpoint to change node state.
 
     :param start: probability between 0 and 1 of getting into Error state
     :param stop: any non None input means stop
-    :param debug: prints debug messages for each node (when started and when did transition)
     :return: None
     """
-    if debug:
+    if configuration['debug'] == 'True':
         now = datetime.now()
         new_state = 'State.Running' if start else 'State.Stopped'
         print("Node " + node.address.get_port() + " received " + new_state + " at " + now.strftime(" %H:%M:%S"))
@@ -77,12 +76,12 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
         return
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
-        asyncio.create_task(node.set_state(model.State.Running, float(start), debug=debug,
+        asyncio.create_task(node.set_state(model.State.Running, float(start),
                                            transition_time=configuration['node']['time']['starting']))
     elif stop and node.state == model.State.Running:
-        asyncio.create_task(node.set_state(model.State.Stopped, debug=debug,
-                                           transition_time=configuration['node']['time']['starting']))
-    elif debug:
+        asyncio.create_task(
+            node.set_state(model.State.Stopped, transition_time=configuration['node']['time']['starting']))
+    elif configuration['debug'] == 'True':
         print('Wrong operation! %r -> %r' % (node.state, new_state))
     # asyncio.get_running_loop() no problem
 
@@ -153,7 +152,7 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop):
             elif message == 'State.Stopped':
                 stop = True
 
-            task = asyncio.run_coroutine_threadsafe(change_state(start=start, stop=stop, debug=True), async_loop)
+            task = asyncio.run_coroutine_threadsafe(change_state(start=start, stop=stop), async_loop)
             """
             RuntimeError: no running event loop
             sys:1: RuntimeWarning: coroutine 'change_state' was never awaited

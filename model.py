@@ -76,27 +76,23 @@ class Node:
         self.children: dict[NodeAddress, [State]] = dict()
         self.started_processes: [Popen] = []
         self.chance_to_fail: float = 0
-        self.debug_mode: bool = False
         self.build()
 
-    async def set_state(self, new_state: State, probability_to_fail: float = 0,
-                        debug: bool = False, transition_time: int = 0) -> None:
+    async def set_state(self, new_state: State, probability_to_fail: float = 0, transition_time: int = 0) -> None:
         """
         Change state from current to new state or fail.
 
         :param new_state:
         :param probability_to_fail: percentage value between 0 and 1
-        :param debug: determine whether print or not additional info about changing state
         :param transition_time: how long should transition last
         :return: None
         """
-        if debug:
+        if configuration['debug'] == 'True':
             now = datetime.now()
             print(
                 "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(" %H:%M:%S"))
         if new_state == State.Running:
             self.chance_to_fail = float(probability_to_fail)
-            self.debug_mode = debug
             await asyncio.sleep(transition_time)
 
             if len(self.children):
@@ -123,7 +119,7 @@ class Node:
             self.state = State.Running
             asyncio.get_running_loop().create_task(self.notify_parent())
             asyncio.get_running_loop().create_task(self.run())
-        if self.debug_mode:
+        if configuration['debug'] == 'True':
             now = datetime.now()
             print(
                 "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(
@@ -137,18 +133,18 @@ class Node:
         :return: None
         """
         for child_address in self.children:
-            if self.debug_mode:
+            if configuration['debug'] == 'True':
                 print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + child_address.get_port())
             if configuration['architecture'] == 'MOM':
                 routing_key = get_bounding_key(child_address.get_port())
                 message = str(new_state) + (" " + str(self.chance_to_fail) if new_state == State.Running else "")
-                send.post_state_change(message, routing_key, debug=self.debug_mode)
+                send.post_state_change(message, routing_key)
             else:
                 if new_state == State.Running:
                     asyncio.create_task(
-                        post_start(str(self.chance_to_fail), child_address.get_full_address(), self.debug_mode))
+                        post_start(str(self.chance_to_fail), child_address.get_full_address()))
                 elif new_state == State.Stopped:
-                    asyncio.create_task(post_stop(child_address.get_full_address(), self.debug_mode))
+                    asyncio.create_task(post_stop(child_address.get_full_address()))
 
     def add_child(self) -> None:
         """
@@ -224,9 +220,9 @@ class Node:
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
                 await self.notify_parent()
-                if self.debug_mode:
+                if configuration['debug'] == 'True':
                     print('Changing State')
-            if self.debug_mode:
+            if configuration['debug'] == 'True':
                 print(self.address.get_port() + ' -> ' + str(self.state))
 
     async def notify_parent(self):
@@ -240,8 +236,7 @@ class Node:
             sender_id = get_bounding_key(self.address.get_port())
             send.post_state_notification(current_state=str(self.state),
                                          routing_key=routing_key,
-                                         sender_id=sender_id,
-                                         debug=self.debug_mode)
+                                         sender_id=sender_id)
         else:
             # REST
             await post_notification(receiver_address=self.get_parent().get_full_address(),
