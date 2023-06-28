@@ -3,7 +3,7 @@ import uuid
 
 from utils import get_configuration
 
-NODE_ROUTING_KEY = '2.0.0.0.0'
+NODE_ROUTING_KEY = '2.3.3.0.0'
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
@@ -31,12 +31,12 @@ class StateRpcClient(object):
         if self.corr_id == props.correlation_id:
             self.response = body
 
-    def call(self, n) -> str:
+    def call(self, routing_key) -> str:
         self.response = None
         self.corr_id = str(uuid.uuid4())
         self.channel.basic_publish(
             exchange='',
-            routing_key='rpc_queue',
+            routing_key='rpc_queue' + routing_key,
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,

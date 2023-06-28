@@ -262,12 +262,13 @@ class Node:
         return NodeAddress(self.address.get_ip() + ':' + parent_port)
 
     def run_get_server(self) -> None:
+        queue_name = 'rpc_queue' + get_bounding_key(self.address.get_port())
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='localhost'))
 
         channel = connection.channel()
 
-        channel.queue_declare(queue='rpc_queue')
+        channel.queue_declare(queue=queue_name)
 
         def get_current_state() -> str:
             time.sleep(configuration['node']['time']['get'])
@@ -283,7 +284,7 @@ class Node:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
         channel.basic_qos(prefetch_count=1)
-        channel.basic_consume(queue='rpc_queue', on_message_callback=on_request)
+        channel.basic_consume(queue=queue_name, on_message_callback=on_request)
 
         print(" [x] Awaiting RPC requests " + self.address.get_port())
         channel.start_consuming()
