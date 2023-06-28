@@ -142,7 +142,7 @@ class Node:
             if configuration['architecture'] == 'MOM':
                 routing_key = get_bounding_key(child_address.get_port())
                 message = str(new_state) + (" " + str(self.chance_to_fail) if new_state == State.Running else "")
-                send.post_state_change(message, routing_key)
+                send.post_state_change(message, routing_key, debug=self.debug_mode)
             else:
                 if new_state == State.Running:
                     asyncio.create_task(
@@ -240,7 +240,8 @@ class Node:
             sender_id = get_bounding_key(self.address.get_port())
             send.post_state_notification(current_state=str(self.state),
                                          routing_key=routing_key,
-                                         sender_id=sender_id)
+                                         sender_id=sender_id,
+                                         debug=self.debug_mode)
         else:
             # REST
             await post_notification(receiver_address=self.get_parent().get_full_address(),

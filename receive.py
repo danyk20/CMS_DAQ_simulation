@@ -77,7 +77,7 @@ async def change_state(start: str = None, stop: str = None, debug: bool = False)
         return
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
-        asyncio.create_task(node.set_state(model.State.Running, float(start), debug,
+        asyncio.create_task(node.set_state(model.State.Running, float(start), debug=debug,
                                            transition_time=configuration['node']['time']['starting']))
     elif stop and node.state == model.State.Running:
         asyncio.create_task(node.set_state(model.State.Stopped, debug=debug,
