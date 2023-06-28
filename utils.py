@@ -20,7 +20,7 @@ def check_address(address: string) -> string:
     configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
     if int(port) < configuration['node']['port']['min'] or int(port) >= configuration['node']['port']['max']:
         raise argparse.ArgumentTypeError("%s is out of range valid port values" % port)
-    return address
+    return addressss
 
 
 def compute_hierarchy_level(port: str) -> int:
@@ -51,11 +51,24 @@ def get_configuration() -> dict[str, str | dict[str, str | dict]]:
 
 
 def get_bounding_key(port: str) -> str:
+    """
+    Convert port into associated binding key
+
+    :param port: number in string format
+    :return: string value of binding key
+    """
     if port:
         return '.'.join(list(port))
     return ''
 
+
 def get_port(bounding_key: str) -> str:
+    """
+    Convert binding key into associated port
+
+    :param bounding_key: string value of binding key
+    :return: number in string format
+    """
     if bounding_key:
         return ''.join(bounding_key.split('.'))
     return ''
