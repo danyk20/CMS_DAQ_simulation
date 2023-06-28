@@ -5,7 +5,7 @@ from subprocess import Popen
 
 import receive
 import server
-from model import Node, NodeAddress
+import model
 from utils import check_address, get_configuration
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
@@ -47,7 +47,7 @@ def parse_input_arguments() -> argparse.Namespace:
     return args
 
 
-def create_node() -> Node:
+def create_node() -> model.Node:
     """
     Creates a node instance based on given arguments
 
@@ -55,12 +55,12 @@ def create_node() -> Node:
     """
     cmd_arguments: argparse.Namespace = parse_input_arguments()
     new_node_address: str = configuration['URL']['address'] + ':' + str(cmd_arguments.port)
-    Node.arity = cmd_arguments.children
-    Node.depth = cmd_arguments.levels
-    return Node(NodeAddress(new_node_address))
+    model.Node.arity = cmd_arguments.children
+    model.Node.depth = cmd_arguments.levels
+    return model.Node(model.NodeAddress(new_node_address))
 
 
-def create_children(parent: Node) -> None:
+def create_children(parent: model.Node) -> None:
     """
     Recursively create child nodes which are defined in parent node attribute children
 
@@ -68,20 +68,23 @@ def create_children(parent: Node) -> None:
     """
     for child_address in parent.children:
         process: Popen = Popen(
-            ['python', 'service.py', '--port', str(child_address.get_port()), '--levels', str(Node.depth),
-             '--children', str(Node.arity), '--parent', parent.address.get_full_address()])
+            ['python', 'service.py', '--port', str(child_address.get_port()), '--levels', str(model.Node.depth),
+             '--children', str(model.Node.arity), '--parent', parent.address.get_full_address()])
         node.started_processes.append(process)
 
 
 async def setup():
     loop = asyncio.get_running_loop()
-    my_fun = lambda: receive.run(node, loop)
+    run_consumer = lambda: receive.run(node, loop)
+    rpc_server = lambda: node.run_get_server()
     with concurrent.futures.ThreadPoolExecutor() as pool:
-        result = await loop.run_in_executor(pool, my_fun)
-        print('custom process pool', result)
+        receiver_task = loop.run_in_executor(pool, run_consumer)
+        server_task = loop.run_in_executor(pool, rpc_server)
+        await receiver_task
+        await server_task
 
 
-node: Node = create_node()
+node: model.Node = create_node()
 create_children(node)
 if configuration['architecture'] == 'MOM':
     async_loop = asyncio.get_event_loop()

@@ -8,14 +8,13 @@ import pika
 
 import model
 import send
-from model import Node
 from utils import get_configuration, get_bounding_key, get_port
 
 STATE_EXCHANGE = 'state_change'
 NOTIFICATION_EXCHANGE = 'state_notification'
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
-node: Node | None = None
+node: model.Node | None = None
 loop = None
 
 
@@ -118,7 +117,7 @@ def simple_print():
     return 0
 
 
-def run(created_node: Node, async_loop: AbstractEventLoop):
+def run(created_node: model.Node, async_loop: AbstractEventLoop):
     global node
     node = created_node
     binding_key = get_bounding_key(node.address.get_port())

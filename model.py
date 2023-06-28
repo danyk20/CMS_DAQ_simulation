@@ -1,13 +1,13 @@
 import asyncio
-import string
+import time
 from datetime import datetime
 from enum import Enum
 import random
 from subprocess import Popen
+import pika
 
 import send
 from client import post_stop, post_start, post_notification
-from send import post_state_change
 from utils import compute_hierarchy_level, get_configuration, get_bounding_key
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
@@ -29,22 +29,22 @@ class NodeAddress:
     Class representing node address consisting of IP address and port in following format: 127.0.0.1:20000
     """
 
-    def __init__(self, address: string):
+    def __init__(self, address: str | None):
         self.address = address
 
-    def get_ip(self) -> string:
+    def get_ip(self) -> str | None:
         if self.address:
             return self.address.split(':')[0]
         else:
             return None
 
-    def get_port(self) -> string:
+    def get_port(self) -> str | None:
         if self.address:
             return self.address.split(':')[1]
         else:
             return None
 
-    def get_full_address(self) -> string:
+    def get_full_address(self) -> str:
         return self.address
 
     def __eq__(self, other):
@@ -142,7 +142,7 @@ class Node:
             if configuration['architecture'] == 'MOM':
                 routing_key = get_bounding_key(child_address.get_port())
                 message = str(new_state) + (" " + str(self.chance_to_fail) if new_state == State.Running else "")
-                post_state_change(message, routing_key)
+                send.post_state_change(message, routing_key)
             else:
                 if new_state == State.Running:
                     asyncio.create_task(
@@ -260,3 +260,30 @@ class Node:
         parent_port[level] = '0'
         parent_port = ''.join(parent_port)
         return NodeAddress(self.address.get_ip() + ':' + parent_port)
+
+    def run_get_server(self) -> None:
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host='localhost'))
+
+        channel = connection.channel()
+
+        channel.queue_declare(queue='rpc_queue')
+
+        def get_current_state() -> str:
+            time.sleep(configuration['node']['time']['get'])
+            return str(self.state)
+
+        def on_request(ch, method, props, body) -> None:
+            response = get_current_state()
+            print('Returning current state: ' + response + ' of node ' + self.address.get_port())
+            ch.basic_publish(exchange='',
+                             routing_key=props.reply_to,
+                             properties=pika.BasicProperties(correlation_id=props.correlation_id),
+                             body=str(response))
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(queue='rpc_queue', on_message_callback=on_request)
+
+        print(" [x] Awaiting RPC requests " + self.address.get_port())
+        channel.start_consuming()

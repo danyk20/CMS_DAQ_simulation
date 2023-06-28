@@ -27,3 +27,6 @@ node:
     default: 3
 
 architecture: MOM
+
+rabbitmq:
+  rpc_timeout: 21
