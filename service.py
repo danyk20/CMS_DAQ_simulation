@@ -73,7 +73,12 @@ def create_children(parent: model.Node) -> None:
         node.started_processes.append(process)
 
 
-async def setup():
+async def setup() -> None:
+    """
+    Starts MOM consumer and rpc server running in infinite asynchronous loop
+
+    :return: None
+    """
     loop = asyncio.get_running_loop()
     run_consumer = lambda: receive.run(node, loop)
     rpc_server = lambda: node.run_get_server()
