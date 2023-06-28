@@ -68,9 +68,9 @@ async def change_state(start: str = None, stop: str = None) -> None:
     :param stop: any non None input means stop
     :return: None
     """
+    new_state = 'State.Running' if start else 'State.Stopped'
     if configuration['debug'] == 'True':
         now = datetime.now()
-        new_state = 'State.Running' if start else 'State.Stopped'
         print("Node " + node.address.get_port() + " received " + new_state + " at " + now.strftime(" %H:%M:%S"))
     if node.state == model.State.Error:
         return
@@ -106,17 +106,14 @@ async def notify(state: str = None, sender_port: str = None) -> None:
                                  sender_id=get_bounding_key(node.address.get_port()))
 
 
-async def just_print():
-    print("Hello World!")
-    return 0
+def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
+    """
+    Run rabbitmq consumer -> proces all messages received in queue
 
-
-def simple_print():
-    print("Hello World!")
-    return 0
-
-
-def run(created_node: model.Node, async_loop: AbstractEventLoop):
+    :param created_node: related node
+    :param async_loop: infinite loop
+    :return: None
+    """
     global node
     node = created_node
     binding_key = get_bounding_key(node.address.get_port())
@@ -136,7 +133,7 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop):
     initialised()
     print(binding_key + ' - initialized')
 
-    def callback(ch, method, properties, body):
+    def callback(_ch, method, _properties, body):
         message = body.decode("utf-8")
         if ':' in message:
             # notification
@@ -152,7 +149,7 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop):
             elif message == 'State.Stopped':
                 stop = True
 
-            task = asyncio.run_coroutine_threadsafe(change_state(start=start, stop=stop), async_loop)
+            asyncio.run_coroutine_threadsafe(change_state(start=start, stop=stop), async_loop)
             """
             RuntimeError: no running event loop
             sys:1: RuntimeWarning: coroutine 'change_state' was never awaited
