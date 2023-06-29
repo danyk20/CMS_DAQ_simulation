@@ -82,7 +82,12 @@ ss
 ![topic diagram](resources/topic_diagram.png)
 
 ### Producer
-Element responsible for emitting messages to the broker. 
+Element responsible for emitting messages to the broker. Producer sends the message to the exchange base on type of the message. There are two separate exchanges one for changing the state the other one for notification. Exchange handles routing base on routing_key/binding_key which is equivalent of port number in REST architecture. The only difference is that digits are separated with `.`, so it is possible use `#` any (single) digit or `*` any sequence of digits for easier broadcast. Once message arrive to the consumer queue, consumer will be triggered. This principle is used to propagate messages from top down (change state) or bottom up (notification).
+
+Note: 
+- Special routing character are currently not utilized.
+- Producer binding_key is not important because it's only on way communication
+
 The implementation can be found in `send.py` and it implements:
 
 #### Change state
@@ -106,15 +111,16 @@ Element responsible for processing messages from the broker. The implementation 
 ![rpc diagram](resources/rpc_diagram.png)
 
 ### RPC Server
-Element responsible for replaying to messages from the broker. The implementation can be found in `model.py` implemented in `run_get_server` method.
+Element responsible for replaying to messages from the broker. Runs infinite asynchronous loop to process any incoming request to get current state which is blocking operation. Once the method execution is finished it returns state encoded into binary form to queue defined in the request properties. 
+The implementation can be found in `model.py` implemented in `run_get_server` method.
 
 #### get_state()
 - implemented as blocking waiting
 
 ### RPC Client
 Element responsible for processing messages from the broker. The implementation can be found in `consumer.py` and it implements rpc call:
-- send request to get node current state without waiting for the response
-- when response arrive to the queue it is processed
+1. send request to get node current state without waiting for the response
+2. when response arrive to the queue it is processed
 
 
 # Prerequisite
