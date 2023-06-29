@@ -20,7 +20,7 @@ def check_address(address: string) -> string:
     configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
     if int(port) < configuration['node']['port']['min'] or int(port) >= configuration['node']['port']['max']:
         raise argparse.ArgumentTypeError("%s is out of range valid port values" % port)
-    return addressss
+    return address
 
 
 def compute_hierarchy_level(port: str) -> int:
