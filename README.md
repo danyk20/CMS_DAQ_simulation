@@ -1,8 +1,9 @@
 # Introduction
 
-This script create tree hierarchy of nodes where each node is running as separate process with public REST API.
+This script create tree hierarchy of nodes where each node is running as separate process which is accessible via REST 
+API or using RabbitMQ middleware based on selected `architecture` attribute in `configuration.yaml`.
 
-## API
+## REST API
 
 ### GET /statemachine/state
 - return current state of the node as one of the following:
@@ -50,7 +51,7 @@ This script create tree hierarchy of nodes where each node is running as separat
 - asynchronous operation using asyncio
   - `await` posting notification to its parent if not root
 
-## Client
+## REST Client
 This script contains manually created client however it is possible to generate client automatically using Python pacakge for following languages:
   - C++
   - C#
@@ -75,12 +76,53 @@ NOTE: You might have to change IP and port ich you have changed `configuration.y
 Use following link: https://editor.swagger.io/ where you just upload http://127.0.0.1:20000/openapi.json (much straightforward usage than offline generator because of good `README.md` containing personalised example).
 
 After execution of commands above, you should be able to see a new directory with generated client library.
+ss
+## RabbitMQ - RPC & Topic
+
+![topic diagram](resources/topic_diagram.png)
+
+### Producer
+Element responsible for emitting messages to the broker. 
+The implementation can be found in `send.py` and it implements:
+
+#### Change state
+- propagate new state to children or update own state if it's leave node
+
+#### Notification
+- update parent node about current node state
+
+### Consumer
+Element responsible for processing messages from the broker. The implementation can be found in `receive.py` and it implements:
+
+#### Listener
+- listener which is triggered when new message arrive and running in infinite asynchronous loop
+
+#### Initialization
+- actions which take immediately after node is ready to consume data 
+
+#### Shutdown
+- actions need to be done before proper shutdown
+
+![rpc diagram](resources/rpc_diagram.png)
+
+### RPC Server
+Element responsible for replaying to messages from the broker. The implementation can be found in `model.py` implemented in `run_get_server` method.
+
+#### get_state()
+- implemented as blocking waiting
+
+### RPC Client
+Element responsible for processing messages from the broker. The implementation can be found in `consumer.py` and it implements rpc call:
+- send request to get node current state without waiting for the response
+- when response arrive to the queue it is processed
+
 
 # Prerequisite
 
 Pipenv - https://pypi.org/project/pipenv/
+RabbitMQ - https://www.rabbitmq.com/
 
-# Run 
+# Run
 
 ```sh
 pipenv install
@@ -93,17 +135,28 @@ There is `configuration.yaml` file containing all variables that are possible to
 
 # Manual test
 
+Note: There are no automated tests!
+
+## REST
+
 Open `<IP>:<port>/docs#/` to manually try endpoints on the current node.
 
 e.g. http://127.0.0.1:20000/docs#/
 ![node_endpoints](resources/node_endpoints.png)
 
-Note: There are no automated tests!
+## RabbitMQ
+
+Convert port number to routing key by putting dot between any two digits and call `consumer.py` with this argument
+
+```sh
+pipenv install
+pipenv run python consumer.py 2.3.1.0.0
+```
 
 
 # Description
 
-After running there will be created tree hierarchy of nodes where each of them exposes REST API described above. Originally all nodes are in `State.Stopped` after initialization what can be verified by `GET` request to `/statemachine/state` endpoint. It's possible to sent `POST` request to `/statemachine/input endpoint` in order to change the state. There are two possible parameters `start` and `stop`. `start` parameter define probability of going into `State.Error` and it must be in range [0,1]. Node change state to `State.Starting` immediately after submitting the request and remains in that state until all it children change state as well. There are 2 possible scenarios: either all children nodes and also current node successfully transitioned into `State.Running` or at least one node (doesn't matter weather current or child) transitioned into `State.Error` - then current node's state is `State.Error`. Running node can transition into `State.Error` with probability defined in the start parameter and this process is periodically repeated with period defined in the `configuration.yaml` file. 
+After running there will be created tree hierarchy of nodes where each of them exposes either REST API or RabbitMQ described above. Originally all nodes are in `State.Stopped` after initialization what can be verified by `GET` request to `/statemachine/state` endpoint. It's possible to sent `POST` request to `/statemachine/input endpoint` in order to change the state. There are two possible parameters `start` and `stop`. `start` parameter define probability of going into `State.Error` and it must be in range [0,1]. Node change state to `State.Starting` immediately after submitting the request and remains in that state until all it children change state as well. There are 2 possible scenarios: either all children nodes and also current node successfully transitioned into `State.Running` or at least one node (doesn't matter weather current or child) transitioned into `State.Error` - then current node's state is `State.Error`. Running node can transition into `State.Error` with probability defined in the start parameter and this process is periodically repeated with period defined in the `configuration.yaml` file. 
 
 `/notofications` endpoint is called automatically when node changes its state from `State.Running` to `State.Error` or `State.Stopped`. This way parent can be immediately updated about the change of children and also update its state as well and propagate this information to its parent until the root node is informed. 
 
@@ -119,4 +172,10 @@ After running there will be created tree hierarchy of nodes where each of them e
 
 # Shutdown
 
+## REST
+
 Sending signal SIGTERM `kill -15 <PID>` will be propagated from node to all its children. Node waits for termination of its children and terminate itself after all children are terminated or after 20 s since SIGTERM signal arrived (what is earlier). 
+
+## RabbitMQ
+
+Not implemented yet.
