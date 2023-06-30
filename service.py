@@ -1,6 +1,8 @@
 import argparse
 import asyncio
 import concurrent.futures
+import os
+import signal
 from subprocess import Popen
 
 import receive
@@ -89,10 +91,13 @@ async def setup() -> None:
         await server_task
 
 
+# TO DELETE
+print('My PID is:', os.getpid())
 node: model.Node = create_node()
 create_children(node)
 if configuration['architecture'] == 'MOM':
     async_loop = asyncio.get_event_loop()
+    async_loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(receive.shutdown_event()))
     async_loop.create_task(setup())
     async_loop.run_forever()
 elif configuration['architecture'] == 'REST':
