@@ -100,5 +100,6 @@ if configuration['architecture'] == 'MOM':
     async_loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(receive.shutdown_event()))
     async_loop.create_task(setup())
     async_loop.run_forever()
+    async_loop.close()
 elif configuration['architecture'] == 'REST':
     server.run(node)

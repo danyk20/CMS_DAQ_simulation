@@ -1,5 +1,7 @@
 import asyncio
+import os
 import signal
+import sys
 import time
 from asyncio import AbstractEventLoop
 from datetime import datetime
@@ -44,7 +46,7 @@ async def shutdown_event() -> None:
             process.send_signal(signal.SIGTERM)
         for process in node.started_processes:
             sleeping_time = 0
-            while process.poll is None and sleeping_time < max_sleep:
+            while process.poll() is None and sleeping_time < max_sleep:
                 await asyncio.sleep(1)
                 sleeping_time += 1
         if sleeping_time < max_sleep:
@@ -53,6 +55,7 @@ async def shutdown_event() -> None:
             print('Child process might still run!')
         print(node.address.get_full_address() + ' is going to be terminated!')
     await asyncio.sleep(1)  # only to see termination messages from children in IDE
+    os._exit(os.EX_OK)
 
 
 def get_state() -> dict[str, str]:
