@@ -130,9 +130,47 @@ There are two (model.Node.run_get_server() and receive.run()) subprocesses runni
 
 Client sends request (white envelope) to the selected server and server responds with json reply containing current state (blue envelope).
 
+Envelope formats:
+
+White:
+```json
+{
+    "action": "get_state"
+}
+```
+
+Blue:
+```json
+{
+    "state": "Starting"
+}
+```
+
 #### One way communication
 
 Initiator uses send_message method to send message in json format. Receiver receive it and base on content inside it process it with notify or change_state method.
+
+Envelope formats:
+
+Red:
+```json
+{
+    "type": "Notification",
+    "fromState": "Starting",
+    "toState": "Running"
+}
+```
+
+Orange:
+```json
+{
+    "type": "Input",
+    "name": "Start",
+    "parameters": {
+        "chance_to_fail": 0.02
+    }
+}
+```
 
 ![internal implementation](resources/rabbitmq_implementation.png)
 
