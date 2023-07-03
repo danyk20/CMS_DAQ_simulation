@@ -178,10 +178,11 @@ After running there will be created tree hierarchy of nodes where each of them e
 
 # Shutdown
 
-## REST
+Sending signal SIGTERM `kill -15 <PID>` will be propagated from node to all its children. Node waits for termination of its children and terminate itself after all children are terminated or after 20s (the value can be changed in `configuration.yaml`) since SIGTERM signal arrived (what is earlier). 
 
-Sending signal SIGTERM `kill -15 <PID>` will be propagated from node to all its children. Node waits for termination of its children and terminate itself after all children are terminated or after 20 s since SIGTERM signal arrived (what is earlier). 
+## REST
+Termination of the process is internally handled by FastAPI.
 
 ## RabbitMQ
 
-Not implemented yet.
+Process is terminated with `os._exit()`.
