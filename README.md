@@ -156,7 +156,7 @@ Convert port number to routing key by putting dot between any two digits and cal
 
 ```sh
 pipenv install
-pipenv run python consumer.py 2.3.1.0.0
+pipenv run python rpc_client.py 2.3.1.0.0
 ```
 
 
