@@ -1,5 +1,4 @@
 import asyncio
-import signal
 import time
 
 import uvicorn
@@ -7,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from datetime import datetime
 
 import model
+import service
 from client import post_notification
 from model import Node
 from utils import get_configuration
@@ -32,26 +32,11 @@ async def initialised() -> None:
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
     """
-    Send SIGTERM to all children before termination and wait up 20s for child termination if not set other limit
+    Call default shutdown method but don't kill process by this function
 
     :return: None
     """
-    if node:
-        sleeping_time = 0
-        max_sleep = configuration['node']['time']['shutdown']
-        for process in node.started_processes:
-            process.send_signal(signal.SIGTERM)
-        for process in node.started_processes:
-            sleeping_time = 0
-            while process.poll is None and sleeping_time < max_sleep:
-                await asyncio.sleep(1)
-                sleeping_time += 1
-        if sleeping_time < max_sleep:
-            print('No running child processes')
-        else:
-            print('Child process might still run!')
-        print(node.address.get_full_address() + ' is going to be terminated!')
-    await asyncio.sleep(1)  # only to see termination messages from children in IDE
+    await service.shutdown_event(False)
 
 
 @app.get(configuration['URL']['get_state'])

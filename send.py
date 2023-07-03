@@ -1,11 +1,11 @@
 import pika
 
-from utils import get_configuration
+import utils
 
 STATE_EXCHANGE = 'state_change'
 NOTIFICATION_EXCHANGE = 'state_notification'
 
-configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
+configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
 
 
 def post_state_change(new_state: str, routing_key: str) -> None:

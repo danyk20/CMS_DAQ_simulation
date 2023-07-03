@@ -1,7 +1,4 @@
 import asyncio
-import os
-import signal
-import sys
 import time
 from asyncio import AbstractEventLoop
 from datetime import datetime
@@ -10,12 +7,12 @@ import pika
 
 import model
 import send
-from utils import get_configuration, get_bounding_key, get_port
+import utils
 
 STATE_EXCHANGE = 'state_change'
 NOTIFICATION_EXCHANGE = 'state_notification'
 
-configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
+configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
 node: model.Node | None = None
 loop = None
 
@@ -29,33 +26,8 @@ def initialised() -> None:
     if not node.children:
         node.state = model.State.Stopped
     send.post_state_notification(current_state=str(node.state),
-                                 routing_key=get_bounding_key(node.get_parent().get_port()),
-                                 sender_id=get_bounding_key(node.address.get_port()))
-
-
-async def shutdown_event() -> None:
-    """
-    Send SIGTERM to all children before termination and wait up 20s for child termination if not set other limit
-
-    :return: None
-    """
-    if node:
-        sleeping_time = 0
-        max_sleep = configuration['node']['time']['shutdown']
-        for process in node.started_processes:
-            process.send_signal(signal.SIGTERM)
-        for process in node.started_processes:
-            sleeping_time = 0
-            while process.poll() is None and sleeping_time < max_sleep:
-                await asyncio.sleep(1)
-                sleeping_time += 1
-        if sleeping_time < max_sleep:
-            print('No running child processes')
-        else:
-            print('Child process might still run!')
-        print(node.address.get_full_address() + ' is going to be terminated!')
-    await asyncio.sleep(1)  # only to see termination messages from children in IDE
-    os._exit(os.EX_OK)
+                                 routing_key=utils.get_bounding_key(node.get_parent().get_port()),
+                                 sender_id=utils.get_bounding_key(node.address.get_port()))
 
 
 def get_state() -> dict[str, str]:
@@ -105,8 +77,8 @@ async def notify(state: str = None, sender_port: str = None) -> None:
     if node.get_parent().address is None:
         return
     send.post_state_notification(current_state=str(node.state),
-                                 routing_key=get_bounding_key(node.get_parent().get_port()),
-                                 sender_id=get_bounding_key(node.address.get_port()))
+                                 routing_key=utils.get_bounding_key(node.get_parent().get_port()),
+                                 sender_id=utils.get_bounding_key(node.address.get_port()))
 
 
 def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
@@ -119,7 +91,7 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
     """
     global node
     node = created_node
-    binding_key = get_bounding_key(node.address.get_port())
+    binding_key = utils.get_bounding_key(node.address.get_port())
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(host=configuration['URL']['address']))
     channel = connection.channel()
@@ -140,7 +112,7 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
         message = body.decode("utf-8")
         if ':' in message:
             # notification
-            sender_id = get_port(message.split(':')[0])
+            sender_id = utils.get_port(message.split(':')[0])
             current_state = message.split(':')[1]
             asyncio.run_coroutine_threadsafe(notify(current_state, sender_id), async_loop)
         else:

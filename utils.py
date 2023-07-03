@@ -1,10 +1,8 @@
 import argparse
-import string
-
 import yaml
 
 
-def check_address(address: string) -> string:
+def check_address(address: str) -> str:
     """
     Validate whether address is in correct format, otherwise throw an error.
 

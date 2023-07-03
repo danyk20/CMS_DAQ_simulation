@@ -91,13 +91,40 @@ async def setup() -> None:
         await server_task
 
 
+async def shutdown_event(force: bool = True) -> None:
+    """
+    Send SIGTERM to all children before termination and wait up Xs for child termination if not set other limit
+
+    :param force: whether kill process inside the function forcefully
+    :return: None
+    """
+    if node:
+        sleeping_time = 0
+        max_sleep = configuration['node']['time']['shutdown']
+        for process in node.started_processes:
+            process.send_signal(signal.SIGTERM)
+        for process in node.started_processes:
+            sleeping_time = 0
+            while process.poll() is None and sleeping_time < max_sleep:
+                await asyncio.sleep(1)
+                sleeping_time += 1
+        if sleeping_time < max_sleep:
+            print('No running child processes')
+        else:
+            print('Child process might still run!')
+        print(node.address.get_full_address() + ' is going to be terminated!')
+    await asyncio.sleep(1)  # only to see termination messages from children in IDE
+    if force:
+        os._exit(os.EX_OK)
+
+
 # TO DELETE
 print('My PID is:', os.getpid())
 node: model.Node = create_node()
 create_children(node)
 if configuration['architecture'] == 'MOM':
     async_loop = asyncio.get_event_loop()
-    async_loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(receive.shutdown_event()))
+    async_loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(shutdown_event()))
     async_loop.create_task(setup())
     async_loop.run_forever()
     async_loop.close()

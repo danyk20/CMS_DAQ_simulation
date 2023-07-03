@@ -7,10 +7,10 @@ from subprocess import Popen
 import pika
 
 import send
-from client import post_stop, post_start, post_notification
-from utils import compute_hierarchy_level, get_configuration, get_bounding_key
+import client
+import utils
 
-configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
+configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
 
 
 class State(Enum):
@@ -71,7 +71,7 @@ class Node:
 
     def __init__(self, address: NodeAddress):
         self.state: State = State.Initialisation
-        self.level: int = compute_hierarchy_level(address.get_port())
+        self.level: int = utils.compute_hierarchy_level(address.get_port())
         self.address: NodeAddress = address
         self.children: dict[NodeAddress, [State]] = dict()
         self.started_processes: [Popen] = []
@@ -136,15 +136,15 @@ class Node:
             if configuration['debug'] == 'True':
                 print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + child_address.get_port())
             if configuration['architecture'] == 'MOM':
-                routing_key = get_bounding_key(child_address.get_port())
+                routing_key = utils.get_bounding_key(child_address.get_port())
                 message = str(new_state) + (" " + str(self.chance_to_fail) if new_state == State.Running else "")
                 send.post_state_change(message, routing_key)
             else:
                 if new_state == State.Running:
                     asyncio.create_task(
-                        post_start(str(self.chance_to_fail), child_address.get_full_address()))
+                        client.post_start(str(self.chance_to_fail), child_address.get_full_address()))
                 elif new_state == State.Stopped:
-                    asyncio.create_task(post_stop(child_address.get_full_address()))
+                    asyncio.create_task(client.post_stop(child_address.get_full_address()))
 
     def add_child(self) -> None:
         """
@@ -232,15 +232,15 @@ class Node:
         :return: None
         """
         if configuration['architecture'] == 'MOM':
-            routing_key = get_bounding_key(self.get_parent().get_port())
-            sender_id = get_bounding_key(self.address.get_port())
+            routing_key = utils.get_bounding_key(self.get_parent().get_port())
+            sender_id = utils.get_bounding_key(self.address.get_port())
             send.post_state_notification(current_state=str(self.state),
                                          routing_key=routing_key,
                                          sender_id=sender_id)
         else:
             # REST
-            await post_notification(receiver_address=self.get_parent().get_full_address(),
-                                    state=str(self.state), sender_address=self.address.get_full_address())
+            await client.post_notification(receiver_address=self.get_parent().get_full_address(),
+                                           state=str(self.state), sender_address=self.address.get_full_address())
 
     def get_parent(self) -> NodeAddress:
         """
@@ -286,7 +286,7 @@ class Node:
                              body=str(response))
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
-        queue_name = 'rpc_queue' + get_bounding_key(self.address.get_port())
+        queue_name = 'rpc_queue' + utils.get_bounding_key(self.address.get_port())
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
 
