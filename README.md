@@ -122,6 +122,19 @@ Element responsible for processing messages from the broker. The implementation 
 1. send request to get node current state without waiting for the response
 2. when response arrive to the queue it is processed
 
+### Internal communication:
+
+There are two (model.Node.run_get_server() and receive.run()) subprocesses running in infinite asynchronous loop. 
+
+#### RPC Client-Server
+
+Client sends request (white envelope) to the selected server and server responds with json reply containing current state (blue envelope).
+
+#### One way communication
+
+Initiator uses send_message method to send message in json format. Receiver receive it and base on content inside it process it with notify or change_state method.
+
+![internal implementation](resources/rabbitmq_implementation.png)
 
 # Prerequisite
 
