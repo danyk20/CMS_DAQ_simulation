@@ -134,5 +134,8 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
     channel.basic_consume(
         queue=queue_name, on_message_callback=callback, auto_ack=True)
 
+    node.channel_tag = queue_name
+    node.channel = channel
     channel.start_consuming()  # blocking
     channel.stop_consuming()
+    connection.close()

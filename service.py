@@ -3,7 +3,10 @@ import asyncio
 import concurrent.futures
 import os
 import signal
+import sys
 from subprocess import Popen
+
+from pika.exceptions import StreamLostError
 
 import receive
 import server
@@ -75,20 +78,32 @@ def create_children(parent: model.Node) -> None:
         node.started_processes.append(process)
 
 
+server_task = None
+receiver_task = None
+
+
 async def setup() -> None:
     """
     Starts MOM consumer and rpc server running in infinite asynchronous loop
 
     :return: None
     """
+    global receiver_task, server_task
     loop = asyncio.get_running_loop()
     run_consumer = lambda: receive.run(node, loop)
     rpc_server = lambda: node.run_get_server()
     with concurrent.futures.ThreadPoolExecutor() as pool:
         receiver_task = loop.run_in_executor(pool, run_consumer)
         server_task = loop.run_in_executor(pool, rpc_server)
-        await receiver_task
-        await server_task
+        try:
+            await receiver_task
+        except asyncio.CancelledError:
+            print('Consumer ' + node.address.get_port() + ' stopped')
+        try:
+            await server_task
+        except asyncio.CancelledError:
+            print('RPC server ' + node.address.get_port() + ' stopped')
+        print('Node ' + node.address.get_port() + ' is terminated')
 
 
 async def shutdown_event(force: bool = True) -> None:
@@ -115,7 +130,23 @@ async def shutdown_event(force: bool = True) -> None:
         print(node.address.get_full_address() + ' is going to be terminated!')
     await asyncio.sleep(1)  # only to see termination messages from children in IDE
     if force:
-        os._exit(os.EX_OK)
+        try:
+            node.channel.stop_consuming()
+        except StreamLostError as e:
+            print('Exception 1' + str(e))
+        try:
+            node.rpc_server.stop_consuming()
+        except Exception as e:
+            print('Exception 2' + str(e))
+
+        loop = asyncio.get_running_loop()
+
+        server_task.cancel()
+        receiver_task.cancel()
+
+        loop.call_soon_threadsafe(loop.stop)
+
+        print("shutdown for node " + node.address.get_port())
 
 
 # TO DELETE
@@ -128,5 +159,7 @@ if configuration['architecture'] == 'MOM':
     async_loop.create_task(setup())
     async_loop.run_forever()
     async_loop.close()
+    # why is it necessary
+    sys.exit(0)
 elif configuration['architecture'] == 'REST':
     server.run(node)

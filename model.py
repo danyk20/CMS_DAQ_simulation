@@ -77,6 +77,10 @@ class Node:
         self.started_processes: [Popen] = []
         self.chance_to_fail: float = 0
         self.build()
+        self.channel = None
+        self.channel_name = ''
+        self.rpc_server = None
+        self.rpc_server_name = ''
 
     async def set_state(self, new_state: State, probability_to_fail: float = 0, transition_time: int = 0) -> None:
         """
@@ -297,4 +301,6 @@ class Node:
         channel.basic_consume(queue=queue_name, on_message_callback=on_request)
 
         print(" [x] Awaiting RPC requests " + self.address.get_port())
+        self.rpc_server = channel
+        self.rpc_server_name = queue_name
         channel.start_consuming()
