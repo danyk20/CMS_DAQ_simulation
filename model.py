@@ -81,6 +81,9 @@ class Node:
         self.channel_name = ''
         self.rpc_server = None
         self.rpc_server_name = ''
+        self.connection = None
+        self.kill_rpc_serer = None
+        self.kill_consumer = None
 
     async def set_state(self, new_state: State, probability_to_fail: float = 0, transition_time: int = 0) -> None:
         """
@@ -268,6 +271,20 @@ class Node:
         :return: None
         """
 
+        def stop():
+            """Stop listening for jobs"""
+            print("External stop on consumer is called")
+            connection.add_callback_threadsafe(_stop)
+
+        def _stop():
+            print("Internal stop on consumer is called")
+            channel.stop_consuming()
+            print("Message consumption stopped.")
+            channel.close()
+            print("Channel closed.")
+            connection.close()
+            print("[JobListener] AMQP connection closed.")
+
         def get_current_state() -> str:
             time.sleep(configuration['node']['time']['get'])
             return str(self.state)
@@ -293,6 +310,7 @@ class Node:
         queue_name = 'rpc_queue' + utils.get_bounding_key(self.address.get_port())
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
+        self.connection = connection
 
         channel = connection.channel()
 
@@ -303,4 +321,10 @@ class Node:
         print(" [x] Awaiting RPC requests " + self.address.get_port())
         self.rpc_server = channel
         self.rpc_server_name = queue_name
-        channel.start_consuming()
+        self.kill_rpc_serer = stop
+        try:
+            channel.start_consuming()
+        except Exception as e:
+            print(self.address.get_port() + " -> I am here Server " + str(e))
+            channel.stop_consuming()
+            connection.close()

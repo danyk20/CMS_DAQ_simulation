@@ -131,13 +131,15 @@ async def shutdown_event(force: bool = True) -> None:
     await asyncio.sleep(1)  # only to see termination messages from children in IDE
     if force:
         try:
-            node.channel.stop_consuming()
+            # node.channel.stop_consuming()
+            node.kill_consumer()
         except StreamLostError as e:
-            print('Exception 1' + str(e))
+            print(sys.argv[2] + ' Exception 1 ' + str(e))
         try:
-            node.rpc_server.stop_consuming()
+            # node.rpc_server.stop_consuming()
+            node.kill_rpc_serer()
         except Exception as e:
-            print('Exception 2' + str(e))
+            print(sys.argv[2] + ' Exception 2 ' + str(e))
 
         loop = asyncio.get_running_loop()
 

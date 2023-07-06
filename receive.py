@@ -131,11 +131,30 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
             """
         print("Node %r received message: %r" % (method.routing_key, message))
 
+    def stop():
+        """Stop listening for jobs"""
+        print("External stop on consumer is called")
+        connection.add_callback_threadsafe(_stop)
+
+    def _stop():
+        print("Internal stop on consumer is called")
+        channel.stop_consuming()
+        print("Message consumption stopped.")
+        channel.close()
+        print("Channel closed.")
+        connection.close()
+        print("[JobListener] AMQP connection closed.")
+
+    node.kill_consumer = stop
+
     channel.basic_consume(
         queue=queue_name, on_message_callback=callback, auto_ack=True)
 
     node.channel_tag = queue_name
     node.channel = channel
-    channel.start_consuming()  # blocking
-    channel.stop_consuming()
-    connection.close()
+    try:
+        channel.start_consuming()  # blocking
+    except Exception as e:
+        print("I am here consumer " + str(e))
+        channel.stop_consuming()
+        connection.close()
