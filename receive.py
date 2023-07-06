@@ -117,14 +117,14 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
             asyncio.run_coroutine_threadsafe(notify(current_state, sender_id), async_loop)
         else:
             # change state
-            start = None
-            stop = None
+            start_state = None
+            stop_state = None
             if 'State.Running' in message:
-                start = message.split()[-1]
+                start_state = message.split()[-1]
             elif message == 'State.Stopped':
-                stop = True
+                stop_state = True
 
-            asyncio.run_coroutine_threadsafe(change_state(start=start, stop=stop), async_loop)
+            asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), async_loop)
             """
             RuntimeError: no running event loop
             sys:1: RuntimeWarning: coroutine 'change_state' was never awaited
@@ -133,17 +133,12 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
 
     def stop():
         """Stop listening for jobs"""
-        print("External stop on consumer is called")
         connection.add_callback_threadsafe(_stop)
 
     def _stop():
-        print("Internal stop on consumer is called")
         channel.stop_consuming()
-        print("Message consumption stopped.")
         channel.close()
-        print("Channel closed.")
         connection.close()
-        print("[JobListener] AMQP connection closed.")
 
     node.kill_consumer = stop
 

@@ -4,9 +4,8 @@ import concurrent.futures
 import os
 import signal
 import sys
+from asyncio import Future
 from subprocess import Popen
-
-from pika.exceptions import StreamLostError
 
 import receive
 import server
@@ -78,13 +77,13 @@ def create_children(parent: model.Node) -> None:
         node.started_processes.append(process)
 
 
-server_task = None
-receiver_task = None
+server_task: None | Future[None] = None
+receiver_task: None | Future[None] = None
 
 
 async def setup() -> None:
     """
-    Starts MOM consumer and rpc server running in infinite asynchronous loop
+    Starts MOM consumer and rpc server running in infinite asynchronous loop and handle task cancellation
 
     :return: None
     """
@@ -92,25 +91,29 @@ async def setup() -> None:
     loop = asyncio.get_running_loop()
     run_consumer = lambda: receive.run(node, loop)
     rpc_server = lambda: node.run_get_server()
+
     with concurrent.futures.ThreadPoolExecutor() as pool:
         receiver_task = loop.run_in_executor(pool, run_consumer)
         server_task = loop.run_in_executor(pool, rpc_server)
         try:
             await receiver_task
         except asyncio.CancelledError:
-            print('Consumer ' + node.address.get_port() + ' stopped')
+            if configuration['debug']:
+                print('Consumer ' + node.address.get_port() + ' stopped')
         try:
             await server_task
         except asyncio.CancelledError:
-            print('RPC server ' + node.address.get_port() + ' stopped')
-        print('Node ' + node.address.get_port() + ' is terminated')
+            if configuration['debug']:
+                print('RPC server ' + node.address.get_port() + ' stopped')
+        if configuration['debug']:
+            print('Node ' + node.address.get_port() + ' is terminated')
 
 
-async def shutdown_event(force: bool = True) -> None:
+async def shutdown_event(broker_disconnect: bool = True) -> None:
     """
     Send SIGTERM to all children before termination and wait up Xs for child termination if not set other limit
 
-    :param force: whether kill process inside the function forcefully
+    :param broker_disconnect: whether kill process inside the function forcefully
     :return: None
     """
     if node:
@@ -123,36 +126,24 @@ async def shutdown_event(force: bool = True) -> None:
             while process.poll() is None and sleeping_time < max_sleep:
                 await asyncio.sleep(1)
                 sleeping_time += 1
-        if sleeping_time < max_sleep:
-            print('No running child processes')
-        else:
-            print('Child process might still run!')
-        print(node.address.get_full_address() + ' is going to be terminated!')
-    await asyncio.sleep(1)  # only to see termination messages from children in IDE
-    if force:
-        try:
-            # node.channel.stop_consuming()
+        if configuration['debug']:
+            if sleeping_time < max_sleep:
+                print('No running child processes')
+            else:
+                print('Child process might still run!')
+            print(node.address.get_full_address() + ' is going to be terminated!')
+        if broker_disconnect:
             node.kill_consumer()
-        except StreamLostError as e:
-            print(sys.argv[2] + ' Exception 1 ' + str(e))
-        try:
-            # node.rpc_server.stop_consuming()
             node.kill_rpc_serer()
-        except Exception as e:
-            print(sys.argv[2] + ' Exception 2 ' + str(e))
-
-        loop = asyncio.get_running_loop()
-
-        server_task.cancel()
-        receiver_task.cancel()
-
-        loop.call_soon_threadsafe(loop.stop)
-
-        print("shutdown for node " + node.address.get_port())
+            loop = asyncio.get_running_loop()
+            server_task.cancel()
+            receiver_task.cancel()
+            loop.call_soon_threadsafe(loop.stop)
+    await asyncio.sleep(1)  # only to see termination messages from children in IDE
 
 
-# TO DELETE
-print('My PID is:', os.getpid())
+if configuration['debug']:
+    print('My PID is:', os.getpid())
 node: model.Node = create_node()
 create_children(node)
 if configuration['architecture'] == 'MOM':
@@ -160,7 +151,6 @@ if configuration['architecture'] == 'MOM':
     async_loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(shutdown_event()))
     async_loop.create_task(setup())
     async_loop.run_forever()
-    async_loop.close()
     # why is it necessary
     sys.exit(0)
 elif configuration['architecture'] == 'REST':
