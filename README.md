@@ -156,7 +156,7 @@ Red:
 ```json
 {
     "type": "Notification",
-    "fromState": "Starting",
+    "sender": "2.0.0.0.0",
     "toState": "Running"
 }
 ```
