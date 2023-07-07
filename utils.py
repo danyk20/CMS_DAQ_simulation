@@ -1,5 +1,6 @@
 import argparse
 import yaml
+import json
 
 
 def check_address(address: str) -> str:
@@ -70,3 +71,59 @@ def get_port(bounding_key: str) -> str:
     if bounding_key:
         return ''.join(bounding_key.split('.'))
     return ''
+
+
+def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
+    """
+    Produce json format necessary for notification about the state change in the children node.
+
+    :param transitioned_state: new current state of the child node
+    :param sender: origin node id as bind key
+    :return: string representation of red envelope
+    """
+    envelope = dict()
+    envelope['type'] = 'Notification'
+    envelope['sender'] = sender
+    envelope['toState'] = transitioned_state
+    return json.dumps(envelope)
+
+
+def get_orange_envelope(state: str, chance_to_fail: float = 0) -> str:
+    """
+    Produce json format necessary for changing state selected node.
+
+    :param state: requested new state
+    :param chance_to_fail: chance to end up in Error state
+    :return: string representation of orange envelope
+    """
+    envelope = dict()
+    envelope['type'] = 'Input'
+    envelope['name'] = state
+    envelope['parameters'] = {'chance_to_fail': chance_to_fail}
+    return json.dumps(envelope)
+
+
+def get_blue_envelope(current_state: str) -> str:
+    """
+    Produce json format for replying from rpc server.
+
+    :param current_state: node current state
+    :return: string representation of blue envelope
+    """
+    envelope = dict()
+    envelope['state'] = current_state
+    return json.dumps(envelope)
+
+
+def get_white_envelope(requested_action: str = 'get_state') -> str:
+    """
+    Produce json format for requesting state from rpc server.
+
+    Note: currently the only supported operation is get_state
+
+    :param requested_action: type of request
+    :return: string representation of blue envelope
+    """
+    envelope = dict()
+    envelope['action'] = requested_action
+    return json.dumps(envelope)

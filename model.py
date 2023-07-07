@@ -139,8 +139,8 @@ class Node:
                 print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + child_address.get_port())
             if configuration['architecture'] == 'MOM':
                 routing_key = utils.get_bounding_key(child_address.get_port())
-                message = str(new_state) + (" " + str(self.chance_to_fail) if new_state == State.Running else "")
-                send.post_state_change(message, routing_key)
+                message = str(new_state)
+                send.post_state_change(message, routing_key, self.chance_to_fail)
             else:
                 if new_state == State.Running:
                     asyncio.create_task(

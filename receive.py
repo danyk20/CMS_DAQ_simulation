@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from asyncio import AbstractEventLoop
 from datetime import datetime
@@ -109,18 +110,18 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
     print(binding_key + ' - initialized')
 
     def callback(_ch, method, _properties, body):
-        message = body.decode("utf-8")
-        if ':' in message:
+        message = json.loads(body)
+        if message['type'] == 'Notification':
             # notification
-            sender_id = utils.get_port(message.split(':')[0])
-            current_state = message.split(':')[1]
+            sender_id = utils.get_port(message['sender'])
+            current_state = message['toState']
             asyncio.run_coroutine_threadsafe(notify(current_state, sender_id), async_loop)
-        else:
+        elif message['type'] == 'Input':
             # change state
             start_state = None
             stop_state = None
-            if 'State.Running' in message:
-                start_state = message.split()[-1]
+            if message['name'] == 'Running':
+                start_state = str(message['parameters']['chance_to_fail'])
             elif message == 'State.Stopped':
                 stop_state = True
 
