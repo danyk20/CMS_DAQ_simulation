@@ -126,10 +126,6 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
                 stop_state = True
 
             asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), async_loop)
-            """
-            RuntimeError: no running event loop
-            sys:1: RuntimeWarning: coroutine 'change_state' was never awaited
-            """
         print("Node %r received message: %r" % (method.routing_key, message))
 
     def stop():
@@ -151,6 +147,7 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
     try:
         channel.start_consuming()  # blocking
     except Exception as e:
-        print("I am here consumer " + str(e))
+        if configuration['debug']:
+            print("Consumer " + node.address.get_port() + " exception: " + str(e))
         channel.stop_consuming()
         connection.close()

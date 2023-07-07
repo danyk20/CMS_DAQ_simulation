@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from datetime import datetime
 from enum import Enum
@@ -277,25 +278,26 @@ class Node:
 
         def get_current_state() -> str:
             time.sleep(configuration['node']['time']['get'])
-            return str(self.state)
+            return str(self.state).split('.')[-1]
 
-        def on_request(ch, method, props, _body) -> None:
+        def on_request(ch, method, props, body) -> None:
             """
             Triggered when there is message in <queue_name>, and reply to it by sending get_current_state() return value
 
             :param ch:
             :param method:
             :param props:
-            :param _body:
+            :param body:
             :return:
             """
-            response = get_current_state()
-            print('Returning current state: ' + response + ' of node ' + self.address.get_port())
-            ch.basic_publish(exchange='',
-                             routing_key=props.reply_to,
-                             properties=pika.BasicProperties(correlation_id=props.correlation_id),
-                             body=str(response))
-            ch.basic_ack(delivery_tag=method.delivery_tag)
+            if json.loads(body)['action'] == 'get_state':
+                response = utils.get_blue_envelope(get_current_state())
+                print('Returning current state: ' + response + ' of node ' + self.address.get_port())
+                ch.basic_publish(exchange='',
+                                 routing_key=props.reply_to,
+                                 properties=pika.BasicProperties(correlation_id=props.correlation_id),
+                                 body=json.dumps(response))
+                ch.basic_ack(delivery_tag=method.delivery_tag)
 
         queue_name = 'rpc_queue' + utils.get_bounding_key(self.address.get_port())
 
