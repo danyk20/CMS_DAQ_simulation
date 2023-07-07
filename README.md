@@ -232,8 +232,19 @@ After running there will be created tree hierarchy of nodes where each of them e
 Sending signal SIGTERM `kill -15 <PID>` will be propagated from node to all its children. Node waits for termination of its children and terminate itself after all children are terminated or after 20s (the value can be changed in `configuration.yaml`) since SIGTERM signal arrived (what is earlier). 
 
 ## REST
+
 Termination of the process is internally handled by FastAPI.
 
 ## RabbitMQ
 
-Process is terminated with `os._exit()`.
+For Consumer and RPC server:
+
+1. Terminate Consumer:
+   - Note: `connection.add_callback_threadsafe(_stop)` is necessary to use since it is called from another thread
+   1. Stop consuming
+   2. Channel close
+   3. Connection close
+2. Cancel a running consumer task:
+   - raise an `asyncio.CancelledError` exception
+3. Stop infinite asynchronous loop
+   - Note: there is just one shared loop -> no need to stop it twice
