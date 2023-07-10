@@ -248,3 +248,57 @@ For Consumer and RPC server:
    - raise an `asyncio.CancelledError` exception
 3. Stop infinite asynchronous loop
    - Note: there is just one shared loop -> no need to stop it twice
+
+# Reliability
+
+## REST
+
+- Error code in case of unprocessed request
+
+## RabbitMQ
+
+- uses TCP
+
+### Acknowledgements
+
+- from consumers to RabbitMQ
+- defined in `channel.basic_consume(... , auto_ack=False)` 
+Note: Manual ack from consumer is required but there is no guarantee between broker and publisher by default
+
+#### Automatic
+
+- `auto_ack=True` - automatic acknowledgement mode -> message is considered to be successfully delivered immediately after it is sent
+    - higher throughput 
+    - reduced safety of delivery and consumer processing
+      - if consumer's TCP connection or channel is closed before successful delivery, the message sent by the server will be lost
+    - consumer overload 
+    - Note: Automatic acknowledgement mode is therefore only recommended for consumers that can process deliveries efficiently and at a steady rate
+
+
+#### Manual
+
+- `auto_ack=False` is the default value which require manual ack from consumer
+  - bounded channel prefetch which limits the num+ber of outstanding ("in progress") deliveries on a channel
+  - `channel.basic_ack(tag, multiple)` - (multiple) positive acknowledgements
+  - `channel.basic_nack(tag, multiple, requeue)` - (multiple) negative acknowledgements
+  - `channel.basic_reject(tag, requeue)` - (single) negative acknowledgements
+
+  ##### Arguments:
+
+    - `tag` - unique id within the channel
+    - `multiple=True` - boolean value whether ack/nack all message up to the current one
+    - `requeue=False` - boolean value whether to resent nack/rejected message
+      - message will be routed to a Dead Letter Exchange if it is configured, otherwise it will be discarded
+
+
+### Publisher confirms
+
+- broker acknowledgements to publishers
+- the only way to guarantee that a message isn't lost is by using transactions
+- decrease throughput by a factor of 250
+- `channel.confirm_delivery(ack_nack_callback=on_delivery_confirmation)`
+- the broker may also set the multiple field in `Basic.Ack` to indicate that all messages up to and including the one with the sequence number have been handled
+
+#### Confirmation  
+- For un-routable messages, the broker will issue a confirmation once the exchange verifies a message won't route to any queue
+- For routable messages, the `Basic.Ack` is sent when a message has been accepted by all the queues (it means persisting to disk in case of persistent)
