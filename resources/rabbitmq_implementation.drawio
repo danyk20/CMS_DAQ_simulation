@@ -1,0 +1,96 @@
+<mxfile host="app.diagrams.net" modified="2023-07-03T15:02:14.658Z" agent="Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/114.0" etag="BvvrZuMBErUEH1PG-zY_" version="21.5.0" type="device">
+  <diagram name="Page-1" id="ezbfZs3MfkWhHDbWRtG6">
+    <mxGraphModel dx="819" dy="452" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-1" value="rpc_client.py" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="350" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-2" value="get_state(ID)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-1">
+          <mxGeometry y="30" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-5" value="model.py" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="350" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-6" value="Node.run_get_server()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-5">
+          <mxGeometry y="30" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-9" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NuRMSKUKVDMpFvLmKgPk-2" target="NuRMSKUKVDMpFvLmKgPk-6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="370" y="410" as="sourcePoint" />
+            <mxPoint x="470" y="410" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-10" value="" style="shape=message;html=1;outlineConnect=0;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-9">
+          <mxGeometry width="20" height="14" relative="1" as="geometry">
+            <mxPoint x="-10" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-11" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="NuRMSKUKVDMpFvLmKgPk-5" target="NuRMSKUKVDMpFvLmKgPk-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="370" y="410" as="sourcePoint" />
+            <mxPoint x="470" y="410" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="660" y="520" />
+              <mxPoint x="440" y="520" />
+              <mxPoint x="200" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-12" value="" style="shape=message;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-11">
+          <mxGeometry width="20" height="14" relative="1" as="geometry">
+            <mxPoint x="-10" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-13" value="" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://cdn0.iconfinder.com/data/icons/google-material-design-3-0/48/ic_loop_48px-128.png" vertex="1" parent="1">
+          <mxGeometry x="596" y="220" width="128" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-14" value="send.py" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="136" y="720" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-15" value="send_message(json)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-14">
+          <mxGeometry y="30" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-20" value="receive.py" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="720" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-21" value="notify()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-20">
+          <mxGeometry y="30" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-22" value="change_state()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-20">
+          <mxGeometry y="60" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-24" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NuRMSKUKVDMpFvLmKgPk-15" target="NuRMSKUKVDMpFvLmKgPk-21">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="370" y="650" as="sourcePoint" />
+            <mxPoint x="470" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-25" value="" style="shape=message;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-24">
+          <mxGeometry width="20" height="14" relative="1" as="geometry">
+            <mxPoint x="107" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-26" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="NuRMSKUKVDMpFvLmKgPk-15" target="NuRMSKUKVDMpFvLmKgPk-22">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="280" y="775" as="sourcePoint" />
+            <mxPoint x="594" y="775" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="430" y="765" />
+              <mxPoint x="430" y="795" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-27" value="" style="shape=message;html=1;outlineConnect=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="NuRMSKUKVDMpFvLmKgPk-26">
+          <mxGeometry width="20" height="14" relative="1" as="geometry">
+            <mxPoint x="110" y="5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NuRMSKUKVDMpFvLmKgPk-28" value="" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://cdn0.iconfinder.com/data/icons/google-material-design-3-0/48/ic_loop_48px-128.png" vertex="1" parent="1">
+          <mxGeometry x="596" y="592" width="128" height="128" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
