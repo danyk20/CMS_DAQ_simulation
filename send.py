@@ -49,7 +49,8 @@ def send_message(message: str, routing_key: str, exchange_name: str) -> None:
 
     channel.exchange_declare(exchange=('%s' % exchange_name), exchange_type='topic')
 
-    channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message)
+    channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message,
+                          properties=pika.BasicProperties(content_type='application/json'))
     if configuration['debug'] == 'True':
         print(" [x] Sent message: %r -> %r" % (message, routing_key))
     connection.close()

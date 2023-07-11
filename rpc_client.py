@@ -59,6 +59,7 @@ class StateRpcClient(object):
             properties=pika.BasicProperties(
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,
+                content_type='application/json'
             ),
             body=utils.get_white_envelope('get_state'))
         self.connection.process_data_events(time_limit=int(configuration['rabbitmq']['rpc_timeout']))
