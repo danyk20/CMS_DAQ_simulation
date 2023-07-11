@@ -257,6 +257,7 @@ For Consumer and RPC server:
 
 ## RabbitMQ
 
+![RabbitMQ Acknowledgements' diagram](resources/RabbitMQ_Acknowledgements.png)
 - uses TCP
 
 ### Acknowledgements
@@ -296,9 +297,12 @@ Note: Manual ack from consumer is required but there is no guarantee between bro
 - broker acknowledgements to publishers
 - the only way to guarantee that a message isn't lost is by using transactions
 - decrease throughput by a factor of 250
-- `channel.confirm_delivery(ack_nack_callback=on_delivery_confirmation)`
+- `channel.confirm_delivery()` - enabled delivery confirmations
+  - raise `pika.exceptions.UnroutableError` in case of nack while publishing the message `channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message)`
 - the broker may also set the multiple field in `Basic.Ack` to indicate that all messages up to and including the one with the sequence number have been handled
 
+Note: `channel.confirm_delivery(ack_nack_callback=on_delivery_confirmation)` possible with SelectConnection `connection = pika.SelectConnection(...)` - asynchronous publisher not suitable for this use-case
+
 #### Confirmation  
-- For un-routable messages, the broker will issue a confirmation once the exchange verifies a message won't route to any queue
-- For routable messages, the `Basic.Ack` is sent when a message has been accepted by all the queues (it means persisting to disk in case of persistent)
+- for un-routable messages, the broker will issue a confirmation once the exchange verifies a message won't route to any queue
+- for routable messages, the `Basic.Ack` is sent when a message has been accepted by all the queues (it means persisting to disk in case of persistent)
