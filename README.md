@@ -329,7 +329,7 @@ sudo service rabbitmq-server restart
 
 ## Access web UI
 
-[web UI](http://localhost:15672/#/l)
+[web UI](http://localhost:15672/#/)
 
 Administrator credentials:
   username: guest
