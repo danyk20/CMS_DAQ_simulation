@@ -343,4 +343,4 @@ Note: it is possible to add more users with different permissions (management, p
 python rabbitmqadmin --help
 ```
 
-`www.rabbitmq.com/management-cli.html`
+[CLI documentation (www.rabbitmq.com/management-cli.html)][website]
