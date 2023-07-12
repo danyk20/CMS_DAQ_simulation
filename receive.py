@@ -100,7 +100,8 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
     channel.exchange_declare(exchange=STATE_EXCHANGE, exchange_type='topic')
     channel.exchange_declare(exchange=NOTIFICATION_EXCHANGE, exchange_type='topic')
 
-    result = channel.queue_declare('', exclusive=True)
+    queue_name = 'consumer:' + utils.get_bounding_key(node.address.get_port())
+    result = channel.queue_declare(queue_name, exclusive=True)
     queue_name = result.method.queue
 
     channel.queue_bind(exchange=STATE_EXCHANGE, queue=queue_name, routing_key=binding_key)

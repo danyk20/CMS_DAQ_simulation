@@ -299,7 +299,7 @@ class Node:
                                  body=json.dumps(response))
                 ch.basic_ack(delivery_tag=method.delivery_tag)
 
-        queue_name = 'rpc_queue' + utils.get_bounding_key(self.address.get_port())
+        queue_name = 'rpc_queue:' + utils.get_bounding_key(self.address.get_port())
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
 
@@ -312,7 +312,7 @@ class Node:
         print(" [x] Awaiting RPC requests " + self.address.get_port())
         self.kill_rpc_serer = stop
         try:
-            channel.start_consuming()
+            channel.sstart_consuming()
         except Exception as e:
             print(self.address.get_port() + " -> I am here Server " + str(e))
             channel.stop_consuming()
