@@ -319,6 +319,10 @@ Note: `channel.confirm_delivery(ack_nack_callback=on_delivery_confirmation)` pos
 - for un-routable messages, the broker will issue a confirmation once the exchange verifies a message won't route to any queue
 - for routable messages, the `Basic.Ack` is sent when a message has been accepted by all the queues (it means persisting to disk in case of persistent)
 
+### Durability
+
+It is possible to set queues so that messages will survive broker reboot by `channel.queue_declare(... , durable=True)`
+
 # Management
 
 ## Activate plugin
