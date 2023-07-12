@@ -312,7 +312,7 @@ class Node:
         print(" [x] Awaiting RPC requests " + self.address.get_port())
         self.kill_rpc_serer = stop
         try:
-            channel.sstart_consuming()
+            channel.start_consuming()
         except Exception as e:
             print(self.address.get_port() + " -> I am here Server " + str(e))
             channel.stop_consuming()
