@@ -305,15 +305,11 @@ class Node:
 
         channel = connection.channel()
 
-        channel.queue_declare(queue=queue_name)
+        channel.queue_declare(queue=queue_name, auto_delete=True)
         channel.basic_qos(prefetch_count=1)
         channel.basic_consume(queue=queue_name, on_message_callback=on_request)
 
-        print(" [x] Awaiting RPC requests " + self.address.get_port())
+        if configuration['debug']:
+            print(" [x] Awaiting RPC requests " + self.address.get_port())
         self.kill_rpc_serer = stop
-        try:
-            channel.start_consuming()
-        except Exception as e:
-            print(self.address.get_port() + " -> I am here Server " + str(e))
-            channel.stop_consuming()
-            connection.close()
+        channel.start_consuming()

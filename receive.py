@@ -145,10 +145,4 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
 
     node.channel_tag = queue_name
     node.channel = channel
-    try:
-        channel.start_consuming()  # blocking
-    except Exception as e:
-        if configuration['debug']:
-            print("Consumer " + node.address.get_port() + " exception: " + str(e))
-        channel.stop_consuming()
-        connection.close()
+    channel.start_consuming()
