@@ -108,7 +108,19 @@ Element responsible for processing messages from the broker. The implementation 
 #### Shutdown
 - actions need to be done before proper shutdown
 
+### Queues
+Each node has own queue for receiving messages (red or orange envelope) named topic_queue:binding_key (e.g. rpc_queue:2.0.0.0.0). All these ques are Auto-delete -> they will be deleted when the last consumer unsubscribe.
+
+
 ![rpc diagram](resources/rpc_diagram.png)
+
+### Queues
+
+#### RPC queues
+Each node has own queue for receiving RPC requests (white envelope) named rpc_queue:binding_key (e.g. rpc_queue:2.0.0.0.0). All these ques are Auto-delete -> they will be deleted when the last consumer unsubscribe.
+
+#### Client Queue
+Client has one uniquely named queue generated just for one purpose - receive return value (blue envelope) from RPC server. This queue is Exclusive -> it will be deleted when the connection is closed.
 
 ### RPC Server
 Element responsible for replaying to messages from the broker. Runs infinite asynchronous loop to process any incoming request to get current state which is blocking operation. Once the method execution is finished it returns state encoded into binary form to queue defined in the request properties. 
@@ -124,7 +136,7 @@ Element responsible for processing messages from the broker. The implementation 
 
 ### Internal communication:
 
-There are two (model.Node.run_get_server() and receive.run()) subprocesses running in infinite asynchronous loop. 
+There are two (`model.Node.run_get_server()` and `receive.run()`) subprocesses running in infinite asynchronous loop. 
 
 #### RPC Client-Server
 
