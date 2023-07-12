@@ -306,3 +306,29 @@ Note: `channel.confirm_delivery(ack_nack_callback=on_delivery_confirmation)` pos
 #### Confirmation  
 - for un-routable messages, the broker will issue a confirmation once the exchange verifies a message won't route to any queue
 - for routable messages, the `Basic.Ack` is sent when a message has been accepted by all the queues (it means persisting to disk in case of persistent)
+
+# Management
+
+## Activate plugin
+
+```shell
+sudo service rabbitmq-server restart
+```
+
+## Access web UI
+
+`http://localhost:15672/#/`
+
+Administrator credentials:
+  username: guest
+  password: guest
+
+Note: it is possible to add more users with different permissions (management, policymaker, monitoring, administrator) `www.rabbitmq.com/management.html#permissions`
+
+## CLI interface
+
+```shell
+python rabbitmqadmin --help
+```
+
+`www.rabbitmq.com/management-cli.html`
