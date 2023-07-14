@@ -323,7 +323,7 @@ Note: `channel.confirm_delivery(ack_nack_callback=on_delivery_confirmation)` pos
 
 It is possible to set queues so that messages will survive broker reboot by `channel.queue_declare(... , durable=True)`
 
-# Management
+# Management o RabbitMQ
 
 ## Activate plugin
 
@@ -348,3 +348,73 @@ python rabbitmqadmin --help
 ```
 
 [CLI documentation](https://www.rabbitmq.com/management-cli.html)
+
+# Logging of RabbiMQ
+
+- enabled by default
+  - log file stored in `var/log/rabbitmq`
+    - possible to have one log file per category -> `log.<category>.file` where category can be one of the:
+      - connection
+      - channel
+      - queue
+      - mirroring
+      - federation
+      - upgrade
+      - default
+    - possible to have a different log level for each message category -> `log.<category>.level` where value can be one of the:
+      - debug
+      - info
+      - warning
+      - error
+      - critical
+      - none
+  - other possibilities:
+    - log to the console -> `log.console = true`
+    - log to the syslog -> `log.syslog = true`
+- create file `rabbitmq.conf` in `/etc/rabbitmq` dir
+- adjust configuration base on your needs:
+
+```text
+## Logging settings.
+##
+## See https://rabbitmq.com/logging.html for details.
+##
+
+## Log directory, taken from the RABBITMQ_LOG_BASE env variable by default.
+##
+# log.dir = /var/log/rabbitmq
+
+## Logging to file. Can be false or a filename.
+## Default:
+# log.file = rabbit.log
+
+## To disable logging to a file
+# log.file = false
+
+## Log level for file logging
+##
+# log.file.level = info
+
+## File rotation config. No rotation by default.
+## DO NOT SET rotation date to ''. Leave the value unset if "" is the desired value
+# log.file.rotation.date = $D0
+# log.file.rotation.size = 0
+
+## Logging to console (can be true or false)
+##
+# log.console = false
+
+## Log level (debug/info/warning/error/critical/none) for console logging
+##
+# log.console.level = info
+
+## Logging to the amq.rabbitmq.log exchange (can be true or false)
+##
+# log.exchange = false
+
+## Log level to use when logging to the amq.rabbitmq.log exchange
+##
+# log.exchange.level = info
+```
+
+Note: Do not forget to add execute permission to all directories on the path and add write permission the log file
