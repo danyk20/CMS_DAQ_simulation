@@ -418,3 +418,38 @@ python rabbitmqadmin --help
 ```
 
 Note: Do not forget to add execute permission to all directories on the path and add write permission the log file
+
+## Logging messages using firehose
+
+- turned off by default
+  - ```shell 
+    sudo rabbitmqctl trace_off
+    ```
+- turned on -> performance will drop somewhat due to additional messages being generated and routed
+  - ```shell 
+    sudo rabbitmqctl trace_on
+    ```
+- add plugin to see message in Management UI
+  - ```shell 
+    sudo rabbitmq-plugins enable rabbitmq_tracing
+    ```
+- remove plugin to reduce broker overload
+  - ```shell 
+    sudo rabbitmq-plugins disable rabbitmq_tracing
+    ```
+- update `enabled_plugins` file if necessary (not necessary by default)
+```text
+....
+{rabbitmq_tracing,
+   [
+       {directory, "/var/tmp/rabbitmq-tracing"},
+       {username, "guest"},
+       {password, "guest"}
+   ]
+},
+....
+```
+- open [web GUI](http://localhost:15672/#/traces)
+  - add a new trace
+  - see `trace.log` file where you can find all filtered messages based on selected pattern
+    - default credentials: "guest"
