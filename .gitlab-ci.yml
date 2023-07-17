@@ -2,7 +2,7 @@ pytest:
     stage: test
     image: python:3.7-alpine3.9
     before_script:
-#        - pip install --upgrade pip
+        - pip install --upgrade pip
         - pip install -r requirements.txt
     script:
         - python -m pytest --junitxml=report.xml
