@@ -260,6 +260,30 @@ class Node:
         parent_port = ''.join(parent_port)
         return NodeAddress(self.address.get_ip() + ':' + parent_port)
 
+    def on_request(self, ch, method, props, body) -> None:
+        """
+        Triggered when there is message in <queue_name>, and reply to it by sending get_current_state() return value
+
+        :param ch:
+        :param method:
+        :param props:
+        :param body:
+        :return:
+        """
+
+        def get_current_state() -> str:
+            time.sleep(configuration['node']['time']['get'])
+            return str(self.state).split('.')[-1]
+
+        if json.loads(body)['action'] == 'get_state':
+            response = utils.get_blue_envelope(get_current_state())
+            print('Returning current state: ' + response + ' of node ' + self.address.get_port())
+            ch.basic_publish(exchange='',
+                             routing_key=props.reply_to,
+                             properties=pika.BasicProperties(correlation_id=props.correlation_id),
+                             body=json.dumps(response))
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+
     def run_get_server(self) -> None:
         """
         Run rpc server to respond on get_state requests
@@ -276,29 +300,6 @@ class Node:
             channel.close()
             connection.close()
 
-        def get_current_state() -> str:
-            time.sleep(configuration['node']['time']['get'])
-            return str(self.state).split('.')[-1]
-
-        def on_request(ch, method, props, body) -> None:
-            """
-            Triggered when there is message in <queue_name>, and reply to it by sending get_current_state() return value
-
-            :param ch:
-            :param method:
-            :param props:
-            :param body:
-            :return:
-            """
-            if json.loads(body)['action'] == 'get_state':
-                response = utils.get_blue_envelope(get_current_state())
-                print('Returning current state: ' + response + ' of node ' + self.address.get_port())
-                ch.basic_publish(exchange='',
-                                 routing_key=props.reply_to,
-                                 properties=pika.BasicProperties(correlation_id=props.correlation_id),
-                                 body=json.dumps(response))
-                ch.basic_ack(delivery_tag=method.delivery_tag)
-
         queue_name = 'rpc_queue:' + utils.get_bounding_key(self.address.get_port())
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
@@ -307,7 +308,7 @@ class Node:
 
         channel.queue_declare(queue=queue_name, auto_delete=True)
         channel.basic_qos(prefetch_count=1)
-        channel.basic_consume(queue=queue_name, on_message_callback=on_request)
+        channel.basic_consume(queue=queue_name, on_message_callback=self.on_request)
 
         if configuration['debug']:
             print(" [x] Awaiting RPC requests " + self.address.get_port())
