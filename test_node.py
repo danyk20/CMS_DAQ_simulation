@@ -18,9 +18,13 @@ class ChannelStub:
 
     def __init__(self):
         self.blue_msg = ''
+        self.routing_key = ''
+        self.properties = None
 
     def basic_publish(self, exchange, routing_key, properties, body):
         self.blue_msg = body
+        self.routing_key = routing_key
+        self.properties = properties
 
     def basic_ack(self, delivery_tag):
         pass
@@ -46,6 +50,8 @@ def test_rpc_client_value():
     init_node.on_request(ch=chanel, body=white_envelope, method=MethodStub(), props=PropertiesStub())
     response = json.loads(chanel.blue_msg)
     assert response == '{"state": "Initialisation"}'
+    assert chanel.routing_key == 'reply_to'
+    assert chanel.properties.correlation_id == 'correlation_id'
 
 
 def test_rpc_client_duration():
