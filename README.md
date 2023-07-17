@@ -328,6 +328,7 @@ It is possible to set queues so that messages will survive broker reboot by `cha
 ## Activate plugin
 
 ```shell
+sudo rabbitmq-plugins enable rabbitmq_management
 sudo service rabbitmq-server restart
 ```
 
@@ -453,3 +454,39 @@ Note: Do not forget to add execute permission to all directories on the path and
   - add a new trace
   - see `trace.log` file where you can find all filtered messages based on selected pattern
     - default credentials: "guest"
+
+## Variable configuration
+
+- create `rabbitmq-env.conf` file in `/etc/rabbitmq` directory
+  - [environment variables used by RabbitMQ](https://www.rabbitmq.com/configure.html#supported-environment-variables)
+    - example:
+    ```text
+    NODENAME=rabbit@rcms-ss23
+    ```
+  - Note: variables from file are used only if there are no or empty environment variables with the same name and prefix `RABBITMQ_` 
+
+# Run RabbitMQ
+
+## Run on localhost
+
+### Start in the background
+
+```shell
+sudo rabbitmq-server -detached
+```
+
+### Stop
+
+```shell
+sudo rabbitmqctl stop
+```
+
+### Restart
+
+```shell
+sudo service rabbitmq-server restart
+```
+
+## Run in Docker
+
+
