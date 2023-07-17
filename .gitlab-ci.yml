@@ -1,0 +1,11 @@
+pytest:
+    stage: test
+    before_script:
+        - pip install -r requirements.txt
+    script:
+        - python -m pytest --junitxml=report.xml
+    artifacts:
+        when: always
+        reports:
+            junit: report.xml
+        expire_in: 2 weeks
