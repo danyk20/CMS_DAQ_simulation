@@ -67,8 +67,8 @@ class Node:
     arity configuration number from range [1-9] referring to number of children than each node except the leaves has
     """
     MAXIMUM_DEPTH = configuration['node']['depth']['max'] - 1  # maximum achievable depth
-    depth: int
-    arity: int
+    depth: int = 0
+    arity: int = 0
 
     def __init__(self, address: NodeAddress):
         self.state: State = State.Initialisation
