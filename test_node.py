@@ -66,7 +66,7 @@ class ChannelStub:
         self.routing_key = ''
         self.properties = None
 
-    def basic_publish(self, _exchange, routing_key, properties, body):
+    def basic_publish(self, exchange, routing_key, properties, body):
         self.blue_msg = body
         self.routing_key = routing_key
         self.properties = properties
