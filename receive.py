@@ -15,7 +15,7 @@ NOTIFICATION_EXCHANGE = 'state_notification'
 
 configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
 node: model.Node | None = None
-loop = None
+loop: AbstractEventLoop | None = None
 
 
 def initialised() -> None:
@@ -82,6 +82,28 @@ async def notify(state: str = None, sender_port: str = None) -> None:
                                  sender_id=utils.get_bounding_key(node.address.get_port()))
 
 
+def callback(_ch, method, _properties, body):
+    message = json.loads(body)
+
+    async_loop = loop
+    if message['type'] == 'Notification':
+        # notification
+        sender_id = utils.get_port(message['sender'])
+        current_state = message['toState']
+        asyncio.run_coroutine_threadsafe(notify(current_state, sender_id), async_loop)
+    elif message['type'] == 'Input':
+        # change state
+        start_state = None
+        stop_state = None
+        if message['name'] == 'Running':
+            start_state = str(message['parameters']['chance_to_fail'])
+        elif message == 'Stopped':
+            stop_state = True
+
+        asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), async_loop)
+    print("Node %r received message: %r" % (method.routing_key, message))
+
+
 def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
     """
     Run rabbitmq consumer -> proces all messages received in queue
@@ -90,7 +112,8 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
     :param async_loop: infinite loop
     :return: None
     """
-    global node
+    global node, loop
+    loop = async_loop
     node = created_node
     binding_key = utils.get_bounding_key(node.address.get_port())
     connection = pika.BlockingConnection(
@@ -109,25 +132,6 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
 
     initialised()
     print(binding_key + ' - initialized')
-
-    def callback(_ch, method, _properties, body):
-        message = json.loads(body)
-        if message['type'] == 'Notification':
-            # notification
-            sender_id = utils.get_port(message['sender'])
-            current_state = message['toState']
-            asyncio.run_coroutine_threadsafe(notify(current_state, sender_id), async_loop)
-        elif message['type'] == 'Input':
-            # change state
-            start_state = None
-            stop_state = None
-            if message['name'] == 'Running':
-                start_state = str(message['parameters']['chance_to_fail'])
-            elif message == 'State.Stopped':
-                stop_state = True
-
-            asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), async_loop)
-        print("Node %r received message: %r" % (method.routing_key, message))
 
     def stop():
         """Stop listening for jobs"""
