@@ -51,6 +51,37 @@ class TestNode:
                 if task.get_name() == 'Task-3':
                     task.cancel()
 
+    @pytest.mark.asyncio
+    async def test_notify_message_two_children(self):
+
+        receive.node = generate_node(State.Stopped)
+        receive.node.children = {model.NodeAddress('127.0.0.1:child_1'): [], model.NodeAddress('127.0.0.1:child_2'): []}
+        receive.loop = asyncio.get_event_loop()
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope('Starting', 'child_1'))
+        assert receive.node.state == State.Stopped  # node created with this state
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Initialisation  # default state when missing notification from any child
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope('Stopped', 'child_2'))
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Stopped  # one child Stopped one Starting -> Stopped
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope('Running', 'child_2'))
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Starting  # one child Running one Starting -> Starting
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope('Running', 'child_1'))
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Running  # all children Running
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope('Error', 'child_1'))
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Error  # at least one child in Error state
+
+        for task in sorted(list(asyncio.all_tasks()), key=lambda x: x.get_name())[1:]:  # cancel all tasks except itself
+            task.cancel()
+
 
 def generate_node(state: State, address: str = '127.0.0.0:20000', ) -> Node:
     node_add = NodeAddress(address)
