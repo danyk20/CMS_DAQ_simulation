@@ -47,9 +47,8 @@ class TestNode:
             await asyncio.sleep(1)
             assert receive.node.state == init_states[i - 1]
 
-            for task in asyncio.all_tasks():
-                if task.get_name() == 'Task-3':
-                    task.cancel()
+            for task in sorted(list(asyncio.all_tasks()), key=lambda x: x.get_name())[1:]:
+                task.cancel()
 
     @pytest.mark.asyncio
     async def test_notify_message_two_children(self):
@@ -80,6 +79,23 @@ class TestNode:
         assert receive.node.state == State.Error  # at least one child in Error state
 
         for task in sorted(list(asyncio.all_tasks()), key=lambda x: x.get_name())[1:]:  # cancel all tasks except itself
+            task.cancel()
+
+    @pytest.mark.asyncio
+    async def test_change_state_message_no_child(self):
+        raw_state = str(State.Running).split('.')[-1]
+
+        receive.node = generate_node(State.Stopped)
+        receive.loop = asyncio.get_event_loop()
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_orange_envelope(raw_state))
+        assert receive.node.state == State.Stopped
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Starting
+        await asyncio.sleep(10)
+        assert receive.node.state == State.Running
+
+        for task in sorted(list(asyncio.all_tasks()), key=lambda x: x.get_name())[1:]:
             task.cancel()
 
 
