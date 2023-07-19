@@ -97,7 +97,7 @@ def callback(_ch, method, _properties, body):
         stop_state = None
         if message['name'] == 'Running':
             start_state = str(message['parameters']['chance_to_fail'])
-        elif message == 'Stopped':
+        elif message['name'] == 'Stopped':
             stop_state = True
 
         asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), async_loop)
