@@ -45,7 +45,7 @@ async def change_state(start: str = None, stop: str = None) -> None:
     :return: None
     """
     new_state = 'State.Running' if start else 'State.Stopped'
-    if configuration['debug'] == 'True':
+    if configuration['debug']:
         now = datetime.now()
         print("Node " + node.address.get_port() + " received " + new_state + " at " + now.strftime(" %H:%M:%S"))
     if node.state == model.State.Error:
@@ -57,7 +57,7 @@ async def change_state(start: str = None, stop: str = None) -> None:
     elif stop and node.state == model.State.Running:
         asyncio.create_task(
             node.set_state(model.State.Stopped, transition_time=configuration['node']['time']['starting']))
-    elif configuration['debug'] == 'True':
+    elif configuration['debug']:
         print('Wrong operation! %r -> %r' % (node.state, new_state))
     # asyncio.get_running_loop() no problem
 

@@ -90,7 +90,7 @@ class Node:
         :param transition_time: how long should transition last
         :return: None
         """
-        if configuration['debug'] == 'True':
+        if configuration['debug']:
             now = datetime.now()
             print(
                 "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(" %H:%M:%S"))
@@ -122,7 +122,7 @@ class Node:
             self.state = State.Running
             asyncio.get_running_loop().create_task(self.notify_parent())
             asyncio.get_running_loop().create_task(self.run())
-        if configuration['debug'] == 'True':
+        if configuration['debug']:
             now = datetime.now()
             print(
                 "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(
@@ -136,7 +136,7 @@ class Node:
         :return: None
         """
         for child_address in self.children:
-            if configuration['debug'] == 'True':
+            if configuration['debug']:
                 print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + child_address.get_port())
             if configuration['architecture'] == 'MOM':
                 routing_key = utils.get_bounding_key(child_address.get_port())
@@ -225,9 +225,9 @@ class Node:
             if self.chance_to_fail > random.uniform(0, 1):
                 self.state = State.Error
                 await self.notify_parent()
-                if configuration['debug'] == 'True':
+                if configuration['debug']:
                     print('Changing State')
-            if configuration['debug'] == 'True':
+            if configuration['debug']:
                 print(self.address.get_port() + ' -> ' + str(self.state))
 
     async def notify_parent(self):

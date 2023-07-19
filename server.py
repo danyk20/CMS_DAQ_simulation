@@ -54,7 +54,7 @@ async def change_state(start: str = None, stop: str = None) -> model.State:
     :param stop: any non None input means stop
     :return: node state after transition
     """
-    if configuration['debug'] == 'True':
+    if configuration['debug']:
         now = datetime.now()
         print("Node " + node.address.get_port() + " received POST " + now.strftime(" %H:%M:%S"))
     if node.state == model.State.Error:

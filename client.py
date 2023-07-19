@@ -15,7 +15,7 @@ async def post_start(chance_to_fail: str, address: str) -> None:
     """
     async with aiohttp.ClientSession() as session:
         params = {'start': str(chance_to_fail)}
-        if configuration['debug'] == 'True':
+        if configuration['debug']:
             params["debug"] = 'True'
         async with session.post(configuration['URL']['protocol'] + address + configuration['URL']['change_state'],
                                 params=params) as _:
@@ -31,7 +31,7 @@ async def post_stop(address: str) -> None:
     """
     async with aiohttp.ClientSession() as session:
         params = {'stop': ' '}
-        if configuration['debug'] == 'True':
+        if configuration['debug']:
             params["debug"] = 'True'
         async with session.post(configuration['URL']['protocol'] + address + configuration['URL']['change_state'],
                                 params=params) as _:
