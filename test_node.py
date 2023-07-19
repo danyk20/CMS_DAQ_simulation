@@ -15,6 +15,10 @@ configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration(
 
 class TestNode:
     def test_rpc_client_value(self):
+        """
+        Test all return values from that rpc_server responded
+        :return:
+        """
         init_node = generate_node(State.Initialisation)
         white_envelope = utils.get_white_envelope('get_state')
         chanel = ChannelStub()
@@ -25,6 +29,10 @@ class TestNode:
         assert chanel.properties.correlation_id == 'correlation_id'
 
     def test_rpc_client_duration(self):
+        """
+        Test that rpc_server is responding in expected time (wait x seconds)
+        :return:
+        """
         init_node = generate_node(State.Initialisation)
         white_envelope = utils.get_white_envelope('get_state')
         chanel = ChannelStub()
@@ -37,6 +45,11 @@ class TestNode:
 
     @pytest.mark.asyncio
     async def test_notify_message_one_parent(self):
+        """
+        Test notification propagation behaviour and updating own state
+        Note: it does not test whether the message to parent is sent correctly
+        :return:
+        """
         raw_state = str(State.Error).split(':')[-1]
         receive.node = generate_node(State.Running, children={model.NodeAddress('127.0.0.1:sender'): []},
                                      address='127.0.0.1:22000')
@@ -51,6 +64,10 @@ class TestNode:
 
     @pytest.mark.asyncio
     async def test_notify_message_one_child(self):
+        """
+        Test notification processing from one child.
+        :return:
+        """
         init_states = [State.Stopped, State.Running]
         for i in range(2):
             raw_state = str(init_states[i - 1]).split(':')[-1]
@@ -66,6 +83,10 @@ class TestNode:
 
     @pytest.mark.asyncio
     async def test_notify_message_two_children(self):
+        """
+        Test notification processing from more children
+        :return:
+        """
 
         receive.node = generate_node(State.Stopped, children={model.NodeAddress('127.0.0.1:child_1'): [],
                                                               model.NodeAddress('127.0.0.1:child_2'): []})
@@ -96,6 +117,10 @@ class TestNode:
 
     @pytest.mark.asyncio
     async def test_change_state_message_no_child_running(self):
+        """
+        Test changing state Stopped->Running behaviour after receiving the command without propagation to children
+        :return:
+        """
         raw_state = str(State.Running).split('.')[-1]
 
         receive.node = generate_node(State.Stopped)
@@ -112,6 +137,10 @@ class TestNode:
 
     @pytest.mark.asyncio
     async def test_change_state_message_no_child_stopped(self):
+        """
+        Test changing state Running->Stopped behaviour after receiving the command without propagation to children
+        :return:
+        """
         raw_state = str(State.Stopped).split('.')[-1]
 
         receive.node = generate_node(State.Running)
@@ -126,6 +155,10 @@ class TestNode:
 
     @pytest.mark.asyncio
     async def test_change_state_message_two_children(self):
+        """
+        Test changing state and waiting to children notification in order to change the state
+        :return:
+        """
         raw_state = str(State.Running).split('.')[-1]
 
         receive.node = generate_node(State.Stopped)
