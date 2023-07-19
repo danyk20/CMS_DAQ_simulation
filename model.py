@@ -181,6 +181,8 @@ class Node:
 
         :return: None
         """
+        if self.state == State.Error:
+            return
         initialisation = 0
         stopped: int = 0
         starting: int = 0
