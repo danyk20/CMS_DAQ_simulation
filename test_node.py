@@ -32,16 +32,29 @@ class TestNode:
         init_node.on_request(ch=chanel, body=white_envelope, method=MethodStub(), props=PropertiesStub())
         end = time.time()
         duration = end - start
-        starting_time = configuration['node']['time']['starting']
+        starting_time = configuration['node']['time']['get']
         assert starting_time - 1 < duration < starting_time + 1
+
+    @pytest.mark.asyncio
+    async def test_notify_message_one_parent(self):
+        raw_state = str(State.Error).split(':')[-1]
+        receive.node = generate_node(State.Running, children={model.NodeAddress('127.0.0.1:sender'): []},
+                                     address='127.0.0.1:22000')
+        receive.loop = asyncio.get_event_loop()
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope(raw_state, 'sender'))
+        assert receive.node.state == State.Running
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Error
+
+        loop_stop()
 
     @pytest.mark.asyncio
     async def test_notify_message_one_child(self):
         init_states = [State.Stopped, State.Running]
         for i in range(2):
             raw_state = str(init_states[i - 1]).split(':')[-1]
-            receive.node = generate_node(init_states[1 - i])
-            receive.node.children = {model.NodeAddress('127.0.0.1:sender'): []}
+            receive.node = generate_node(init_states[1 - i], children={model.NodeAddress('127.0.0.1:sender'): []})
             receive.loop = asyncio.get_event_loop()
             receive.callback(_ch=None, method=MethodStub(), _properties=None,
                              body=utils.get_red_envelope(raw_state, 'sender'))
@@ -79,11 +92,10 @@ class TestNode:
         await asyncio.sleep(1)
         assert receive.node.state == State.Error  # at least one child in Error state
 
-        for task in sorted(list(asyncio.all_tasks()), key=lambda x: x.get_name())[1:]:  # cancel all tasks except itself
-            task.cancel()
+        loop_stop()
 
     @pytest.mark.asyncio
-    async def test_change_state_message_no_child(self):
+    async def test_change_state_message_no_child_running(self):
         raw_state = str(State.Running).split('.')[-1]
 
         receive.node = generate_node(State.Stopped)
@@ -95,6 +107,20 @@ class TestNode:
         assert receive.node.state == State.Starting
         await asyncio.sleep(configuration['node']['time']['starting'])
         assert receive.node.state == State.Running
+
+        loop_stop()
+
+    @pytest.mark.asyncio
+    async def test_change_state_message_no_child_stopped(self):
+        raw_state = str(State.Stopped).split('.')[-1]
+
+        receive.node = generate_node(State.Running)
+        receive.loop = asyncio.get_event_loop()
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_orange_envelope(raw_state))
+        assert receive.node.state == State.Running
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Stopped
 
         loop_stop()
 
@@ -135,7 +161,7 @@ def generate_node(state: State, address: str = '127.0.0.0:20000', children: dict
 
 
 def loop_stop():
-    for task in sorted(list(asyncio.all_tasks()), key=lambda x: x.get_name())[1:]:
+    for task in sorted(list(asyncio.all_tasks()), key=lambda x: int(x.get_name().split('-')[-1]))[1:]:
         task.cancel()
 
 
