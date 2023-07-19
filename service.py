@@ -154,4 +154,4 @@ if configuration['architecture'] == 'MOM':
     # why is it necessary
     sys.exit(0)
 elif configuration['architecture'] == 'REST':
-    server.run(node)
+    server.run(node, shutdown=shutdown_event)

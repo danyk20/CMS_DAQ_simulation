@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException
 from datetime import datetime
 
 import model
-import service
+from typing import Callable
 from client import post_notification
 from model import Node
 from utils import get_configuration
@@ -14,6 +14,7 @@ from utils import get_configuration
 node: Node | None = None
 app = FastAPI()
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
+shutdown_handler: Callable
 
 
 @app.on_event("startup")
@@ -36,7 +37,7 @@ async def shutdown_event() -> None:
 
     :return: None
     """
-    await service.shutdown_event(False)
+    await shutdown_handler(False)
 
 
 @app.get(configuration['URL']['get_state'])
@@ -88,13 +89,15 @@ async def notify(state: str = None, sender: str = None) -> None:
     await post_notification(node.get_parent().get_full_address(), str(node.state), node.address.get_full_address())
 
 
-def run(created_node: Node) -> None:
+def run(created_node: Node, shutdown: Callable) -> None:
     """
     Enable API
 
+    :param shutdown: proper shutdown function
     :param created_node: node instance that is serviced by the API
     :return: None
     """
-    global node
+    global node, shutdown_handler
     node = created_node
+    shutdown_handler = shutdown
     uvicorn.run(app, host=configuration['URL']['address'], port=int(node.address.get_port()))
