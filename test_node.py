@@ -98,6 +98,33 @@ class TestNode:
         for task in sorted(list(asyncio.all_tasks()), key=lambda x: x.get_name())[1:]:
             task.cancel()
 
+    @pytest.mark.asyncio
+    async def test_change_state_message_two_children(self):
+        raw_state = str(State.Running).split('.')[-1]
+
+        receive.node = generate_node(State.Stopped)
+        receive.node.children = {model.NodeAddress('127.0.0.1:child_1'): [], model.NodeAddress('127.0.0.1:child_2'): []}
+        receive.loop = asyncio.get_event_loop()
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_orange_envelope(raw_state))
+        assert receive.node.state == State.Stopped
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Starting
+        await asyncio.sleep(10)
+        assert receive.node.state == State.Starting  # node won't change the state before its child
+
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope('Running', 'child_2'))
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Initialisation  # one child Running one no notification -> Initialisation
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope('Running', 'child_1'))
+        await asyncio.sleep(10)
+        assert receive.node.state == State.Running
+
+        for task in sorted(list(asyncio.all_tasks()), key=lambda x: x.get_name())[1:]:
+            task.cancel()
+
 
 def generate_node(state: State, address: str = '127.0.0.0:20000', ) -> Node:
     node_add = NodeAddress(address)
