@@ -154,6 +154,24 @@ class TestNode:
         loop_stop()
 
     @pytest.mark.asyncio
+    async def test_change_state_message_no_child_error(self):
+        """
+        Test changing state Error->Stopped behaviour after receiving the command without propagation to children
+        :return:
+        """
+        raw_state = str(State.Stopped).split('.')[-1]
+
+        receive.node = generate_node(State.Error)
+        receive.loop = asyncio.get_event_loop()
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_orange_envelope(raw_state))
+        assert receive.node.state == State.Error
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Error
+
+        loop_stop()
+
+    @pytest.mark.asyncio
     async def test_change_state_message_no_child_stopped(self):
         """
         Test changing state Running->Stopped behaviour after receiving the command without propagation to children
