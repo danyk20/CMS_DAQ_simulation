@@ -63,6 +63,24 @@ class TestNode:
         loop_stop()
 
     @pytest.mark.asyncio
+    async def test_notify_message_node_already_error(self):
+        """
+        Test if notification influence node that is already in error state
+        Note: it does not test whether the message to parent is sent correctly
+        :return:
+        """
+        raw_state = str(State.Running).split(':')[-1]
+        receive.node = generate_node(State.Error, children={model.NodeAddress('127.0.0.1:sender'): []})
+        receive.loop = asyncio.get_event_loop()
+        receive.callback(_ch=None, method=MethodStub(), _properties=None,
+                         body=utils.get_red_envelope(raw_state, 'sender'))
+        assert receive.node.state == State.Error
+        await asyncio.sleep(1)
+        assert receive.node.state == State.Error
+
+        loop_stop()
+
+    @pytest.mark.asyncio
     async def test_notify_message_one_child(self):
         """
         Test notification processing from one child.
