@@ -202,18 +202,47 @@ pipenv run python service.py --port 20000 --levels 2 --children 3
 
 There is `configuration.yaml` file containing all variables that are possible to change. Range of some values is limited -> see individual comments.
 
-# Manual test
+# Tests
 
-Note: There are no automated tests!
+- run tests and store the report in `report.xml` file
+- tests are automatically executed after each push in gitlab-ci pipeline
 
-## REST
+```sh
+python -m pytest --junitxml=report.xml
+```
+
+## REST tests
+
+### GET state request
+
+## MOM tests
+
+### RPC reply value
+
+### RPC reply duration
+
+### Notification with parent
+
+### Notification arrive to node in Error state
+
+### Notification from the only child
+
+### Notification from two children
+
+### Changing the state of node without children (Stopped and Running)
+
+### Changing the state of node in Error state
+
+### Changing the state of node with two children
+
+## REST manual testing
 
 Open `<IP>:<port>/docs#/` to manually try endpoints on the current node.
 
 e.g. http://127.0.0.1:20000/docs#/
 ![node_endpoints](resources/node_endpoints.png)
 
-## RabbitMQ
+## RabbitMQ manual testing
 
 Convert port number to routing key by putting dot between any two digits and call `consumer.py` with this argument
 
