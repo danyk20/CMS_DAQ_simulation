@@ -117,7 +117,7 @@ class Node:
         :return: None
         """
         if float(self.chance_to_fail) > random.uniform(0, 1):
-            self.state = State.Error
+            await self.change_state(State.Error)
         else:
             self.state = State.Running
             asyncio.get_running_loop().create_task(self.notify_parent())
@@ -223,12 +223,21 @@ class Node:
         while self.state == State.Running:
             await asyncio.sleep(configuration['node']['time']['running'])
             if self.chance_to_fail > random.uniform(0, 1):
-                self.state = State.Error
-                await self.notify_parent()
-                if configuration['debug']:
-                    print('Changing State')
+                await self.change_state(State.Error)
             if configuration['debug']:
                 print(self.address.get_port() + ' -> ' + str(self.state))
+
+    async def change_state(self, new_state: State) -> None:
+        """
+        Change the current state of the node to the new_state
+
+        :param new_state: state that will be used
+        :return: None
+        """
+        self.state = new_state
+        await self.notify_parent()
+        if configuration['debug']:
+            print(str(self.address.get_port()) + ' is changing State to ' + str(new_state))
 
     async def notify_parent(self):
         """
