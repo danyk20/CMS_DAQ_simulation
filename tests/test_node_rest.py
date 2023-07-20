@@ -1,3 +1,5 @@
+import asyncio
+
 import aiohttp
 import json
 import os
@@ -7,7 +9,6 @@ import subprocess
 import time
 
 import utils
-import model
 
 pytest_plugins = ('pytest_asyncio',)
 configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
@@ -22,7 +23,7 @@ class TestNode:
     async def test_get_value(self):
         """
         Test get request from all nodes
-        :return:
+        :return: None
         """
         ports = list(get_all_ports())
         ports.sort()
@@ -33,15 +34,58 @@ class TestNode:
                     assert resp.status == 200
                     assert json.loads(await resp.text()) == {"State": "State.Stopped"}
 
+    @pytest.mark.asyncio
+    async def test_get_duration(self):
+        """
+        Test get request time duration
+        :return: None
+        """
+        async with aiohttp.ClientSession() as session:
+            start = time.time()
+            async with session.get(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
+                                   configuration['URL']['get_state']) as _:
+                end = time.time()
+                duration = end - start
+                starting_time = configuration['node']['time']['get']
+                assert starting_time - 1 < duration < starting_time + 1
 
-def generate_node(state: model.State, address: str = '127.0.0.0:20000',
-                  children: dict[model.NodeAddress, [model.State]] = None) -> model.Node:
-    node_add = model.NodeAddress(address)
-    node = model.Node(node_add)
-    node.state = state
-    if children:
-        node.children = children
-    return node
+    @pytest.mark.asyncio
+    async def test_middle_node_interaction(self):
+        """
+        Complex test testing change state propagation to children and also notification propagation to the parent
+        :return:
+        """
+        params = {'start': '1'}
+        error_initiator = sorted(list(get_children_ports(PORT)))[0]
+        await asyncio.sleep(1)
+        async with aiohttp.ClientSession() as session:
+            # set error statin in most left child pof the root
+            async with session.post(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' +
+                                    error_initiator + configuration['URL']['change_state'], params=params) as _:
+                await asyncio.sleep(configuration['node']['time']['starting'] + 1)
+                # check that error was propagated to the top
+                async with session.get(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
+                                       configuration['URL']['get_state']) as resp:
+                    assert json.loads(await resp.text()) == {"State": "State.Error"}
+                # check that node most left root node is in error state
+                async with session.get(
+                        configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + error_initiator +
+                        configuration['URL']['get_state']) as resp:
+                    assert json.loads(await resp.text()) == {"State": "State.Error"}
+                # check that all its children are in error state
+                for port in get_children_ports(error_initiator, 2):
+                    async with session.get(
+                            configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + port +
+                            configuration['URL']['get_state']) as resp:
+                        assert json.loads(await resp.text()) == {"State": "State.Error"}
+                # all other nodes are stopped
+                stopped_nodes = (get_children_ports(PORT).difference({error_initiator})).difference(
+                    get_children_ports(error_initiator, 2))
+                for port in stopped_nodes:
+                    async with session.get(
+                            configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + port +
+                            configuration['URL']['get_state']) as resp:
+                        assert json.loads(await resp.text()) == {"State": "State.Stopped"}
 
 
 @pytest.fixture(autouse=True)
