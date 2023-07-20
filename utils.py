@@ -1,6 +1,7 @@
 import argparse
 import yaml
 import json
+import os
 
 
 def check_address(address: str) -> str:
@@ -35,13 +36,22 @@ def compute_hierarchy_level(port: str) -> int:
         return 4
 
 
+def get_configuration_full_path() -> str:
+    """
+    Get absolut path to the configuration file
+    :return: Absolut path to the configuration file
+    """
+    dir_path = os.path.dirname(__file__)
+    return os.path.join(dir_path, "configuration.yaml")
+
+
 def get_configuration() -> dict[str, str | dict[str, str | dict]]:
     """
     Load all values from configuration.yaml into dictionary
 
     :return: dictionary of configuration vales
     """
-    with open("configuration.yaml", 'r') as stream:
+    with open(get_configuration_full_path()) as stream:
         try:
             parsed_yaml = yaml.safe_load(stream)
             return parsed_yaml
@@ -127,3 +137,21 @@ def get_white_envelope(requested_action: str = 'get_state') -> str:
     envelope = dict()
     envelope['action'] = requested_action
     return json.dumps(envelope)
+
+
+def set_architecture(architecture: str):
+    """
+    Edit selected architecture in configuration file
+    :param architecture: newly selected architecture
+    :return: original architecture
+    """
+    with open(get_configuration_full_path()) as f:
+        list_doc = yaml.safe_load(f)
+
+    original_architecture = list_doc['architecture']
+    if original_architecture != architecture:
+        list_doc['architecture'] = architecture
+        with open(get_configuration_full_path(), "w") as f:
+            yaml.dump(list_doc, f)
+
+    return original_architecture

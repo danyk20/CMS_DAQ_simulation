@@ -262,3 +262,9 @@ class PropertiesStub:
     def __init__(self):
         self.reply_to = 'reply_to'
         self.correlation_id = 'correlation_id'
+
+
+@pytest.fixture(scope="session", autouse=True)
+def do_something(request):
+    original_architecture = utils.set_architecture('MOM')
+    request.addfinalizer(lambda: utils.set_architecture(original_architecture))
