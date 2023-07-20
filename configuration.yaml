@@ -1,34 +1,28 @@
 URL:
+  address: 127.0.0.1
   change_state: /statemachine/input
   get_state: /statemachine/state
   notification: /notifications
   protocol: http://
-  address: 127.0.0.1
-
+architecture: MOM
+debug: true
 node:
+  children:
+    default: 3
+    max: 10
+    min: 1
+  depth:
+    default: 0
+    max: 5
+    min: 0
+  port:
+    default: 20000
+    max: 60000
+    min: 10000
   time:
-    starting: 10
+    get: 10
     running: 10
     shutdown: 20
-    get: 10
-  port:
-    # range min - max need to be at least 10 000
-    min: 10000
-    max: 60000
-    default: 20000
-  depth:
-    # values have to be non negative
-    min: 0
-    max: 5 # cannot be bigger than 5
-    default: 0
-  children:
-    min: 1 # cannot be smaller than 1
-    max: 10 # cannot be bigger than 10
-    default: 3
-
-architecture: MOM
-
+    starting: 10
 rabbitmq:
   rpc_timeout: 21
-
-debug: True
