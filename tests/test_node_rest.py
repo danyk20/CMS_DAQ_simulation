@@ -20,6 +20,7 @@ PORT = '20000'
 
 class TestNode:
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures('run_around_tests')
     async def test_get_value(self):
         """
         Test get request from all nodes
@@ -35,6 +36,7 @@ class TestNode:
                     assert json.loads(await resp.text()) == {"State": "State.Stopped"}
 
     @pytest.mark.asyncio
+    @pytest.mark.usefixtures('run_around_tests')
     async def test_get_duration(self):
         """
         Test get request time duration
@@ -49,7 +51,22 @@ class TestNode:
                 starting_time = configuration['node']['time']['get']
                 assert starting_time - 1 < duration < starting_time + 1
 
+    @pytest.mark.parametrize('run_around_tests', [{'port': '20000', 'children': '3', 'levels': '0'}], indirect=True)
     @pytest.mark.asyncio
+    async def test_single_node(self, run_around_tests):
+        params = {'start': '0'}
+        async with aiohttp.ClientSession() as session:
+            # set error statin in most left child pof the root
+            async with session.post(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' +
+                                    PORT + configuration['URL']['change_state'], params=params) as _:
+                await asyncio.sleep(configuration['node']['time']['starting'] + 1)
+                # check that error was propagated to the top
+                async with session.get(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
+                                       configuration['URL']['get_state']) as resp:
+                    assert json.loads(await resp.text()) == {"State": "State.Running"}
+
+    @pytest.mark.asyncio
+    @pytest.mark.usefixtures('run_around_tests')
     async def test_middle_node_interaction(self):
         """
         Complex test testing change state propagation to children and also notification propagation to the parent
@@ -88,10 +105,17 @@ class TestNode:
                         assert json.loads(await resp.text()) == {"State": "State.Stopped"}
 
 
-@pytest.fixture(autouse=True)
-def run_around_tests():
+@pytest.fixture
+def run_around_tests(request):
+    port = PORT
+    levels = LEVELS
+    children = CHILDREN
+    if 'param' in dir(request):
+        port = request.param['port']
+        levels = request.param['levels']
+        children = request.param['children']
     path = os.path.join(os.getcwd(), '..')
-    process = subprocess.Popen(["python", "service.py", '--port', PORT, '--levels', LEVELS, '--children', CHILDREN],
+    process = subprocess.Popen(["python", "service.py", '--port', port, '--levels', levels, '--children', children],
                                cwd=path)
     time.sleep(2)
     yield
@@ -99,7 +123,7 @@ def run_around_tests():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def do_something(request):
+def configure_configuration_file(request):
     os.chdir(os.path.dirname(__file__))
     original_architecture = utils.set_architecture('REST')
     request.addfinalizer(lambda: utils.set_architecture(original_architecture))
