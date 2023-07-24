@@ -11,6 +11,7 @@ import time
 from aiohttp import ClientConnectorError
 
 import utils
+from client import request_node
 
 pytest_plugins = ('pytest_asyncio',)
 configuration: dict[str, str | dict[str, str | dict | int]] = utils.get_configuration()
@@ -81,10 +82,12 @@ class TestNode:
         :return: None
         """
         params = {'start': '1'}
+        # set the most left children of the root to error state
         error_initiator = sorted(list(get_children_ports(PORT)))[0]
         await post_state(params, error_initiator)
         await asyncio.sleep(configuration['node']['time']['starting'] + 1)
         assert await get_state() == {"State": "State.Error"}
+        # check that error was propagated to the parent
         assert await get_state(error_initiator) == {"State": "State.Error"}
         # check that all its children are in error state
         for port in get_children_ports(error_initiator, 2):
@@ -156,16 +159,5 @@ async def get_state(port: str = PORT) -> str:
 
 
 async def post_state(param: dict, port: str = PORT) -> None:
-    counter = 0
-    while (True):
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' +
-                                        port + configuration['URL']['change_state'], params=param) as request:
-                    if request.status == 200:
-                        break
-        except ClientConnectorError:
-            time.sleep(1)
-            counter += 1
-            if counter > configuration['REST']['timeout']:
-                return
+    url = configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + port + configuration['URL']['change_state']
+    await request_node(url, param)

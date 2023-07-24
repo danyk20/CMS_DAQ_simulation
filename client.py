@@ -2,6 +2,7 @@ import asyncio
 
 import aiohttp
 from aiohttp import ClientConnectorError
+from aiohttp.client_exceptions import ConnectionKey
 
 from utils import get_configuration
 
@@ -16,27 +17,9 @@ async def post_start(chance_to_fail: str, address: str) -> None:
     :param address: node address
     :return: None
     """
-    delivered = False
-    attempts = 0
-    while not delivered:
-        if attempts > configuration['REST']['timeout']:
-            if configuration['debug']:
-                print(str(params) + ' - message cannot be delivered to ' + address)
-            return
-        try:
-            async with aiohttp.ClientSession() as session:
-                params = {'start': str(chance_to_fail)}
-                async with session.post(
-                        configuration['URL']['protocol'] + address + configuration['URL']['change_state'],
-                        params=params) as request:
-                    if request.status == 200:
-                        delivered = True
-                    else:
-                        raise ConnectionError
-        except ConnectionError:
-            await asyncio.sleep(1)
-            attempts += 1
-
+    url = configuration['URL']['protocol'] + address + configuration['URL']['change_state']
+    params = {'start': str(chance_to_fail)}
+    await request_node(url, params)
 
 
 async def post_stop(address: str) -> None:
@@ -46,43 +29,47 @@ async def post_stop(address: str) -> None:
     :param address: node address
     :return: None
     """
-    async with aiohttp.ClientSession() as session:
-        params = {'stop': ' '}
-        if configuration['debug']:
-            params["debug"] = 'True'
-        async with session.post(configuration['URL']['protocol'] + address + configuration['URL']['change_state'],
-                                params=params) as _:
-            pass
+    params = {'stop': ' '}
+    url = configuration['URL']['protocol'] + address + configuration['URL']['change_state']
+    await request_node(url, params)
 
 
-async def post_notification(receiver_address: str, state: str, sender_address: str) -> None:
+async def post_notification(address: str, state: str, sender_address: str) -> None:
     """
 
-    :param receiver_address: to which node is notification going
+    :param address: to which node is notification going
     :param state: node state
     :param sender_address: from which node is notification coming from
     :return: None
     """
 
-    if receiver_address:
-        delivered = False
-        attempts = 0
+    if address:
+        params = {'state': state, 'sender': sender_address}
+        url = configuration['URL']['protocol'] + address + configuration['URL']['notification']
+        await request_node(url, params)
+
+
+async def request_node(url, params) -> None:
+    """
+    General HTTP post request to specific node with parameters
+    :param url: node address and port
+    :param params: attributes
+    :return: None
+    """
+    delivered = False
+    attempts = 0
+    async with aiohttp.ClientSession() as session:
         while not delivered:
             if attempts > configuration['REST']['timeout']:
                 if configuration['debug']:
-                    print(str(params) + ' - message cannot be delivered to ' + receiver_address)
+                    print(str(params) + ' - message cannot be delivered to ' + url)
                 return
             try:
-                async with aiohttp.ClientSession() as session:
-                    params = {'state': state, 'sender': sender_address}
-                    async with session.post(
-                            configuration['URL']['protocol'] + receiver_address + configuration['URL']['notification'],
-                            params=params) as request:
-                        if request.status == 200:
-                            delivered = True
-                        else:
-                            raise ClientConnectorError
-            except ClientConnectorError:
+                async with session.post(url, params=params) as request:
+                    if request.status == 200:
+                        return
+                    else:
+                        raise Exception("Server didn't responded as expected")
+            except (ClientConnectorError, Exception):
                 await asyncio.sleep(1)
                 attempts += 1
-

@@ -253,7 +253,7 @@ class Node:
                                          sender_id=sender_id)
         else:
             # REST
-            await client.post_notification(receiver_address=self.get_parent().get_full_address(),
+            await client.post_notification(address=self.get_parent().get_full_address(),
                                            state=str(self.state), sender_address=self.address.get_full_address())
 
     def get_parent(self) -> NodeAddress:
