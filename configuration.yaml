@@ -31,4 +31,7 @@ architecture: MOM
 rabbitmq:
   rpc_timeout: 21
 
+REST:
+  timeout: 21
+
 debug: True
