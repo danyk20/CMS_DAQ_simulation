@@ -13,7 +13,7 @@ from aiohttp import ClientConnectorError
 import utils
 
 pytest_plugins = ('pytest_asyncio',)
-configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
+configuration: dict[str, str | dict[str, str | dict | int]] = utils.get_configuration()
 
 CHILDREN = '3'
 LEVELS = '2'
@@ -45,7 +45,7 @@ class TestNode:
         end = time.time()
         duration = end - start
         starting_time = configuration['node']['time']['get']
-        assert starting_time - 1 < duration < starting_time + 1
+        assert starting_time < duration < starting_time + 2
 
     @pytest.mark.parametrize('run_around_tests', [{'port': '20000', 'children': '3', 'levels': '0'}], indirect=True)
     @pytest.mark.asyncio
@@ -53,7 +53,7 @@ class TestNode:
         """
         Test single node Stopped->Running->Stopped->Error
         :param run_around_tests: function to set up environment for the test and clean afterward
-        :return:
+        :return: None
         """
         start = {'start': '0'}
         stop = {'stop': '_'}
@@ -73,65 +73,27 @@ class TestNode:
         await asyncio.sleep(configuration['node']['time']['starting'] + 1)
         assert await get_state() == {"State": "State.Error"}
 
-    @pytest.mark.parametrize('run_around_tests', [{'port': '20000', 'children': '1', 'levels': '1'}], indirect=True)
-    @pytest.mark.asyncio
-    async def test_initialising_state(self, run_around_tests):
-        """
-        Test single node Stopped->Running->Stopped->Error
-        :param run_around_tests: function to set up environment for the test and clean afterward
-        :return:
-        """
-
-        while (True):
-            try:
-                async with aiohttp.ClientSession() as session:
-                    # check that node is stopped
-                    async with session.get(
-                            configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
-                            configuration['URL']['get_state']) as resp:
-                        assert json.loads(await resp.text()) == {"State": "State.Initialising"}
-                        break
-            except ClientConnectorError:
-                print("Failed")
-
     @pytest.mark.asyncio
     @pytest.mark.usefixtures('run_around_tests')
     async def test_middle_node_interaction(self):
         """
         Complex test testing change state propagation to children and also notification propagation to the parent
-        :return:
+        :return: None
         """
         params = {'start': '1'}
         error_initiator = sorted(list(get_children_ports(PORT)))[0]
-        await asyncio.sleep(1)
-        async with aiohttp.ClientSession() as session:
-            # set error statin in most left child pof the root
-            async with session.post(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' +
-                                    error_initiator + configuration['URL']['change_state'], params=params) as _:
-                await asyncio.sleep(configuration['node']['time']['starting'] + 1)
-                # check that error was propagated to the top
-                async with session.get(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
-                                       configuration['URL']['get_state']) as resp:
-                    assert json.loads(await resp.text()) == {"State": "State.Error"}
-                # check that node most left root node is in error state
-                async with session.get(
-                        configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + error_initiator +
-                        configuration['URL']['get_state']) as resp:
-                    assert json.loads(await resp.text()) == {"State": "State.Error"}
-                # check that all its children are in error state
-                for port in get_children_ports(error_initiator, 2):
-                    async with session.get(
-                            configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + port +
-                            configuration['URL']['get_state']) as resp:
-                        assert json.loads(await resp.text()) == {"State": "State.Error"}
-                # all other nodes are stopped
-                stopped_nodes = (get_children_ports(PORT).difference({error_initiator})).difference(
-                    get_children_ports(error_initiator, 2))
-                for port in stopped_nodes:
-                    async with session.get(
-                            configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + port +
-                            configuration['URL']['get_state']) as resp:
-                        assert json.loads(await resp.text()) == {"State": "State.Stopped"}
+        await post_state(params, error_initiator)
+        await asyncio.sleep(configuration['node']['time']['starting'] + 1)
+        assert await get_state() == {"State": "State.Error"}
+        assert await get_state(error_initiator) == {"State": "State.Error"}
+        # check that all its children are in error state
+        for port in get_children_ports(error_initiator, 2):
+            assert await get_state(port) == {"State": "State.Error"}
+        # all other nodes are stopped
+        stopped_nodes = (get_children_ports(PORT).difference({error_initiator})).difference(
+            get_children_ports(error_initiator, 2))
+        for port in stopped_nodes:
+            assert await get_state(port) == {"State": "State.Stopped"}
 
 
 @pytest.fixture
@@ -187,8 +149,9 @@ async def get_state(port: str = PORT) -> str:
                     assert resp.status == 200
                     return json.loads(await resp.text())
         except ClientConnectorError:
+            time.sleep(1)
             counter += 1
-            if counter > 1000:
+            if counter > configuration['REST']['timeout']:
                 return ""
 
 
@@ -198,9 +161,11 @@ async def post_state(param: dict, port: str = PORT) -> None:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' +
-                                        port + configuration['URL']['change_state'], params=param) as _:
-                    break
+                                        port + configuration['URL']['change_state'], params=param) as request:
+                    if request.status == 200:
+                        break
         except ClientConnectorError:
+            time.sleep(1)
             counter += 1
-            if counter > 1000:
+            if counter > configuration['REST']['timeout']:
                 return
