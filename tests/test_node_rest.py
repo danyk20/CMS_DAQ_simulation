@@ -54,16 +54,45 @@ class TestNode:
     @pytest.mark.parametrize('run_around_tests', [{'port': '20000', 'children': '3', 'levels': '0'}], indirect=True)
     @pytest.mark.asyncio
     async def test_single_node(self, run_around_tests):
-        params = {'start': '0'}
+        """
+        Test single node Stopped->Running->Stopped->Error
+        :param run_around_tests: function to set up environment for the test and clean afterward
+        :return:
+        """
+        start = {'start': '0'}
+        stop = {'stop': '_'}
+        error = {'start': '1'}
         async with aiohttp.ClientSession() as session:
-            # set error statin in most left child pof the root
+            # check that node is stopped
+            async with session.get(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
+                                   configuration['URL']['get_state']) as resp:
+                assert json.loads(await resp.text()) == {"State": "State.Stopped"}
+            # set running state
             async with session.post(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' +
-                                    PORT + configuration['URL']['change_state'], params=params) as _:
+                                    PORT + configuration['URL']['change_state'], params=start) as _:
                 await asyncio.sleep(configuration['node']['time']['starting'] + 1)
-                # check that error was propagated to the top
+                # check that node is running
                 async with session.get(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
                                        configuration['URL']['get_state']) as resp:
                     assert json.loads(await resp.text()) == {"State": "State.Running"}
+            # set stopped state
+            async with session.post(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' +
+                                    PORT + configuration['URL']['change_state'], params=stop) as _:
+                await asyncio.sleep(configuration['node']['time']['starting'] + 1)
+                # check that node is in error state
+                async with session.get(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
+                                       configuration['URL']['get_state']) as resp:
+                    pass
+                    assert json.loads(await resp.text()) == {"State": "State.Stopped"}
+            # set error state
+            async with session.post(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' +
+                                    PORT + configuration['URL']['change_state'], params=error) as _:
+                await asyncio.sleep(configuration['node']['time']['starting'] + 1)
+                # check that node is in error state
+                async with session.get(configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + PORT +
+                                       configuration['URL']['get_state']) as resp:
+                    pass
+                    assert json.loads(await resp.text()) == {"State": "State.Error"}
 
     @pytest.mark.asyncio
     @pytest.mark.usefixtures('run_around_tests')
