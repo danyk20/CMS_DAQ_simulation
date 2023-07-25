@@ -63,7 +63,7 @@ class TestNode:
 
         assert await get_state() == {"State": "State.Stopped"}
 
-        await post_state(start)
+        asyncio.get_running_loop().create_task(post_state(start))
         assert await get_state() == {"State": "State.Starting"}
         await asyncio.sleep(configuration['node']['time']['starting'])
         assert await get_state() == {"State": "State.Running"}
@@ -71,7 +71,7 @@ class TestNode:
         await post_state(stop)
         assert await get_state() == {"State": "State.Stopped"}
 
-        await post_state(error)
+        asyncio.get_running_loop().create_task(post_state(error))
         assert await get_state() == {"State": "State.Starting"}
         await asyncio.sleep(configuration['node']['time']['starting'])
         assert await get_state() == {"State": "State.Error"}
@@ -86,7 +86,7 @@ class TestNode:
         params = {'start': '1'}
         # set the most left children of the root to error state
         error_initiator = sorted(list(get_children_ports(PORT)))[0]
-        await post_state(params, error_initiator)
+        asyncio.get_running_loop().create_task(post_state(params, error_initiator))
         assert await get_state(error_initiator) == {"State": "State.Starting"}
         await asyncio.sleep(configuration['node']['time']['starting'])
         assert await get_state(error_initiator) == {"State": "State.Error"}
@@ -171,7 +171,8 @@ async def get_state(port: str = PORT) -> str:
                     assert resp.status == 200
                     return json.loads(await resp.text())
         except ClientConnectorError:
-            time.sleep(1)
+            if counter:
+                time.sleep(1)  # skip waiting for the first failure
             counter += 1
             if counter > configuration['REST']['timeout']:
                 return ""
