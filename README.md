@@ -213,27 +213,66 @@ python -m pytest --junitxml=report.xml
 
 ## REST tests
 
+### GET state request values
+- values
+- all node
+
 ### GET state request
+- time duration
+
+### Single node test
+- testing whole life cycle 
+  1. Initializing
+  2. Stopped
+  3. Running
+  4. Stopped
+  5. Starting
+  6. Error
+
+### Complex test with middle node causing error
+- propagation to children (POST change state)
+- propagation to the parent (POST notification)
+- siblings and their children are not affected
 
 ## MOM tests
 
 ### RPC reply value
+- request state from RPC server and compare values
 
 ### RPC reply duration
+- request state from RPC server and measure duration
 
 ### Notification with parent
+- node in running state receives error notification from children -> change own state
 
 ### Notification arrive to node in Error state
+- node in error state receives running notification from children -> ignor
 
 ### Notification from the only child
+- node has one child and receive notification from it -> immediately change the state
 
 ### Notification from two children
+- node has more children but receive notification just from one of them -> Initializing
+- node has more children but receive notification just from both of them -> Change the state accordingly:
+  - starting + stopped = stopped
+  - starting + running = starting
+  - running + running = running
+  - running + error = error
 
 ### Changing the state of node without children (Stopped and Running)
+- post change state message to the node that has no children -> immediately change the state:
+  - stopped -> starting -> running
+  - not immediately
 
 ### Changing the state of node in Error state
+- post change state message to the node that is in error state -> ignored
+
+### Changing the state of node without children (Running -> Stopped)
+- post change state (stopped) message to the node that is in running state -> state changed to stopped immediately
 
 ### Changing the state of node with two children
+- check propagation of change state message when node has children
+  - parent stays in starting until both children are not running
 
 ## REST manual testing
 
