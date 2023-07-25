@@ -64,15 +64,16 @@ class TestNode:
         assert await get_state() == {"State": "State.Stopped"}
 
         await post_state(start)
-        await asyncio.sleep(configuration['node']['time']['starting'] + 1)
+        assert await get_state() == {"State": "State.Starting"}
+        await asyncio.sleep(configuration['node']['time']['starting'])
         assert await get_state() == {"State": "State.Running"}
 
         await post_state(stop)
-        await asyncio.sleep(configuration['node']['time']['starting'] + 1)
         assert await get_state() == {"State": "State.Stopped"}
 
         await post_state(error)
-        await asyncio.sleep(configuration['node']['time']['starting'] + 1)
+        assert await get_state() == {"State": "State.Starting"}
+        await asyncio.sleep(configuration['node']['time']['starting'])
         assert await get_state() == {"State": "State.Error"}
 
     @pytest.mark.asyncio
@@ -86,10 +87,11 @@ class TestNode:
         # set the most left children of the root to error state
         error_initiator = sorted(list(get_children_ports(PORT)))[0]
         await post_state(params, error_initiator)
-        await asyncio.sleep(configuration['node']['time']['starting'] + 1)
-        assert await get_state() == {"State": "State.Error"}
-        # check that error was propagated to the parent
+        assert await get_state(error_initiator) == {"State": "State.Starting"}
+        await asyncio.sleep(configuration['node']['time']['starting'])
         assert await get_state(error_initiator) == {"State": "State.Error"}
+        # check that error was propagated to the parent
+        assert await get_state() == {"State": "State.Error"}
         # check that all its children are in error state
         for port in get_children_ports(error_initiator):
             assert await get_state(port) == {"State": "State.Error"}
