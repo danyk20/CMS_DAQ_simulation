@@ -155,3 +155,22 @@ def set_architecture(architecture: str):
             yaml.dump(list_doc, f)
 
     return original_architecture
+
+
+def set_time(time: str, value: int):
+    """
+    Edit selected architecture in configuration file
+    :param value: newly selected value
+    :param time: specifier
+    :return: original architecture
+    """
+    with open(get_configuration_full_path()) as f:
+        list_doc = yaml.safe_load(f)
+
+    original_value = list_doc['node']['time'][time]
+    if original_value != value:
+        list_doc['node']['time'][time] = value
+        with open(get_configuration_full_path(), "w") as f:
+            yaml.dump(list_doc, f)
+
+    return original_value

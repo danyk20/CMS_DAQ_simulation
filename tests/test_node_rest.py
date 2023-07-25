@@ -47,9 +47,10 @@ class TestNode:
         end = time.time()
         duration = end - start
         starting_time = configuration['node']['time']['get']
-        assert starting_time < duration < starting_time + 2
+        assert starting_time < duration < starting_time + 1
 
     @pytest.mark.parametrize('run_around_tests', [{'port': '20000', 'children': '3', 'levels': '0'}], indirect=True)
+    @pytest.mark.usefixtures('set_immediate_get')
     @pytest.mark.asyncio
     async def test_single_node(self, run_around_tests):
         """
@@ -100,6 +101,13 @@ class TestNode:
             get_children_ports(error_initiator))
         for port in stopped_nodes:
             assert await get_state(port) == {"State": "State.Stopped"}
+
+
+@pytest.fixture
+def set_immediate_get():
+    original = utils.set_time('get', 0)
+    yield
+    utils.set_time('get', original)
 
 
 @pytest.fixture
@@ -162,17 +170,16 @@ def get_all_ports():
 
 async def get_state(port: str = PORT) -> str:
     counter = 0
-    while True:
-        try:
-            async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession() as session:
+        while True:
+            try:
                 async with session.get(
                         configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + port +
                         configuration['URL']['get_state']) as resp:
                     assert resp.status == 200
                     return json.loads(await resp.text())
-        except ClientConnectorError:
-            if counter:
-                time.sleep(1)  # skip waiting for the first failure
+            except ClientConnectorError:
+                await asyncio.sleep(0.9)
             counter += 1
             if counter > configuration['REST']['timeout']:
                 return ""
