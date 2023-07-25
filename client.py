@@ -2,7 +2,6 @@ import asyncio
 
 import aiohttp
 from aiohttp import ClientConnectorError
-from aiohttp.client_exceptions import ConnectionKey
 
 from utils import get_configuration
 
@@ -17,9 +16,9 @@ async def post_start(chance_to_fail: str, address: str) -> None:
     :param address: node address
     :return: None
     """
-    url = configuration['URL']['protocol'] + address + configuration['URL']['change_state']
+    endpoint = address + configuration['URL']['change_state']
     params = {'start': str(chance_to_fail)}
-    await request_node(url, params)
+    await request_node(endpoint, params)
 
 
 async def post_stop(address: str) -> None:
@@ -30,8 +29,8 @@ async def post_stop(address: str) -> None:
     :return: None
     """
     params = {'stop': ' '}
-    url = configuration['URL']['protocol'] + address + configuration['URL']['change_state']
-    await request_node(url, params)
+    endpoint = address + configuration['URL']['change_state']
+    await request_node(endpoint, params)
 
 
 async def post_notification(address: str, state: str, sender_address: str) -> None:
@@ -45,19 +44,20 @@ async def post_notification(address: str, state: str, sender_address: str) -> No
 
     if address:
         params = {'state': state, 'sender': sender_address}
-        url = configuration['URL']['protocol'] + address + configuration['URL']['notification']
-        await request_node(url, params)
+        endpoint = address + configuration['URL']['notification']
+        await request_node(endpoint, params)
 
 
-async def request_node(url, params) -> None:
+async def request_node(endpoint, params) -> None:
     """
     General HTTP post request to specific node with parameters
-    :param url: node address and port
+    :param endpoint: node address, port and path
     :param params: attributes
     :return: None
     """
     delivered = False
     attempts = 0
+    url = configuration['URL']['protocol'] + endpoint
     async with aiohttp.ClientSession() as session:
         while not delivered:
             if attempts > configuration['REST']['timeout']:

@@ -139,11 +139,10 @@ async def shutdown_event(broker_disconnect: bool = True) -> None:
             server_task.cancel()
             receiver_task.cancel()
             loop.call_soon_threadsafe(loop.stop)
-    await asyncio.sleep(1)  # only to see termination messages from children in IDE
 
 
 if configuration['debug']:
-    print('My PID is:', os.getpid())
+    print('My PID is:', os.getpid(), ' and my port is ' + str(parse_input_arguments().port))
 node: model.Node = create_node()
 create_children(node)
 if configuration['architecture'] == 'MOM':

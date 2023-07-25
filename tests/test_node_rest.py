@@ -1,4 +1,5 @@
 import asyncio
+import socket
 
 import aiohttp
 import json
@@ -90,11 +91,11 @@ class TestNode:
         # check that error was propagated to the parent
         assert await get_state(error_initiator) == {"State": "State.Error"}
         # check that all its children are in error state
-        for port in get_children_ports(error_initiator, 2):
+        for port in get_children_ports(error_initiator):
             assert await get_state(port) == {"State": "State.Error"}
         # all other nodes are stopped
         stopped_nodes = (get_children_ports(PORT).difference({error_initiator})).difference(
-            get_children_ports(error_initiator, 2))
+            get_children_ports(error_initiator))
         for port in stopped_nodes:
             assert await get_state(port) == {"State": "State.Stopped"}
 
@@ -113,25 +114,41 @@ def run_around_tests(request):
                                cwd=path)
     yield
     process.send_signal(signal.SIGTERM)
+    for port in get_all_ports():
+        if not is_terminated(port):  # ensure nodes are correctly terminated before the next test
+            raise Exception('Cannot terminate node: ' + str(port))
 
 
 @pytest.fixture(scope="session", autouse=True)
-def configure_configuration_file(request):
+def configure_configuration_file(request) -> None:
+    """
+    Temporally change the configuration file in order to set the correct architecture
+
+    :param request: request.addfinalizer is executed after all test are finished
+    :return: None
+    """
     os.chdir(os.path.dirname(__file__))
     original_architecture = utils.set_architecture('REST')
     request.addfinalizer(lambda: utils.set_architecture(original_architecture))
 
 
-def get_children_ports(parent_port: str, level: int = 1):
+def get_children_ports(parent_port: str):
+    """
+    Get all children of the specific port
+
+    :param parent_port: port number
+    :return:
+    """
+    child_level = utils.compute_hierarchy_level(parent_port) + 1
     ports = set()
     for child in range(int(CHILDREN)):
         node_port = list(parent_port)
-        node_port[level] = str(child + 1)
+        node_port[child_level] = str(child + 1)
         ports.add(''.join(node_port))
 
     for port in ports:
-        if level < int(LEVELS):
-            ports = ports.union(get_children_ports(port, level + 1))
+        if child_level < int(LEVELS):
+            ports = ports.union(get_children_ports(port))
     return ports
 
 
@@ -143,7 +160,7 @@ def get_all_ports():
 
 async def get_state(port: str = PORT) -> str:
     counter = 0
-    while (True):
+    while True:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
@@ -159,5 +176,31 @@ async def get_state(port: str = PORT) -> str:
 
 
 async def post_state(param: dict, port: str = PORT) -> None:
-    url = configuration['URL']['protocol'] + configuration['URL']['address'] + ':' + port + configuration['URL']['change_state']
+    url = configuration['URL']['address'] + ':' + port + configuration['URL']['change_state']
     await request_node(url, param)
+
+
+def is_open(port):
+    """
+    Check whether the port is open or not
+
+    :param port: numeric value of the port
+    :return: boolean whether the port is open or not
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    result = sock.connect_ex((configuration['URL']['address'], int(port)))
+    return result == 0
+
+
+def is_terminated(port):
+    """
+    Check whether the port is terminated or not and wait for termination up to Xs defined in configuration file
+
+    :param port: numeric value of the port
+    :return: boolean whether the port is terminated or not
+    """
+    counter = 0
+    while is_open(port) and counter < configuration['REST']['timeout']:
+        counter += 1
+        time.sleep(1)
+    return counter < configuration['REST']['timeout']
