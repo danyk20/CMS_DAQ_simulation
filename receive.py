@@ -58,7 +58,7 @@ async def change_state(start: str = None, stop: str = None) -> None:
         asyncio.create_task(
             node.set_state(model.State.Stopped, transition_time=configuration['node']['time']['starting']))
     elif configuration['debug']:
-        print('Wrong operation! %r -> %r' % (node.state, new_state))
+        print('Wrong operation! Node remains in : %r' % str(node.state))
     # asyncio.get_running_loop() no problem
 
 
@@ -72,9 +72,13 @@ async def notify(state: str = None, sender_port: str = None) -> None:
     """
     full_address = configuration['URL']['address'] + ':' + sender_port
     if state:
-        node.children[model.NodeAddress(full_address)].append(model.State[state.split('.')[-1]])
-        # asyncio.get_running_loop() exception
-        node.update_state()
+        try:
+            node.children[model.NodeAddress(full_address)].append(model.State[state.split('.')[-1]])
+            node.update_state()
+        except KeyError:
+            if configuration['debug']:
+                print('Invalid notification! Node remains in : %r' % str(node.state))
+
     if node.get_parent().address is None:
         return
     send.post_state_notification(current_state=str(node.state),
@@ -84,7 +88,7 @@ async def notify(state: str = None, sender_port: str = None) -> None:
 
 def callback(_ch, method, _properties, body):
     message = json.loads(body)
-
+    # message validation possible here
     async_loop = loop
     if message['type'] == 'Notification':
         # notification

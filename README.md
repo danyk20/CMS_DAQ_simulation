@@ -287,6 +287,8 @@ Note: In case of missing or invalid parameter response code will be 400 however 
 
 Convert port number to routing key by putting dot between any two digits and call `consumer.py` with this argument
 
+Note: In case of incorrect orange envelope (change state) format or content debug print `Wrong operation! Node remains in : <original_state>` and in case of invalid red envelope (notification) `Invalid notification! Node remains in : <original_state>`. To try it see `examples.py`
+
 ```sh
 pipenv install
 pipenv run python rpc_client.py 2.3.1.0.0

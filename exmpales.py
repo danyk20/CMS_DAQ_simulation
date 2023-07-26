@@ -1,5 +1,6 @@
 import requests
 
+from send import post_state_change, post_state_notification
 from utils import get_configuration
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
@@ -62,7 +63,7 @@ def post_valid_change_state() -> int:
     return response_code
 
 
-def post(endpoint: str, message: dict):
+def post(endpoint: str, message: dict) -> int:
     """
     General post request to the default root node
 
@@ -75,3 +76,21 @@ def post(endpoint: str, message: dict):
     response = requests.post(url, params=message)
 
     return response.status_code
+
+
+def send_invalid_state_mom() -> None:
+    """
+    Sends command to change the state but the parameter is invalid therefore it will be ignored.
+
+    :return: None
+    """
+    post_state_change('invalid', '2.0.0.0.0')
+
+
+def send_invalid_notification_mom() -> None:
+    """
+    Sends notification to the root node but the parameter is invalid therefore it will be ignored.
+
+    :return: None
+    """
+    post_state_notification('state.invalid', '2.0.0.0.0', '2.1.0.0.0')

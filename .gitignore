@@ -11,4 +11,3 @@ Pipfile.lock
 playground.py
 to.do
 /rabbitmq_logs/*
-/examples.py
