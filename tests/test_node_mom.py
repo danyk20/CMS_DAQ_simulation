@@ -23,8 +23,8 @@ class TestNode:
         white_envelope = utils.get_white_envelope('get_state')
         chanel = ChannelStub()
         init_node.on_request(ch=chanel, body=white_envelope, method=MethodStub(), props=PropertiesStub())
-        response = json.loads(chanel.blue_msg)
-        assert response == '{"state": "Initialisation"}'
+        response = utils.get_dict_from_envelope(chanel.blue_msg)
+        assert response['state'] == 'Initialisation' and len(response) == 1
         assert chanel.routing_key == 'reply_to'
         assert chanel.properties.correlation_id == 'correlation_id'
 

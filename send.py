@@ -34,7 +34,7 @@ def post_state_notification(current_state: str, routing_key: str, sender_id: str
     send_message(utils.get_red_envelope(raw_state, sender_id), routing_key, NOTIFICATION_EXCHANGE)
 
 
-def send_message(message: str, routing_key: str, exchange_name: str) -> None:
+def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> None:
     """
     Transfer message to the destination node's queue using exchange and routing key
 

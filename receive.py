@@ -1,11 +1,9 @@
 import asyncio
-import json
 import time
 from asyncio import AbstractEventLoop
 from datetime import datetime
 
 import pika
-
 import model
 import send
 import utils
@@ -87,7 +85,7 @@ async def notify(state: str = None, sender_port: str = None) -> None:
 
 
 def callback(_ch, method, _properties, body):
-    message = json.loads(body)
+    message = utils.get_dict_from_envelope(body)
     # message validation possible here
     async_loop = loop
     if message['type'] == 'Notification':

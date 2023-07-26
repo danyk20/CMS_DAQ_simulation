@@ -1,5 +1,4 @@
 import asyncio
-import json
 import time
 from datetime import datetime
 from enum import Enum
@@ -286,13 +285,13 @@ class Node:
             time.sleep(configuration['node']['time']['get'])
             return str(self.state).split('.')[-1]
 
-        if json.loads(body)['action'] == 'get_state':
+        if utils.get_dict_from_envelope(body)['action'] == 'get_state':
             response = utils.get_blue_envelope(get_current_state())
-            print('Returning current state: ' + response + ' of node ' + self.address.get_port())
+            print('Returning current state: ' + str(response) + ' of node ' + self.address.get_port())
             ch.basic_publish(exchange='',
                              routing_key=props.reply_to,
                              properties=pika.BasicProperties(correlation_id=props.correlation_id),
-                             body=json.dumps(response))
+                             body=response)
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def run_get_server(self) -> None:

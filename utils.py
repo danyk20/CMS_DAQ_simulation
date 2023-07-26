@@ -3,6 +3,8 @@ import yaml
 import json
 import os
 
+from google.protobuf.json_format import MessageToDict
+
 import envelope_pb2
 
 
@@ -105,7 +107,7 @@ def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
         red_envelope.type = 'Notification'
         red_envelope.sender = sender
         red_envelope.toState = transitioned_state
-        return red_envelope
+        return red_envelope.SerializeToString()
 
 
 def get_orange_envelope(state: str, chance_to_fail: float = 0) -> str:
@@ -128,7 +130,7 @@ def get_orange_envelope(state: str, chance_to_fail: float = 0) -> str:
         orange_envelope.type = 'Input'
         orange_envelope.name = state
         orange_envelope.parameters.chance_to_fail = chance_to_fail
-        return orange_envelope
+        return orange_envelope.SerializeToString()
 
 
 def get_blue_envelope(current_state: str) -> str:
@@ -146,7 +148,7 @@ def get_blue_envelope(current_state: str) -> str:
     elif envelope_format == 'proto':
         blue_envelope = envelope_pb2.Blue()
         blue_envelope.state = current_state
-        return blue_envelope
+        return blue_envelope.SerializeToString()
 
 
 def get_white_envelope(requested_action: str = 'get_state') -> str:
@@ -166,7 +168,7 @@ def get_white_envelope(requested_action: str = 'get_state') -> str:
     elif envelope_format == 'proto':
         white_envelope = envelope_pb2.White()
         white_envelope.action = requested_action
-        return white_envelope
+        return white_envelope.SerializeToString()
 
 
 def set_architecture(architecture: str):
@@ -204,3 +206,25 @@ def set_time(time: str, value: int):
             yaml.dump(list_doc, f)
 
     return original_value
+
+
+def get_dict_from_envelope(message):
+    """
+
+    :param message:
+    :return:
+    """
+    if get_configuration()['rabbitmq']['envelope_format'] == 'json':
+        return json.loads(message)
+    # TODO better parsing
+    if b'get_state' in message:
+        envelope = envelope_pb2.White()
+    elif b'Input' in message:
+        envelope = envelope_pb2.Orange()
+    elif b'Notification' in message:
+        envelope = envelope_pb2.Red()
+    else:
+        envelope = envelope_pb2.Blue()
+
+    envelope.ParseFromString(message)
+    return MessageToDict(envelope, preserving_proto_field_name=True)
