@@ -281,6 +281,8 @@ Open `<IP>:<port>/docs#/` to manually try endpoints on the current node.
 e.g. http://127.0.0.1:20000/docs#/
 ![node_endpoints](resources/node_endpoints.png)
 
+Note: In case of missing or invalid parameter response code will be 400 however in case that subset of parameters contains valid combination (key: value) it will be correctly processed with response code 200. See `examples.py` for better understanding
+
 ## RabbitMQ manual testing
 
 Convert port number to routing key by putting dot between any two digits and call `consumer.py` with this argument
