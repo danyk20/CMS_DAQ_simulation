@@ -30,6 +30,7 @@ architecture: MOM
 
 rabbitmq:
   rpc_timeout: 21
+  envelope_format: json
 
 REST:
   timeout: 21

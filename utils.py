@@ -3,6 +3,8 @@ import yaml
 import json
 import os
 
+import envelope_pb2
+
 
 def check_address(address: str) -> str:
     """
@@ -91,11 +93,19 @@ def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
     :param sender: origin node id as bind key
     :return: string representation of red envelope
     """
-    envelope = dict()
-    envelope['type'] = 'Notification'
-    envelope['sender'] = sender
-    envelope['toState'] = transitioned_state
-    return json.dumps(envelope)
+    envelope_format = get_configuration()['rabbitmq']['envelope_format']
+    if envelope_format == 'json':
+        envelope = dict()
+        envelope['type'] = 'Notification'
+        envelope['sender'] = sender
+        envelope['toState'] = transitioned_state
+        return json.dumps(envelope)
+    elif envelope_format == 'proto':
+        red_envelope = envelope_pb2.Red()
+        red_envelope.type = 'Notification'
+        red_envelope.sender = sender
+        red_envelope.toState = transitioned_state
+        return red_envelope
 
 
 def get_orange_envelope(state: str, chance_to_fail: float = 0) -> str:
@@ -106,11 +116,19 @@ def get_orange_envelope(state: str, chance_to_fail: float = 0) -> str:
     :param chance_to_fail: chance to end up in Error state
     :return: string representation of orange envelope
     """
-    envelope = dict()
-    envelope['type'] = 'Input'
-    envelope['name'] = state
-    envelope['parameters'] = {'chance_to_fail': chance_to_fail}
-    return json.dumps(envelope)
+    envelope_format = get_configuration()['rabbitmq']['envelope_format']
+    if envelope_format == 'json':
+        envelope = dict()
+        envelope['type'] = 'Input'
+        envelope['name'] = state
+        envelope['parameters'] = {'chance_to_fail': chance_to_fail}
+        return json.dumps(envelope)
+    elif envelope_format == 'proto':
+        orange_envelope = envelope_pb2.Orange()
+        orange_envelope.type = 'Input'
+        orange_envelope.name = state
+        orange_envelope.parameters.chance_to_fail = chance_to_fail
+        return orange_envelope
 
 
 def get_blue_envelope(current_state: str) -> str:
@@ -120,9 +138,15 @@ def get_blue_envelope(current_state: str) -> str:
     :param current_state: node current state
     :return: string representation of blue envelope
     """
-    envelope = dict()
-    envelope['state'] = current_state
-    return json.dumps(envelope)
+    envelope_format = get_configuration()['rabbitmq']['envelope_format']
+    if envelope_format == 'json':
+        envelope = dict()
+        envelope['state'] = current_state
+        return json.dumps(envelope)
+    elif envelope_format == 'proto':
+        blue_envelope = envelope_pb2.Blue()
+        blue_envelope.state = current_state
+        return blue_envelope
 
 
 def get_white_envelope(requested_action: str = 'get_state') -> str:
@@ -134,9 +158,15 @@ def get_white_envelope(requested_action: str = 'get_state') -> str:
     :param requested_action: type of request
     :return: string representation of blue envelope
     """
-    envelope = dict()
-    envelope['action'] = requested_action
-    return json.dumps(envelope)
+    envelope_format = get_configuration()['rabbitmq']['envelope_format']
+    if envelope_format == 'json':
+        envelope = dict()
+        envelope['action'] = requested_action
+        return json.dumps(envelope)
+    elif envelope_format == 'proto':
+        white_envelope = envelope_pb2.White()
+        white_envelope.action = requested_action
+        return white_envelope
 
 
 def set_architecture(architecture: str):

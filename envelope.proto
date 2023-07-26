@@ -1,0 +1,26 @@
+syntax = 'proto2';
+
+package envelope;
+
+message White {
+  optional string action = 1;
+}
+
+message Blue {
+  optional string state = 1;
+}
+
+message Red {
+  optional string type = 1;
+  optional string sender = 2;
+  optional string toState = 3;
+}
+
+message Orange {
+  optional string type = 1;
+  optional string name = 2;
+  message Parameter {
+    optional float chance_to_fail = 1;
+  }
+  optional Parameter parameters = 3;
+}
