@@ -6,3 +6,6 @@ pytest == 7.4.0
 PyYAML == 6.0
 openapi-python-client == 0.14.1
 pytest_asyncio == 0.21.1
+google == 3.0.0
+requests == 2.31.0
+google-api-python-client == 2.95.0
