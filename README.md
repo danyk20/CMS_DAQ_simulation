@@ -138,7 +138,7 @@ Element responsible for processing messages from the broker. The implementation 
 
 There are two (`model.Node.run_get_server()` and `receive.run()`) subprocesses running in infinite asynchronous loop. 
 
-Note: Inter node communication consists of 4 (white, blue, orange, red) different envelopes where all of them support either JSON or Protocol Buffer for data serialisation and deserialization. To change the envelopes' format update `configuration.yaml` file accordingly.
+Note: Inter-node communication consists of 4 (white, blue, orange, red) different envelopes where all of them support either JSON or Protocol Buffer for data serialisation and deserialization. To change the envelopes' format update `configuration.yaml` file accordingly.
 
 #### RPC Client-Server
 
