@@ -567,3 +567,20 @@ sudo service rabbitmq-server restart
 sudo systemctl start docker
 sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.12-management
 ```
+
+# Measurements
+
+## JSON vs Protocol Buffer
+
+![JSON vs Protocol Buffer plot](resources/json_vs_proto.png)
+
+
+| Envelope |  JSON   | ProtocolBuffer | Reduction |
+|:---------|:-------:|:--------------:|----------:|
+| White    |  72 B   |      44 B      |      39 % |
+| Blue     | 76.2 B  |     49.2 B     |      35 % |
+| Red      | 125.2 B |     74.2 B     |      41 % |
+| Orange   | 136.2 B |     63.2 B     |      54 % |
+| Average  | 102.4 B |    57.65 B     |      44 % |
+
+

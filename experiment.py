@@ -23,8 +23,7 @@ def generate_envelopes():
     return {'white': white, 'blue': blue, 'red': red, 'orange': orange}
 
 
-def plot_results(json, proto):
-    # x-coordinates of left sides of bars
+def plot_results(json, proto):# x-coordinates of left sides of bars
     left = [1, 2, 3, 4, 5, 6, 7, 8]
 
     json_size = dict(map(lambda x: (x[0], get_avg_size(x[1])), json.items()))
@@ -45,6 +44,10 @@ def plot_results(json, proto):
     # rotate labels
     plt.xticks(rotation=35)
 
+    colors = {'JSON': 'red', 'Protocol Buffer': 'blue'}
+    labels = list(colors.keys())
+    handles = [plt.Rectangle((0, 0), 1, 1, color=colors[label]) for label in labels]
+    plt.legend(handles, labels)
     # naming the x-axis
     plt.xlabel('envelope type')
     # naming the y-axis
@@ -55,6 +58,7 @@ def plot_results(json, proto):
     plt.subplots_adjust(bottom=0.15)
 
     # function to show the plot
+    plt.savefig('resources/json_vs_proto.png')
     plt.show()
 
 
