@@ -189,6 +189,42 @@ def set_architecture(architecture: str):
     return original_architecture
 
 
+def set_message_format(new_format: str):
+    """
+    Edit selected architecture in configuration file
+    :param new_format: newly selected architecture
+    :return: original envelope format
+    """
+
+    return set_configuration(new_format, ['rabbitmq', 'envelope_format'])
+
+
+def set_configuration(new_value: str, path: list):
+    """
+    Edit selected value in configuration file
+    :param path: path to get the selected value
+    :param new_value: newly selected value
+    :return: original value
+    """
+    with open(get_configuration_full_path()) as f:
+        list_doc = yaml.safe_load(f)
+
+    reference = list_doc
+    original_value = ''
+
+    for i in range(len(path)):
+        if i < len(path) - 1:
+            reference = reference[path[i]]
+        else:
+            original_value = reference[path[i]]
+    if original_value != new_value:
+        reference[path[-1]] = new_value
+        with open(get_configuration_full_path(), "w") as f:
+            yaml.dump(list_doc, f)
+
+    return original_value
+
+
 def set_time(time: str, value: int):
     """
     Edit selected architecture in configuration file
