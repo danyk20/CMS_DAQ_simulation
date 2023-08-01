@@ -1,0 +1,7 @@
+syntax = 'proto2';
+
+package experiment;
+
+message Array {
+  repeated string word = 1;
+}
