@@ -587,21 +587,21 @@ Note: Do not forget to add execute permission to all directories on the path and
 ## Logging messages using firehose
 
 - turned off by default
-    - ```shell 
+  ```shell 
     sudo rabbitmqctl trace_off
-    ```
+  ```
 - turned on -> performance will drop somewhat due to additional messages being generated and routed
-    - ```shell 
-    sudo rabbitmqctl trace_on
-    ```
+  ```shell 
+    sudo rabbitmqctl trace_on 
+  ```
 - add plugin to see message in Management UI
-    - ```shell 
+  ```shell 
     sudo rabbitmq-plugins enable rabbitmq_tracing
-    ```
+  ```
 - remove plugin to reduce broker overload
-    - ```shell 
+  ```shell 
     sudo rabbitmq-plugins disable rabbitmq_tracing
-    ```
+  ```
 - update `enabled_plugins` file if necessary (not necessary by default)
 
 ```text
