@@ -1,4 +1,5 @@
 import json
+import time
 
 import numpy as np
 
@@ -129,13 +130,15 @@ def measure_lists(json_data: list, proto_data: list, plot_name: str):
         tick_label.append(str(len(json.loads(element))))
         tick_label.append(str(len(json.loads(element))))
 
-    plot_grouped_graph(json_size, proto_size, proto_raw_size, plot_name)
+    plot_grouped_graph(json_size, proto_size, proto_raw_size, plot_name, 'Size (B)', 'List as JSON vs Protocol Buffer')
 
 
-def plot_grouped_graph(json_val, proto_val, proto_raw_val, plot_name):
+def plot_grouped_graph(json_val, proto_val, proto_raw_val, plot_name, y_label, title):
     """
     Plot and save grouped bar graph
 
+    :param title: plot title
+    :param y_label: label on y axes
     :param json_val: 1st bar in the group
     :param proto_val: 2nd bar in the group
     :param proto_raw_val: 3rd bar in the group
@@ -162,9 +165,9 @@ def plot_grouped_graph(json_val, proto_val, proto_raw_val, plot_name):
         multiplier += 1
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('Size (B)')
+    ax.set_ylabel(y_label)
     ax.set_xlabel('number of elements in the list')
-    ax.set_title('List as JSON vs Protocol Buffer')
+    ax.set_title(title)
     ax.set_xticks(x + width, species)
     ax.legend(loc='upper left')
     ax.set_yscale('log')
@@ -216,12 +219,23 @@ def list_generator():
     for size in sizes:
         inputs.append(get_list(size))
     json_val = []
+    json_duration = []
     proto_val = []
+    proto_raw_duration = []
+    proto_duration = []
     for element in inputs:
+        start = time.time()
         json_val.append(json.dumps(element))
-        proto_val.append(get_proto_array(element))
+        json_duration.append(time.time() - start)
 
-    return json_val, proto_val
+        start = time.time()
+        proto_val.append(get_proto_array(element))
+        proto_raw_duration.append(time.time() - start)
+        start = time.time()
+        proto_val[-1].SerializeToString()
+        proto_duration.append(time.time() - start + proto_raw_duration[-1])
+
+    return json_val, proto_val, json_duration, proto_duration, proto_raw_duration
 
 
 original_format = set_message_format('json')
@@ -232,7 +246,10 @@ original_format = set_message_format('proto')
 envelopes_proto = generate_envelopes()
 set_message_format(original_format)
 
-json_list, proto_list = list_generator()
+json_list, proto_list, json_time, proto_time, proto_raw_time = list_generator()
 
 # measure_envelopes(envelopes_json, envelopes_proto, 'envelopes_json_vs_proto')
+
 # measure_lists(json_list, proto_list, 'list_json_vs_proto')
+# plot_grouped_graph(json_time, proto_time, proto_raw_time, 'time_list_json_vs_proto', 'time [s]',
+                   # 'Duration of converting list into JSON vs Protocol Buffer')

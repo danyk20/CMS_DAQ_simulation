@@ -738,6 +738,8 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 
 ### Python list
 
+#### Size
+
 ![JSON vs Protocol Python list](resources/list_json_vs_proto.png)
 
 | List size |    JSON     | ProtocolBuffer Serialised | ProtocolBuffer Serialised | Reduction |
@@ -748,5 +750,19 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 | 10k       |  98 049 B   |         78 033 B          |         78 000 B          |      20 % |
 | 100k      |  980 049 B  |         780 033 B         |         780 000 B         |      20 % |
 | 1M        | 9 800 049 B |        7 800 033 B        |        7 800 000 B        |      20 % |
+
+
+#### Time duration
+
+![JSON vs Protocol Python list](resources/time_list_json_vs_proto.png)
+
+| List size |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer Serialised | Reduction |
+|:----------|:----------:|:-------------------------:|:-------------------------:|----------:|
+| 10        | 0.000 06 s |        0.000 04 s         |        0.000 04 s         |      33 % |
+| 100       | 0.000 04 s |        0.000 02 s         |        0.000 01 s         |   50-75 % |
+| 1k        | 0.000 13 s |        0.000 06 s         |        0.000 05 s         |   54-62 % |
+| 10k       | 0.001 12 s |        0.000 70 s         |        0.000 51 s         |   38-54 % |
+| 100k      | 0.011 71 s |        0.007 63 s         |        0.005 85 s         |   35-50 % |
+| 1M        | 0.110 16 s |        0.074 59 s         |        0.057 35 s         |   32-48 % |
 
 
