@@ -742,7 +742,7 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 
 ![JSON vs Protocol Python list](resources/list_json_vs_proto.png)
 
-| List size |    JSON     | ProtocolBuffer Serialised | ProtocolBuffer Serialised | Reduction |
+| List size |    JSON     | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
 |:----------|:-----------:|:-------------------------:|:-------------------------:|----------:|
 | 10        |    143 B    |           107 B           |           74 B            |   25-48 % |
 | 100       |   1 029 B   |           813 B           |           780 B           |   21-24 % |
@@ -756,7 +756,7 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 
 ![JSON vs Protocol Python list](resources/time_list_json_vs_proto.png)
 
-| List size |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer Serialised | Reduction |
+| List size |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
 |:----------|:----------:|:-------------------------:|:-------------------------:|----------:|
 | 10        | 0.000 06 s |        0.000 04 s         |        0.000 04 s         |      33 % |
 | 100       | 0.000 04 s |        0.000 02 s         |        0.000 01 s         |   50-75 % |
@@ -765,4 +765,61 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 | 100k      | 0.011 71 s |        0.007 63 s         |        0.005 85 s         |   35-50 % |
 | 1M        | 0.110 16 s |        0.074 59 s         |        0.057 35 s         |   32-48 % |
 
+### Python dictionary (short keys < 7 characters)
+
+#### Size
+
+![JSON vs Protocol Python list](resources/dict_short_json_vs_proto.png)
+
+| List size |     JSON     | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
+|:----------|:------------:|:-------------------------:|:-------------------------:|----------:|
+| 10        |    193 B     |           157 B           |           124 B           |   19-36 % |
+| 100       |   1 619 B    |          1 403 B          |          1 370 B          |   13-15 % |
+| 1k        |   16 739 B   |         14 723 B          |         14 690 B          |      12 % |
+| 10k       |  176 939 B   |         156 923 B         |         156 890 B         |      11 % |
+| 100k      | 1 868 939 B  |        1 668 923 B        |        1 668 890 B        |      11 % |
+| 1M        | 19 688 939 B |       17 688 923 B        |       17 688 890 B        |      10 % |
+
+
+#### Time duration
+
+![JSON vs Protocol Python list](resources/time_dict_short_json_vs_proto.png)
+
+| List size |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object |     Reduction |
+|:----------|:----------:|:-------------------------:|:-------------------------:|--------------:|
+| 10        | 0.000 06 s |        0.000 09 s         |        0.000 08 s         | (-50)-(-33) % |
+| 100       | 0.000 06 s |        0.000 06 s         |        0.000 05 s         |       0-17  % |
+| 1k        | 0.000 33 s |        0.000 43 s         |        0.000 39 s         | (-30)-(-18) % |
+| 10k       | 0.031 13 s |        0.004 24 s         |        0.003 82 s         |       86-88 % |
+| 100k      | 0.064 69 s |        0.064 08 s         |        0.052 68 s         |        1-19 % |
+| 1M        | 0.675 56 s |        0.916 78 s         |        0.754 72 s         | (-36)-(-12) % |
+
+### Python dictionary (long keys > 70 characters)
+
+#### Size
+
+![JSON vs Protocol Python list](resources/dict_json_vs_proto.png)
+
+| List size |     JSON      | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
+|:----------|:-------------:|:-------------------------:|:-------------------------:|----------:|
+| 10        |    1 543 B    |          1 527 B          |          1 494 B          |     1-3 % |
+| 100       |   15 119 B    |         15 103 B          |         15 070 B          |       0 % |
+| 1k        |   151 739 B   |         151 723 B         |         151 690 B         |       0 % |
+| 10k       |  1 526 939 B  |        1 526 923 B        |        1 526 890 B        |       0 % |
+| 100k      | 15 368 939 B  |       15 368 923 B        |       15 368 890 B        |       0 % |
+| 1M        | 154 688 929 B |       154 688 923 B       |       154 688 890 B       |       0 % |
+
+
+#### Time duration
+
+![JSON vs Protocol Python list](resources/time_dict_json_vs_proto.png)
+
+| List size |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object |     Reduction |
+|:----------|:----------:|:-------------------------:|:-------------------------:|--------------:|
+| 10        | 0.000 06 s |        0.000 09 s         |        0.000 08 s         | (-50)-(-33) % |
+| 100       | 0.000 10 s |        0.000 07 s         |        0.000 05 s         |      30-50  % |
+| 1k        | 0.000 86 s |        0.000 56 s         |        0.000 46 s         |       35-47 % |
+| 10k       | 0.034 73 s |        0.010 48 s         |        0.006 68 s         |       70-80 % |
+| 100k      | 0.127 81 s |        0.126 80 s         |        0.087 48 s         |        1-32 % |
+| 1M        | 1.336 67 s |        1.665 21 s         |        1.132 30 s         |    (-25)-15 % |
 

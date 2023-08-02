@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x65xperiment.proto\x12\nexperiment\"\x15\n\x05\x41rray\x12\x0c\n\x04word\x18\x01 \x03(\t')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x65xperiment.proto\x12\nexperiment\"\x15\n\x05\x41rray\x12\x0c\n\x04word\x18\x01 \x03(\t\"i\n\nDictionary\x12.\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32 .experiment.Dictionary.DataEntry\x1a+\n\tDataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -21,6 +21,12 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'experiment_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
+  _DICTIONARY_DATAENTRY._options = None
+  _DICTIONARY_DATAENTRY._serialized_options = b'8\001'
   _globals['_ARRAY']._serialized_start=32
   _globals['_ARRAY']._serialized_end=53
+  _globals['_DICTIONARY']._serialized_start=55
+  _globals['_DICTIONARY']._serialized_end=160
+  _globals['_DICTIONARY_DATAENTRY']._serialized_start=117
+  _globals['_DICTIONARY_DATAENTRY']._serialized_end=160
 # @@protoc_insertion_point(module_scope)

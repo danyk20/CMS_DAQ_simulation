@@ -31,6 +31,26 @@ def get_list(length: int):
     return result
 
 
+def get_dict(length: int, long_key: bool = False):
+    """
+    Generate dictionary of string, string with selected number of elements
+
+    :param long_key: boolean value whether to use long key
+    :param length: number of elements
+    :return: list
+    """
+    words = SENTENCE.split()
+    index = 0
+    result = dict()
+    for i in range(length):
+        key = str(i) + SENTENCE if long_key else str(i)
+        if index == len(words):
+            index = 0
+        result[key] = words[index]
+        index += 1
+    return result
+
+
 def get_proto_array(array: list):
     """
     Convert list of Strings to list Protocol Buffer
@@ -40,6 +60,18 @@ def get_proto_array(array: list):
     """
     result = experiment_pb2.Array()
     result.word.extend(array)
+    return result
+
+
+def get_proto_dictionary(data: dict):
+    """
+    Convert list of Strings to list Protocol Buffer
+
+    :param data: input
+    :return: Protocol Buffer Object
+    """
+    result = experiment_pb2.Dictionary()
+    result.data.update(data)
     return result
 
 
@@ -103,7 +135,7 @@ def measure_envelopes(json_envelopes, proto_envelopes, plot_name):
     plot_graph(plot_name, size, tick_label, x_ax)
 
 
-def measure_lists(json_data: list, proto_data: list, plot_name: str):
+def measure_size(json_data: list, proto_data: list, plot_name: str):
     """
     Measure size and plot lists (json & proto)
 
@@ -238,6 +270,36 @@ def list_generator():
     return json_val, proto_val, json_duration, proto_duration, proto_raw_duration
 
 
+def dict_generator(long_key: bool = False):
+    """
+    Generate dict of string with following number of elements [10, 100, 1000, 10000, 100000, 1000000]
+
+    :return: tuple where the first element is encoded in json and the other in Protocol Buffer
+    """
+    sizes = [10, 100, 1000, 10000, 100000, 1000000]
+    inputs = []
+    for size in sizes:
+        inputs.append(get_dict(size, long_key))
+    json_val = []
+    json_duration = []
+    proto_val = []
+    proto_raw_duration = []
+    proto_duration = []
+    for element in inputs:
+        start = time.time()
+        json_val.append(json.dumps(element))
+        json_duration.append(time.time() - start)
+
+        start = time.time()
+        proto_val.append(get_proto_dictionary(element))
+        proto_raw_duration.append(time.time() - start)
+        start = time.time()
+        proto_val[-1].SerializeToString()
+        proto_duration.append(time.time() - start + proto_raw_duration[-1])
+
+    return json_val, proto_val, json_duration, proto_duration, proto_raw_duration
+
+
 original_format = set_message_format('json')
 envelopes_json = generate_envelopes()
 set_message_format(original_format)
@@ -246,10 +308,14 @@ original_format = set_message_format('proto')
 envelopes_proto = generate_envelopes()
 set_message_format(original_format)
 
-json_list, proto_list, json_time, proto_time, proto_raw_time = list_generator()
-
 # measure_envelopes(envelopes_json, envelopes_proto, 'envelopes_json_vs_proto')
 
+# json_list, proto_list, json_time, proto_time, proto_raw_time = list_generator()
 # measure_lists(json_list, proto_list, 'list_json_vs_proto')
 # plot_grouped_graph(json_time, proto_time, proto_raw_time, 'time_list_json_vs_proto', 'time [s]',
-                   # 'Duration of converting list into JSON vs Protocol Buffer')
+#                    'Duration of converting list into JSON vs Protocol Buffer')
+
+json_dict, proto_dict, json_dict_time, proto_dict_time, proto_dict_raw_time = dict_generator()
+measure_size(json_dict, proto_dict, 'dict_short_json_vs_proto')
+plot_grouped_graph(json_dict_time, proto_dict_time, proto_dict_raw_time, 'time_dict_short_json_vs_proto', 'time [s]',
+                   'Duration of converting dictionary into JSON vs Protocol Buffer')

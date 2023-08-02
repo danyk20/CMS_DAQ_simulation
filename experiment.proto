@@ -5,3 +5,7 @@ package experiment;
 message Array {
   repeated string word = 1;
 }
+
+message Dictionary {
+  map<string, string> data = 1;
+}
