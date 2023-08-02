@@ -240,7 +240,16 @@ def plot_graph(plot_name: str, values: list, tick_label: list, x_ax: list) -> No
     plt.show()
 
 
-def list_generator():
+def compute_avg_list(aggregated_list) -> list:
+    result = [0] * len(aggregated_list[0])
+    for measurement in aggregated_list:
+        for i in range(len(measurement)):
+            result[i] += measurement[i]
+    result = list(map(lambda x: x / len(aggregated_list), result))
+    return result
+
+
+def list_generator(measurements: int = 1):
     """
     Generate list of string with following number of elements [10, 100, 1000, 10000, 100000, 1000000]
 
@@ -251,26 +260,39 @@ def list_generator():
     for size in sizes:
         inputs.append(get_list(size))
     json_val = []
-    json_duration = []
     proto_val = []
-    proto_raw_duration = []
-    proto_duration = []
-    for element in inputs:
-        start = time.time()
-        json_val.append(json.dumps(element))
-        json_duration.append(time.time() - start)
+    aggregated_time_json = []
+    aggregated_time_proto = []
+    aggregated_time_proto_raw = []
+    for _ in range(measurements):
+        json_val = []
+        proto_val = []
+        json_duration = []
+        proto_raw_duration = []
+        proto_duration = []
+        for element in inputs:
+            start = time.time()
+            json_val.append(json.dumps(element))
+            json_duration.append(time.time() - start)
 
-        start = time.time()
-        proto_val.append(get_proto_array(element))
-        proto_raw_duration.append(time.time() - start)
-        start = time.time()
-        proto_val[-1].SerializeToString()
-        proto_duration.append(time.time() - start + proto_raw_duration[-1])
+            start = time.time()
+            proto_val.append(get_proto_array(element))
+            proto_raw_duration.append(time.time() - start)
+            start = time.time()
+            proto_val[-1].SerializeToString()
+            proto_duration.append(time.time() - start + proto_raw_duration[-1])
+        aggregated_time_json.append(json_duration)
+        aggregated_time_proto.append(proto_duration)
+        aggregated_time_proto_raw.append(proto_raw_duration)
+
+    json_duration = compute_avg_list(aggregated_time_json)
+    proto_duration = compute_avg_list(aggregated_time_proto)
+    proto_raw_duration = compute_avg_list(aggregated_time_proto_raw)
 
     return json_val, proto_val, json_duration, proto_duration, proto_raw_duration
 
 
-def dict_generator(long_key: bool = False):
+def dict_generator(long_key: bool = False, measurements: int = 1):
     """
     Generate dict of string with following number of elements [10, 100, 1000, 10000, 100000, 1000000]
 
@@ -281,21 +303,34 @@ def dict_generator(long_key: bool = False):
     for size in sizes:
         inputs.append(get_dict(size, long_key))
     json_val = []
-    json_duration = []
     proto_val = []
-    proto_raw_duration = []
-    proto_duration = []
-    for element in inputs:
-        start = time.time()
-        json_val.append(json.dumps(element))
-        json_duration.append(time.time() - start)
+    aggregated_time_json = []
+    aggregated_time_proto = []
+    aggregated_time_proto_raw = []
+    for i in range(measurements):
+        json_val = []
+        proto_val = []
+        json_duration = []
+        proto_raw_duration = []
+        proto_duration = []
+        for element in inputs:
+            start = time.time()
+            json_val.append(json.dumps(element))
+            json_duration.append(time.time() - start)
 
-        start = time.time()
-        proto_val.append(get_proto_dictionary(element))
-        proto_raw_duration.append(time.time() - start)
-        start = time.time()
-        proto_val[-1].SerializeToString()
-        proto_duration.append(time.time() - start + proto_raw_duration[-1])
+            start = time.time()
+            proto_val.append(get_proto_dictionary(element))
+            proto_raw_duration.append(time.time() - start)
+            start = time.time()
+            proto_val[-1].SerializeToString()
+            proto_duration.append(time.time() - start + proto_raw_duration[-1])
+        aggregated_time_json.append(json_duration)
+        aggregated_time_proto.append(proto_duration)
+        aggregated_time_proto_raw.append(proto_raw_duration)
+
+    json_duration = compute_avg_list(aggregated_time_json)
+    proto_duration = compute_avg_list(aggregated_time_proto)
+    proto_raw_duration = compute_avg_list(aggregated_time_proto_raw)
 
     return json_val, proto_val, json_duration, proto_duration, proto_raw_duration
 
@@ -308,14 +343,19 @@ original_format = set_message_format('proto')
 envelopes_proto = generate_envelopes()
 set_message_format(original_format)
 
-# measure_envelopes(envelopes_json, envelopes_proto, 'envelopes_json_vs_proto')
+measure_envelopes(envelopes_json, envelopes_proto, 'envelopes_json_vs_proto')
 
-# json_list, proto_list, json_time, proto_time, proto_raw_time = list_generator()
-# measure_lists(json_list, proto_list, 'list_json_vs_proto')
-# plot_grouped_graph(json_time, proto_time, proto_raw_time, 'time_list_json_vs_proto', 'time [s]',
-#                    'Duration of converting list into JSON vs Protocol Buffer')
+json_list, proto_list, json_time, proto_time, proto_raw_time = list_generator(100)
+measure_size(json_list, proto_list, 'list_json_vs_proto')
+plot_grouped_graph(json_time, proto_time, proto_raw_time, 'time_list_json_vs_proto', 'time [s]',
+                   'Duration of converting list into JSON vs Protocol Buffer')
 
-json_dict, proto_dict, json_dict_time, proto_dict_time, proto_dict_raw_time = dict_generator()
+json_dict, proto_dict, json_dict_time, proto_dict_time, proto_dict_raw_time = dict_generator(True, 100)
+measure_size(json_dict, proto_dict, 'dict_json_vs_proto')
+plot_grouped_graph(json_dict_time, proto_dict_time, proto_dict_raw_time, 'time_dict_json_vs_proto', 'time [s]',
+                   'Duration of converting dictionary into JSON vs Protocol Buffer')
+
+json_dict, proto_dict, json_dict_time, proto_dict_time, proto_dict_raw_time = dict_generator(False, 100)
 measure_size(json_dict, proto_dict, 'dict_short_json_vs_proto')
 plot_grouped_graph(json_dict_time, proto_dict_time, proto_dict_raw_time, 'time_dict_short_json_vs_proto', 'time [s]',
                    'Duration of converting dictionary into JSON vs Protocol Buffer')
