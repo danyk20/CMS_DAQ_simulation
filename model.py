@@ -285,7 +285,7 @@ class Node:
             time.sleep(configuration['node']['time']['get'])
             return str(self.state).split('.')[-1]
 
-        if utils.get_dict_from_envelope(body)['action'] == 'get_state':
+        if utils.get_dict_from_envelope(body, ['white'])['action'] == 'get_state':
             response = utils.get_blue_envelope(get_current_state())
             print('Returning current state: ' + str(response) + ' of node ' + self.address.get_port())
             ch.basic_publish(exchange='',

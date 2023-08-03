@@ -97,17 +97,16 @@ def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
     """
     envelope_format = get_configuration()['rabbitmq']['envelope_format']
     if envelope_format == 'json':
-        envelope = dict()
-        envelope['type'] = 'Notification'
-        envelope['sender'] = sender
-        envelope['toState'] = transitioned_state
+        envelope = {'color': 'red', 'type': 'Notification', 'sender': sender, 'toState': transitioned_state}
         return json.dumps(envelope)
     elif envelope_format == 'proto':
-        red_envelope = envelope_pb2.Red()
-        red_envelope.type = 'Notification'
-        red_envelope.sender = sender
-        red_envelope.toState = transitioned_state
-        return red_envelope.SerializeToString()
+        envelope = envelope_pb2.Rainbow()
+        envelope.color = 'red'
+        envelope.red.type = 'Notification'
+        envelope.red.sender = sender
+        envelope.red.toState = transitioned_state
+
+        return envelope.SerializeToString()
 
 
 def get_orange_envelope(state: str, chance_to_fail: float = 0) -> str:
@@ -120,17 +119,15 @@ def get_orange_envelope(state: str, chance_to_fail: float = 0) -> str:
     """
     envelope_format = get_configuration()['rabbitmq']['envelope_format']
     if envelope_format == 'json':
-        envelope = dict()
-        envelope['type'] = 'Input'
-        envelope['name'] = state
-        envelope['parameters'] = {'chance_to_fail': chance_to_fail}
+        envelope = {'color': 'orange', 'type': 'Input', 'name': state, 'parameters': {'chance_to_fail': chance_to_fail}}
         return json.dumps(envelope)
     elif envelope_format == 'proto':
-        orange_envelope = envelope_pb2.Orange()
-        orange_envelope.type = 'Input'
-        orange_envelope.name = state
-        orange_envelope.parameters.chance_to_fail = chance_to_fail
-        return orange_envelope.SerializeToString()
+        envelope = envelope_pb2.Rainbow()
+        envelope.color = 'orange'
+        envelope.orange.type = 'Input'
+        envelope.orange.name = state
+        envelope.orange.parameters.chance_to_fail = chance_to_fail
+        return envelope.SerializeToString()
 
 
 def get_blue_envelope(current_state: str) -> str:
@@ -142,13 +139,13 @@ def get_blue_envelope(current_state: str) -> str:
     """
     envelope_format = get_configuration()['rabbitmq']['envelope_format']
     if envelope_format == 'json':
-        envelope = dict()
-        envelope['state'] = current_state
+        envelope = {'color': 'blue', 'state': current_state}
         return json.dumps(envelope)
     elif envelope_format == 'proto':
-        blue_envelope = envelope_pb2.Blue()
-        blue_envelope.state = current_state
-        return blue_envelope.SerializeToString()
+        envelope = envelope_pb2.Rainbow()
+        envelope.color = 'blue'
+        envelope.blue.state = current_state
+        return envelope.SerializeToString()
 
 
 def get_white_envelope(requested_action: str = 'get_state') -> str:
@@ -162,13 +159,13 @@ def get_white_envelope(requested_action: str = 'get_state') -> str:
     """
     envelope_format = get_configuration()['rabbitmq']['envelope_format']
     if envelope_format == 'json':
-        envelope = dict()
-        envelope['action'] = requested_action
+        envelope = {'color': 'white', 'action': requested_action}
         return json.dumps(envelope)
     elif envelope_format == 'proto':
-        white_envelope = envelope_pb2.White()
-        white_envelope.action = requested_action
-        return white_envelope.SerializeToString()
+        envelope = envelope_pb2.Rainbow()
+        envelope.color = 'white'
+        envelope.white.action = requested_action
+        return envelope.SerializeToString()
 
 
 def set_architecture(architecture: str):
@@ -244,23 +241,30 @@ def set_time(time: str, value: int):
     return original_value
 
 
-def get_dict_from_envelope(message):
+def get_dict_from_envelope(message, accepted_types: list = ['white', 'blue', 'red', 'orange']):
     """
 
+    :param accepted_types:
     :param message:
     :return:
     """
     if get_configuration()['rabbitmq']['envelope_format'] == 'json':
         return json.loads(message)
-    # TODO better parsing
-    if b'get_state' in message:
-        envelope = envelope_pb2.White()
-    elif b'Input' in message:
-        envelope = envelope_pb2.Orange()
-    elif b'Notification' in message:
-        envelope = envelope_pb2.Red()
-    else:
-        envelope = envelope_pb2.Blue()
-
+    envelope = envelope_pb2.Rainbow()
     envelope.ParseFromString(message)
-    return MessageToDict(envelope, preserving_proto_field_name=True)
+
+    if envelope.color not in accepted_types:
+        raise Exception('Unexpected envelope type arrived')
+
+    if envelope.color == 'white':
+        data = envelope.white
+    elif envelope.color == 'orange':
+        data = envelope.orange
+    elif envelope.color == 'red':
+        data = envelope.red
+    elif envelope.color == 'blue':
+        data = envelope.blue
+    else:
+        raise Exception('Unsupported envelope type arrived')
+
+    return MessageToDict(data, preserving_proto_field_name=True)

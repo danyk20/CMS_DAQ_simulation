@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x65nvelope.proto\x12\x08\x65nvelope\"\x17\n\x05White\x12\x0e\n\x06\x61\x63tion\x18\x01 \x01(\t\"\x15\n\x04\x42lue\x12\r\n\x05state\x18\x01 \x01(\t\"4\n\x03Red\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0e\n\x06sender\x18\x02 \x01(\t\x12\x0f\n\x07toState\x18\x03 \x01(\t\"y\n\x06Orange\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\nparameters\x18\x03 \x01(\x0b\x32\x1a.envelope.Orange.Parameter\x1a#\n\tParameter\x12\x16\n\x0e\x63hance_to_fail\x18\x01 \x01(\x02')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x65nvelope.proto\x12\x08\x65nvelope\"\x17\n\x05White\x12\x0e\n\x06\x61\x63tion\x18\x01 \x01(\t\"\x15\n\x04\x42lue\x12\r\n\x05state\x18\x01 \x01(\t\"4\n\x03Red\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0e\n\x06sender\x18\x02 \x01(\t\x12\x0f\n\x07toState\x18\x03 \x01(\t\"y\n\x06Orange\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\nparameters\x18\x03 \x01(\x0b\x32\x1a.envelope.Orange.Parameter\x1a#\n\tParameter\x12\x16\n\x0e\x63hance_to_fail\x18\x01 \x01(\x02\"\xa4\x01\n\x07Rainbow\x12\r\n\x05\x63olor\x18\x01 \x01(\t\x12 \n\x05white\x18\x02 \x01(\x0b\x32\x0f.envelope.WhiteH\x00\x12\x1e\n\x04\x62lue\x18\x03 \x01(\x0b\x32\x0e.envelope.BlueH\x00\x12\x1c\n\x03red\x18\x04 \x01(\x0b\x32\r.envelope.RedH\x00\x12\"\n\x06orange\x18\x05 \x01(\x0b\x32\x10.envelope.OrangeH\x00\x42\x06\n\x04\x64\x61ta')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -31,4 +31,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_ORANGE']._serialized_end=251
   _globals['_ORANGE_PARAMETER']._serialized_start=216
   _globals['_ORANGE_PARAMETER']._serialized_end=251
+  _globals['_RAINBOW']._serialized_start=254
+  _globals['_RAINBOW']._serialized_end=418
 # @@protoc_insertion_point(module_scope)

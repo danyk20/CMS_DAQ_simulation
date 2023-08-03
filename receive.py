@@ -85,7 +85,7 @@ async def notify(state: str = None, sender_port: str = None) -> None:
 
 
 def callback(_ch, method, _properties, body):
-    message = utils.get_dict_from_envelope(body)
+    message = utils.get_dict_from_envelope(body, ['orange', 'red'])
     # message validation possible here
     async_loop = loop
     if message['type'] == 'Notification':

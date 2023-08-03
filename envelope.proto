@@ -24,3 +24,13 @@ message Orange {
   }
   optional Parameter parameters = 3;
 }
+
+message Rainbow {
+  optional string color = 1;
+  oneof data {
+    White white = 2;
+    Blue blue = 3;
+    Red red = 4;
+    Orange orange = 5;
+  }
+}

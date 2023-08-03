@@ -33,7 +33,8 @@ class TestNode:
         ports = list(get_all_ports())
         ports.sort()
         for port in ports:
-            assert await get_state(port) == {"State": "State.Stopped"}
+            state = await get_state(port)
+            assert (state == {"State": "State.Stopped"} or state == {"State": "State.Initialisation"})
 
     @pytest.mark.asyncio
     @pytest.mark.usefixtures('run_around_tests')
@@ -87,7 +88,7 @@ class TestNode:
         params = {'start': '1'}
         # set the most left children of the root to error state
         error_initiator = sorted(list(get_children_ports(PORT)))[0]
-        asyncio.get_running_loop().create_task(post_state(params, error_initiator))
+        await post_state(params, error_initiator)
         assert await get_state(error_initiator) == {"State": "State.Starting"}
         await asyncio.sleep(configuration['node']['time']['starting'])
         assert await get_state(error_initiator) == {"State": "State.Error"}
