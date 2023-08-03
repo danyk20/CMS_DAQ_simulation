@@ -158,7 +158,7 @@ def get_white_envelope(requested_action: str = 'get_state') -> str:
     Note: currently the only supported operation is get_state
 
     :param requested_action: type of request
-    :return: string representation of blue envelope
+    :return: string representation of white envelope
     """
     envelope_format = get_configuration()['rabbitmq']['envelope_format']
     if envelope_format == 'json':

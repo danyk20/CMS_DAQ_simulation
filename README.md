@@ -707,11 +707,11 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
     }
     ```
 
-    Note: do not use `required` mainly because of compatibility issues
+   Note: do not use `required` mainly because of compatibility issues
 
 2. Compile it `./protoc-23.4-linux-x86_64/bin/protoc -I=$SRC_DIR --python_out=$DST_DIR $SRC_DIR/<name>.proto`
-3. Assign values: e.g. 
-    ```
+3. Assign values: e.g.
+    ```text
     import <name>_pb2
     person = <name>_pb2.Person()
     person.id = 1234
@@ -742,28 +742,27 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 
 ![JSON vs Protocol Python list](resources/list_json_vs_proto.png)
 
-| List size |    JSON     | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
-|:----------|:-----------:|:-------------------------:|:-------------------------:|----------:|
-| 10        |    143 B    |           107 B           |           74 B            |   25-48 % |
-| 100       |   1 029 B   |           813 B           |           780 B           |   21-24 % |
-| 1k        |   9 849 B   |          7 833 B          |          7 800 B          |   20-21 % |
-| 10k       |  98 049 B   |         78 033 B          |         78 000 B          |      20 % |
-| 100k      |  980 049 B  |         780 033 B         |         780 000 B         |      20 % |
-| 1M        | 9 800 049 B |        7 800 033 B        |        7 800 000 B        |      20 % |
-
+| List length |    JSON     | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
+|:------------|:-----------:|:-------------------------:|:-------------------------:|----------:|
+| 10          |    143 B    |           107 B           |           74 B            |   25-48 % |
+| 100         |   1 029 B   |           813 B           |           780 B           |   21-24 % |
+| 1k          |   9 849 B   |          7 833 B          |          7 800 B          |   20-21 % |
+| 10k         |  98 049 B   |         78 033 B          |         78 000 B          |      20 % |
+| 100k        |  980 049 B  |         780 033 B         |         780 000 B         |      20 % |
+| 1M          | 9 800 049 B |        7 800 033 B        |        7 800 000 B        |      20 % |
 
 #### Time duration
 
 ![JSON vs Protocol Python list](resources/time_list_json_vs_proto.png)
 
-| List size |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
-|:----------|:----------:|:-------------------------:|:-------------------------:|----------:|
-| 10        | 0.000 07 s |        0.000 02 s         |        0.000 02 s         |      71 % |
-| 100       | 0.000 03 s |        0.000 01 s         |        0.000 01 s         |      66 % |
-| 1k        | 0.000 11 s |        0.000 06 s         |        0.000 05 s         |   45-55 % |
-| 10k       | 0.001 09 s |        0.000 53 s         |        0.000 45 s         |   51-59 % |
-| 100k      | 0.011 31 s |        0.007 35 s         |        0.005 78 s         |   35-49 % |
-| 1M        | 0.113 41 s |        0.074 11 s         |        0.057 23 s         |   35-50 % |
+| List length |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
+|:------------|:----------:|:-------------------------:|:-------------------------:|----------:|
+| 10          | 0.000 07 s |        0.000 02 s         |        0.000 02 s         |      71 % |
+| 100         | 0.000 03 s |        0.000 01 s         |        0.000 01 s         |      66 % |
+| 1k          | 0.000 11 s |        0.000 06 s         |        0.000 05 s         |   45-55 % |
+| 10k         | 0.001 09 s |        0.000 53 s         |        0.000 45 s         |   51-59 % |
+| 100k        | 0.011 31 s |        0.007 35 s         |        0.005 78 s         |   35-49 % |
+| 1M          | 0.113 41 s |        0.074 11 s         |        0.057 23 s         |   35-50 % |
 
 ### Python dictionary (short keys < 7 characters)
 
@@ -771,28 +770,27 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 
 ![JSON vs Protocol Python list](resources/dict_short_json_vs_proto.png)
 
-| List size |     JSON     | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
-|:----------|:------------:|:-------------------------:|:-------------------------:|----------:|
-| 10        |    193 B     |           157 B           |           124 B           |   19-36 % |
-| 100       |   1 619 B    |          1 403 B          |          1 370 B          |   13-15 % |
-| 1k        |   16 739 B   |         14 723 B          |         14 690 B          |      12 % |
-| 10k       |  176 939 B   |         156 923 B         |         156 890 B         |      11 % |
-| 100k      | 1 868 939 B  |        1 668 923 B        |        1 668 890 B        |      11 % |
-| 1M        | 19 688 939 B |       17 688 923 B        |       17 688 890 B        |      10 % |
-
+| Dictionary length |     JSON     | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
+|:------------------|:------------:|:-------------------------:|:-------------------------:|----------:|
+| 10                |    193 B     |           157 B           |           124 B           |   19-36 % |
+| 100               |   1 619 B    |          1 403 B          |          1 370 B          |   13-15 % |
+| 1k                |   16 739 B   |         14 723 B          |         14 690 B          |      12 % |
+| 10k               |  176 939 B   |         156 923 B         |         156 890 B         |      11 % |
+| 100k              | 1 868 939 B  |        1 668 923 B        |        1 668 890 B        |      11 % |
+| 1M                | 19 688 939 B |       17 688 923 B        |       17 688 890 B        |      10 % |
 
 #### Time duration
 
 ![JSON vs Protocol Python list](resources/time_dict_short_json_vs_proto.png)
 
-| List size |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object |     Reduction |
-|:----------|:----------:|:-------------------------:|:-------------------------:|--------------:|
-| 10        | 0.000 07 s |        0.000 06 s         |        0.000 05 s         |       14-29 % |
-| 100       | 0.000 07 s |        0.000 07 s         |        0.000 06 s         |       0-14  % |
-| 1k        | 0.000 36 s |        0.000 46 s         |        0.000 41 s         | (-27)-(-14) % |
-| 10k       | 0.003 24 s |        0.004 34 s         |        0.003 86 s         | (-34)-(-19) % |
-| 100k      | 0.034 19 s |        0.055 13 s         |        0.046 12 s         | (-61)-(-35) % |
-| 1M        | 0.725 99 s |        0.910 48 s         |        0.748 13 s         |  (-25)-(-3) % |
+| Dictionary length |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object |     Reduction |
+|:------------------|:----------:|:-------------------------:|:-------------------------:|--------------:|
+| 10                | 0.000 07 s |        0.000 06 s         |        0.000 05 s         |       14-29 % |
+| 100               | 0.000 07 s |        0.000 07 s         |        0.000 06 s         |       0-14  % |
+| 1k                | 0.000 36 s |        0.000 46 s         |        0.000 41 s         | (-27)-(-14) % |
+| 10k               | 0.003 24 s |        0.004 34 s         |        0.003 86 s         | (-34)-(-19) % |
+| 100k              | 0.034 19 s |        0.055 13 s         |        0.046 12 s         | (-61)-(-35) % |
+| 1M                | 0.725 99 s |        0.910 48 s         |        0.748 13 s         |  (-25)-(-3) % |
 
 ### Python dictionary (long keys > 70 characters)
 
@@ -800,32 +798,31 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 
 ![JSON vs Protocol Python list](resources/dict_json_vs_proto.png)
 
-| List size |     JSON      | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
-|:----------|:-------------:|:-------------------------:|:-------------------------:|----------:|
-| 10        |    1 543 B    |          1 527 B          |          1 494 B          |     1-3 % |
-| 100       |   15 119 B    |         15 103 B          |         15 070 B          |       0 % |
-| 1k        |   151 739 B   |         151 723 B         |         151 690 B         |       0 % |
-| 10k       |  1 526 939 B  |        1 526 923 B        |        1 526 890 B        |       0 % |
-| 100k      | 15 368 939 B  |       15 368 923 B        |       15 368 890 B        |       0 % |
-| 1M        | 154 688 929 B |       154 688 923 B       |       154 688 890 B       |       0 % |
-
+| Dictionary length |     JSON      | ProtocolBuffer Serialised | ProtocolBuffer raw object | Reduction |
+|:------------------|:-------------:|:-------------------------:|:-------------------------:|----------:|
+| 10                |    1 543 B    |          1 527 B          |          1 494 B          |     1-3 % |
+| 100               |   15 119 B    |         15 103 B          |         15 070 B          |       0 % |
+| 1k                |   151 739 B   |         151 723 B         |         151 690 B         |       0 % |
+| 10k               |  1 526 939 B  |        1 526 923 B        |        1 526 890 B        |       0 % |
+| 100k              | 15 368 939 B  |       15 368 923 B        |       15 368 890 B        |       0 % |
+| 1M                | 154 688 929 B |       154 688 923 B       |       154 688 890 B       |       0 % |
 
 #### Time duration
 
 ![JSON vs Protocol Python list](resources/time_dict_json_vs_proto.png)
 
-| List size |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object |  Reduction |
-|:----------|:----------:|:-------------------------:|:-------------------------:|-----------:|
-| 10        | 0.000 08 s |        0.000 05 s         |        0.000 04 s         |    38-50 % |
-| 100       | 0.000 10 s |        0.000 08 s         |        0.000 06 s         |    20-40 % |
-| 1k        | 0.000 71 s |        0.000 57 s         |        0.000 46 s         |    20-35 % |
-| 10k       | 0.007 19 s |        0.006 23 s         |        0.004 68 s         |    13-35 % |
-| 100k      | 0.094 58 s |        0.121 72 s         |        0.082 81 s         | (-29)-12 % |
-| 1M        | 1.347 49 s |        1.635 06 s         |        1.114 57 s         | (-21)-17 % |
-
+| Dictionary length |    JSON    | ProtocolBuffer Serialised | ProtocolBuffer raw object |  Reduction |
+|:------------------|:----------:|:-------------------------:|:-------------------------:|-----------:|
+| 10                | 0.000 08 s |        0.000 05 s         |        0.000 04 s         |    38-50 % |
+| 100               | 0.000 10 s |        0.000 08 s         |        0.000 06 s         |    20-40 % |
+| 1k                | 0.000 71 s |        0.000 57 s         |        0.000 46 s         |    20-35 % |
+| 10k               | 0.007 19 s |        0.006 23 s         |        0.004 68 s         |    13-35 % |
+| 100k              | 0.094 58 s |        0.121 72 s         |        0.082 81 s         | (-29)-12 % |
+| 1M                | 1.347 49 s |        1.635 06 s         |        1.114 57 s         | (-21)-17 % |
 
 ### Conclusion
 
-TBA
-
-
+Protocol Buffer come with measurable improvement in time and space complexity across almost all experiments. Especially
+using it for small chunks of data shows to be very efficient. We can follow the pattern that with growing size of the
+data is the improvement over the JSON decreasing. The only disadvantage is unintuitive initialisation of Protocol Buffer
+which need to be done on both sides of the communication and consistent of 3 steps (see above).
