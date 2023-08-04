@@ -3,7 +3,24 @@
 This script create tree hierarchy of nodes where each node is running as separate process which is accessible via REST
 API or using RabbitMQ middleware based on selected `architecture` attribute in `configuration.yaml`.
 
+## Node
+
+- All nodes have 5 digit long ID for uniq identification during the communication
+    - all nodes run identical code, the only difference is the ID which define node's position in the tree
+- Root node has ID 20 000(REST)/2.0.0.0.0(MOM) by default
+- The first most left child keep copy ID from parent and change first (from the left) 0 -> 1
+    - The seconds most left child keep copy ID from parent and change first (from the left) 0 -> 2, and etc. up to X
+      which is number of children
+    - maximum allowed number of children is 9 because of decimal number limitation
+- This proces recursively continue until selected level is reached
+    - level of the image as example is 2 (0 level = root)
+    - maximum allowed level is 4 because of ID length limitation
+
 ## REST API
+
+### Nodes tree structure
+
+![REST node diagram](resources/REST_nodes.png)
 
 ### GET /statemachine/state
 
@@ -92,7 +109,15 @@ ss
 
 ## RabbitMQ - RPC & Topic
 
-![topic diagram](resources/topic_diagram.png)
+### Nodes tree structure
+
+![MOM node diagram](resources/MOM_nodes.png)
+
+\
+
+|      ![topic diagram](resources/topic_diagram.png)      |
+|:-------------------------------------------------------:|
+| Message propagation using Topic - one way communication |
 
 ### Producer
 
@@ -140,7 +165,9 @@ implements:
 Each node has own queue for receiving messages (red or orange envelope) named topic_queue:binding_key (e.g. rpc_queue:
 2.0.0.0.0). All these ques are Auto-delete -> they will be deleted when the last consumer unsubscribe.
 
-![rpc diagram](resources/rpc_diagram.png)
+|          ![rpc diagram](resources/rpc_diagram.png)           |
+|:------------------------------------------------------------:|
+| Message propagation using RPC Server - two way communication |
 
 ### Queues
 
