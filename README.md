@@ -753,15 +753,15 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
 
 ### Envelopes
 
-![JSON vs Protocol Buffer plot](resources/json_vs_proto.png)
+![JSON vs Protocol Buffer plot](resources/envelopes_json_vs_proto.png)
 
 | Envelope |  JSON   | ProtocolBuffer | Reduction |
 |:---------|:-------:|:--------------:|----------:|
-| White    |  72 B   |      44 B      |      39 % |
-| Blue     | 76.2 B  |     49.2 B     |      35 % |
-| Red      | 125.2 B |     74.2 B     |      41 % |
-| Orange   | 136.2 B |     63.2 B     |      54 % |
-| Average  | 102.4 B |    57.65 B     |      44 % |
+| White    |  90 B   |      53 B      |      41 % |
+| Blue     | 93.2 B  |     57.2 B     |      39 % |
+| Red      | 141.2 B |     81.2 B     |      42 % |
+| Orange   | 155.2 B |     73.2 B     |      53 % |
+| Average  | 119.9 B |    66.15 B     |      45 % |
 
 ### Python list
 
