@@ -6,8 +6,9 @@ from fastapi import FastAPI, HTTPException
 from datetime import datetime
 
 import model
-from typing import Callable
+from typing import Callable, Optional
 from client import post_notification
+from message import ChangeState, Notification
 from model import Node
 from utils import get_configuration
 
@@ -47,10 +48,12 @@ def get_state() -> dict[str, str]:
 
 
 @app.post(configuration['URL']['change_state'])
-async def change_state(start: str = None, stop: str = None) -> model.State:
+async def change_state(state_change_command: Optional[ChangeState] = None, start: Optional[str] = None,
+                       stop: Optional[str] = None) -> model.State:
     """
     Endpoint to change node state.
 
+    :param state_change_command: object containing validated start or stop
     :param start: probability between 0 and 1 of getting into Error state
     :param stop: any non None input means stop
     :return: node state after transition
@@ -60,11 +63,19 @@ async def change_state(start: str = None, stop: str = None) -> model.State:
         print("Node " + node.address.get_port() + " received POST " + now.strftime(" %H:%M:%S"))
     if node.state == model.State.Error:
         return node.state
-    if start and node.state == model.State.Stopped:
+
+    if configuration['REST']['pydantic']:
+        prompt_to_start = state_change_command.start
+        prompt_to_stop = state_change_command.stop
+    else:
+        prompt_to_start = start
+        prompt_to_stop = stop
+
+    if prompt_to_start and node.state == model.State.Stopped:
         node.state = model.State.Starting
         asyncio.create_task(
-            node.set_state(model.State.Running, float(start), configuration['node']['time']['starting']))
-    elif stop and node.state == model.State.Running:
+            node.set_state(model.State.Running, float(prompt_to_start), configuration['node']['time']['starting']))
+    elif prompt_to_stop and node.state == model.State.Running:
         asyncio.create_task(
             node.set_state(model.State.Stopped, transition_time=configuration['node']['time']['starting']))
     else:
@@ -73,16 +84,25 @@ async def change_state(start: str = None, stop: str = None) -> model.State:
 
 
 @app.post(configuration['URL']['notification'])
-async def notify(state: str = None, sender: str = None) -> None:
+async def notify(notification: Optional[Notification] = None, state: Optional[str] = None,
+                 sender: Optional[str] = None) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
 
+    :param notification: object containing validated state and sender
     :param state: state of the child that sent notification
     :param sender: child's address
     :return: None
     """
-    if state:
-        node.children[model.NodeAddress(sender)].append(model.State[state.split('.')[-1]])
+    if configuration['REST']['pydantic']:
+        received_state = notification.state
+        received_from = notification.sender
+    else:
+        received_state = state
+        received_from = sender
+
+    if received_state:
+        node.children[model.NodeAddress(received_from)].append(model.State[received_state.split('.')[-1]])
         node.update_state()
     if node.get_parent().address is None:
         return

@@ -34,5 +34,6 @@ rabbitmq:
 
 REST:
   timeout: 21
+  pydantic: true
 
 debug: True

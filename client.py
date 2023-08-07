@@ -28,7 +28,7 @@ async def post_stop(address: str) -> None:
     :param address: node address
     :return: None
     """
-    params = {'stop': ' '}
+    params = {'stop': '_'}
     endpoint = address + configuration['URL']['change_state']
     await request_node(endpoint, params)
 
@@ -58,14 +58,21 @@ async def request_node(endpoint, params) -> None:
     delivered = False
     attempts = 0
     url = configuration['URL']['protocol'] + endpoint
-    async with aiohttp.ClientSession() as session:
+    headers = {'content-type': 'application/json'} if configuration['REST']['pydantic'] else {}
+    async with aiohttp.ClientSession(headers=headers) as session:
         while not delivered:
             if attempts > configuration['REST']['timeout']:
                 if configuration['debug']:
                     print(str(params) + ' - message cannot be delivered to ' + url)
                 return
             try:
-                async with session.post(url, params=params) as request:
+                def validated_post():
+                    return session.post(url, json=params)
+
+                def raw_post():
+                    return session.post(url, params=params)
+
+                async with validated_post() if configuration['REST']['pydantic'] else raw_post() as request:
                     if request.status == 200:
                         return
                     else:
