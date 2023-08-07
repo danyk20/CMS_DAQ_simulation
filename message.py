@@ -7,6 +7,12 @@ from utils import get_configuration
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
 
+class ValidationError(Exception):
+    def __init__(self, message, errors=None):
+        super().__init__(message)
+        self.errors = errors
+
+
 class ChangeState(pydantic.BaseModel):
     start: Optional[str]
     stop: Optional[str]
@@ -15,9 +21,9 @@ class ChangeState(pydantic.BaseModel):
     @classmethod
     def start_or_stop(cls, values):
         if 'start' in values and 'stop' in values:
-            raise Exception('Start and Stop at the same time!')
+            raise ValidationError('Start and Stop at the same time!')
         if 'start' not in values and 'stop' not in values:
-            raise Exception('Start neither Stop is defined!')
+            raise ValidationError('Start neither Stop is defined!')
         return values
 
     @pydantic.validator("start")
@@ -25,14 +31,14 @@ class ChangeState(pydantic.BaseModel):
     def start_valid(cls, value):
         probability = float(value)
         if probability < 0 or probability > 1:
-            raise Exception('Invalid probability of Start state: ' + value)
+            raise ValidationError('Invalid probability of Start state', value)
         return value
 
     @pydantic.validator("stop")
     @classmethod
     def stop_valid(cls, value):
         if value != '_':
-            raise Exception('Invalid attribute of Stop state: ' + value)
+            raise ValidationError('Invalid attribute of Stop state', value)
         return value
 
 
@@ -44,7 +50,7 @@ class Notification(pydantic.BaseModel):
     @classmethod
     def state_valid(cls, value):
         if value.split('.')[-1] not in ['Initialisation', 'Stopped', 'Starting', 'Running', 'Error']:
-            raise Exception('Invalid state in Notification: ' + value)
+            raise ValidationError('Invalid state in Notification', value)
         return value
 
     @pydantic.validator("sender")
@@ -52,5 +58,5 @@ class Notification(pydantic.BaseModel):
     def sender_valid(cls, value):
         port = int(value.split(':')[-1])
         if configuration['node']['port']['min'] > port > configuration['node']['port']['max']:
-            raise Exception('Invalid sender port in Notification: ' + value)
+            raise ValidationError('Invalid sender port in Notification:', value)
         return value

@@ -11,3 +11,5 @@ requests == 2.31.0
 google-api-python-client == 2.95.0
 numpy==1.25.2
 matplotlib==3.7.2
+starlette==0.27.0
+pydantic==1.10.9

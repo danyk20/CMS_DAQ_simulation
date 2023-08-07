@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import time
 
 import uvicorn
@@ -8,14 +9,29 @@ from datetime import datetime
 import model
 from typing import Callable, Optional
 from client import post_notification
-from message import ChangeState, Notification
+from message import ChangeState, Notification, ValidationError
 from model import Node
 from utils import get_configuration
+from starlette.requests import Request
+from starlette.responses import Response
 
 node: Node | None = None
 app = FastAPI()
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 shutdown_handler: Callable
+
+
+async def catch_exceptions_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except ValidationError as e:
+        if e.errors:
+            print(e.errors, file=sys.stderr)
+        print(e.args[0], file=sys.stderr)
+        return Response("Validation Error", status_code=400)
+
+
+app.middleware('http')(catch_exceptions_middleware)
 
 
 @app.on_event("startup")

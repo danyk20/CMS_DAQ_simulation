@@ -11,7 +11,7 @@ configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 def post_empty_change_state() -> int:
     """
     Show example of corrupted message - empty
-    :return: 400 code pydantic off, 500 code pydantic on
+    :return: 400 code
     """
     message = {}
     response_code = post(configuration['URL']['change_state'], message)
@@ -33,7 +33,7 @@ def post_invalid_change_state() -> int:
 def post_unknown_change_state() -> int:
     """
     Show example of corrupted message - non-existing
-    :return: 400 code pydantic off, 500 code pydantic on
+    :return: 400 code
     """
     message = {'foo': '_'}
     response_code = post(configuration['URL']['change_state'], message)
@@ -69,7 +69,7 @@ def post(endpoint: str, message: dict) -> int:
 
     :param endpoint: endpoint name
     :param message: json
-    :return: 200, 400, or 500 code
+    :return: 200 or 400 code
     """
     url = configuration['URL']['protocol'] + configuration['URL']['address'] + ':20000' + endpoint
 
