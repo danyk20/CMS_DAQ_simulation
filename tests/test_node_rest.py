@@ -65,7 +65,7 @@ class TestNode:
 
         assert await get_state() == {"State": "State.Stopped"}
 
-        asyncio.get_running_loop().create_task(post_state(start))
+        await post_state(start)
         assert await get_state() == {"State": "State.Starting"}
         await asyncio.sleep(configuration['node']['time']['starting'])
         assert await get_state() == {"State": "State.Running"}
