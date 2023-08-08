@@ -73,6 +73,28 @@ API or using RabbitMQ middleware based on selected `architecture` attribute in `
 - asynchronous operation using asyncio
     - `await` posting notification to its parent if not root
 
+### Pydantic Validation
+
+All messages sent from any node is validated by pydantic. The BaseModel of `StateChange` and `Notification` with
+validation is defined in `messages.py`. Any invalid value will raise `ValidationError` exception' which will be
+caught `catch_exceptions_middleware()` provided by FastAPI.
+
+Note: Pydantic validation is considered to be slow and therefore there is option to turn it off in `configuration.yaml`
+
+#### Change State
+
+Allow only one of the following command:
+
+- `{ 'start': <probability> }` - \<probability> must be in range [0 - 1]
+- `{ 'stop': '_' }` - '_' is the only allowed value
+
+#### Notification
+
+Allow only following format of the message:
+
+- `{ 'state': <State>, 'sender': 'A.B.C.D.E'}` - \<State> must be in only one of {Initialisation, Starting, Stopped,
+  Running, Error},  [A - E] is single digit
+
 ## REST Client
 
 This script contains manually created client however it is possible to generate client automatically using Python
