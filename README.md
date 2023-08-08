@@ -79,6 +79,10 @@ All messages sent from any node is validated by pydantic. The BaseModel of `Stat
 validation is defined in `messages.py`. Any invalid value will raise `ValidationError` exception' which will be
 caught `catch_exceptions_middleware()` provided by FastAPI.
 
+|                                       ![pydantic plot](resources/pydantic_speed.png)                                       |
+|:--------------------------------------------------------------------------------------------------------------------------:|
+| Instantiation Performance      [source](https://janhendrikewers.uk/pydantic_vs_protobuf_vs_namedtuple_vs_dataclasses.html) |
+
 Note: Pydantic validation is considered to be slow and therefore there is option to turn it off in `configuration.yaml`
 
 #### Change State
