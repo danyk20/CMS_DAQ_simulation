@@ -273,6 +273,7 @@ def get_dict_from_envelope(message: str, accepted_types: list = ['white', 'blue'
         data = envelope.blue
     else:
         raise Exception('Unsupported envelope type arrived')
-    env.validator(data, envelope.color)
+    if get_configuration()['rabbitmq']['validation']:
+        env.validator(data, envelope.color)
 
     return MessageToDict(data, preserving_proto_field_name=True)

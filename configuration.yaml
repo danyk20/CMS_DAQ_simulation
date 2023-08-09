@@ -30,6 +30,7 @@ architecture: MOM
 
 rabbitmq:
   rpc_timeout: 21
+  validation: true
   envelope_format: proto # supported formats are either json either proto (Protocol Buffer)
 
 REST:
