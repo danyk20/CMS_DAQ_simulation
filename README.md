@@ -9,7 +9,7 @@ API or using RabbitMQ middleware based on selected `architecture` attribute in `
     - all nodes run identical code, the only difference is the ID which define node's position in the tree
 - Root node has ID 20 000(REST)/2.0.0.0.0(MOM) by default
 - The first most left child keep copy ID from parent and change first (from the left) 0 -> 1
-    - The seconds most left child keep copy ID from parent and change first (from the left) 0 -> 2, and etc. up to X
+    - The seconds most left child keep copy ID from parent and change first (from the left) 0 -> 2, etc. up to X
       which is number of children
     - maximum allowed number of children is 9 because of decimal number limitation
 - This proces recursively continue until selected level is reached
@@ -76,7 +76,7 @@ API or using RabbitMQ middleware based on selected `architecture` attribute in `
 ### Pydantic Validation
 
 All messages sent from any node is validated by pydantic. The BaseModel of `StateChange` and `Notification` with
-validation is defined in `messages.py`. Any invalid value will raise `ValidationError` exception' which will be
+validation is defined in `messages.py`. Any invalid value will raise `ValidationError` exception which will be
 caught `catch_exceptions_middleware()` provided by FastAPI.
 
 |                                       ![pydantic plot](resources/pydantic_speed.png)                                       |
@@ -887,3 +887,70 @@ Protocol Buffer come with measurable improvement in time and space complexity ac
 using it for small chunks of data shows to be very efficient. We can follow the pattern that with growing size of the
 data is the improvement over the JSON decreasing. The only disadvantage is unintuitive initialisation of Protocol Buffer
 which need to be done on both sides of the communication and consistent of 3 steps (see above).
+
+# Kubernetes
+
+## Create a cluster
+
+Create Kubernetes cluster with specific name `rabbit` running in Docker container using KinD (Kubernetes in Docker).
+
+```shell
+sudo kind create cluster --name rabbit
+```
+
+Verify that it is running:
+
+```shell
+sudo kind get clusters
+```
+
+result:
+
+```text
+rabbit
+```
+
+Delete cluster with specific name `rabbit`.
+
+```shell
+sudo kind delete cluster --name rabbit
+```
+
+## Namespace
+
+Create namespaces on created cluster.
+
+```shell
+sudo kubectl create ns rabbits --context kind-rabbit
+```
+
+## Deployment
+
+```shell
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-rbac.yaml --context kind-rabbit
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-configmap.yaml --context kind-rabbit
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-secret.yaml --context kind-rabbit
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-statefulset.yaml --context kind-rabbit
+```
+
+## Test
+
+Verify pods:
+
+```shell
+sudo kubectl -n rabbits get pods --context kind-rabbit
+```
+
+Verify storage:
+
+```shell
+sudo kubectl -n rabbits get pvc --context kind-rabbit
+```
+
+Connect to the web GUI:
+
+```shell
+sudo kubectl -n rabbits port-forward rabbitmq-0 8080:15672 --context kind-rabbit
+```
+
+Note: Username & Password: Z3Vlc3q=
