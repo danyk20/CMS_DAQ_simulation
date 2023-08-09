@@ -17,7 +17,8 @@ class TestNode:
     def test_rpc_client_value(self):
         """
         Test all return values from that rpc_server responded
-        :return:
+
+        :return: None
         """
         init_node = generate_node(State.Initialisation)
         white_envelope = utils.get_white_envelope('get_state')
@@ -31,7 +32,8 @@ class TestNode:
     def test_rpc_client_duration(self):
         """
         Test that rpc_server is responding in expected time (wait x seconds)
-        :return:
+
+        :return: None
         """
         init_node = generate_node(State.Initialisation)
         white_envelope = utils.get_white_envelope('get_state')
@@ -48,14 +50,16 @@ class TestNode:
         """
         Test notification propagation behaviour and updating own state
         Note: it does not test whether the message to parent is sent correctly
-        :return:
+
+        :return: None
         """
+        sender = '23456'
         raw_state = str(State.Error).split(':')[-1]
-        receive.node = generate_node(State.Running, children={model.NodeAddress('127.0.0.1:sender'): []},
+        receive.node = generate_node(State.Running, children={model.NodeAddress('127.0.0.1:' + sender): []},
                                      address='127.0.0.1:22000')
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope(raw_state, 'sender'))
+                         body=utils.get_red_envelope(raw_state, sender))
         assert receive.node.state == State.Running
         await asyncio.sleep(1)
         assert receive.node.state == State.Error
@@ -67,13 +71,15 @@ class TestNode:
         """
         Test if notification influence node that is already in error state
         Note: it does not test whether the message to parent is sent correctly
-        :return:
+
+        :return: None
         """
+        sender = '23456'
         raw_state = str(State.Running).split(':')[-1]
-        receive.node = generate_node(State.Error, children={model.NodeAddress('127.0.0.1:sender'): []})
+        receive.node = generate_node(State.Error, children={model.NodeAddress('127.0.0.1:' + sender): []})
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope(raw_state, 'sender'))
+                         body=utils.get_red_envelope(raw_state, sender))
         assert receive.node.state == State.Error
         await asyncio.sleep(1)
         assert receive.node.state == State.Error
@@ -84,15 +90,17 @@ class TestNode:
     async def test_notify_message_one_child(self):
         """
         Test notification processing from one child.
-        :return:
+
+        :return: None
         """
         init_states = [State.Stopped, State.Running]
+        sender = '23456'
         for i in range(2):
             raw_state = str(init_states[i - 1]).split(':')[-1]
-            receive.node = generate_node(init_states[1 - i], children={model.NodeAddress('127.0.0.1:sender'): []})
+            receive.node = generate_node(init_states[1 - i], children={model.NodeAddress('127.0.0.1:' + sender): []})
             receive.loop = asyncio.get_event_loop()
             receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                             body=utils.get_red_envelope(raw_state, 'sender'))
+                             body=utils.get_red_envelope(raw_state, sender))
             assert receive.node.state == init_states[1 - i]
             await asyncio.sleep(1)
             assert receive.node.state == init_states[i - 1]
@@ -103,31 +111,34 @@ class TestNode:
     async def test_notify_message_two_children(self):
         """
         Test notification processing from more children
-        :return:
-        """
 
-        receive.node = generate_node(State.Stopped, children={model.NodeAddress('127.0.0.1:child_1'): [],
-                                                              model.NodeAddress('127.0.0.1:child_2'): []})
+        :return: None
+        """
+        child_1 = '21000'
+        child_2 = '22000'
+
+        receive.node = generate_node(State.Stopped, children={model.NodeAddress('127.0.0.1:' + child_1): [],
+                                                              model.NodeAddress('127.0.0.1:' + child_2): []})
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope('Starting', 'child_1'))
+                         body=utils.get_red_envelope('Starting', child_1))
         assert receive.node.state == State.Stopped  # node created with this state
         await asyncio.sleep(1)
         assert receive.node.state == State.Initialisation  # default state when missing notification from any child
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope('Stopped', 'child_2'))
+                         body=utils.get_red_envelope('Stopped', child_2))
         await asyncio.sleep(1)
         assert receive.node.state == State.Stopped  # one child Stopped one Starting -> Stopped
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope('Running', 'child_2'))
+                         body=utils.get_red_envelope('Running', child_2))
         await asyncio.sleep(1)
         assert receive.node.state == State.Starting  # one child Running one Starting -> Starting
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope('Running', 'child_1'))
+                         body=utils.get_red_envelope('Running', child_1))
         await asyncio.sleep(1)
         assert receive.node.state == State.Running  # all children Running
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope('Error', 'child_1'))
+                         body=utils.get_red_envelope('Error', child_1))
         await asyncio.sleep(1)
         assert receive.node.state == State.Error  # at least one child in Error state
 
@@ -137,7 +148,8 @@ class TestNode:
     async def test_change_state_message_no_child_running(self):
         """
         Test changing state Stopped->Running behaviour after receiving the command without propagation to children
-        :return:
+
+        :return: None
         """
         raw_state = str(State.Running).split('.')[-1]
 
@@ -157,7 +169,8 @@ class TestNode:
     async def test_change_state_message_no_child_error(self):
         """
         Test changing state Error->Stopped behaviour after receiving the command without propagation to children
-        :return:
+
+        :return: None
         """
         raw_state = str(State.Stopped).split('.')[-1]
 
@@ -175,7 +188,8 @@ class TestNode:
     async def test_change_state_message_no_child_stopped(self):
         """
         Test changing state Running->Stopped behaviour after receiving the command without propagation to children
-        :return:
+
+        :return: None
         """
         raw_state = str(State.Stopped).split('.')[-1]
 
@@ -193,12 +207,16 @@ class TestNode:
     async def test_change_state_message_two_children(self):
         """
         Test changing state and waiting to children notification in order to change the state
-        :return:
+
+        :return: None
         """
+        child_1 = '21000'
+        child_2 = '22000'
+
         raw_state = str(State.Running).split('.')[-1]
 
         receive.node = generate_node(State.Stopped)
-        receive.node.children = {model.NodeAddress('127.0.0.1:child_1'): [], model.NodeAddress('127.0.0.1:child_2'): []}
+        receive.node.children = {model.NodeAddress('127.0.0.1:' + child_1): [], model.NodeAddress('127.0.0.1:' + child_2): []}
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
                          body=utils.get_orange_envelope(raw_state))
@@ -209,11 +227,11 @@ class TestNode:
         assert receive.node.state == State.Starting  # node won't change the state before its child
 
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope('Running', 'child_2'))
+                         body=utils.get_red_envelope('Running', child_2))
         await asyncio.sleep(1)
         assert receive.node.state == State.Initialisation  # one child Running one no notification -> Initialisation
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope('Running', 'child_1'))
+                         body=utils.get_red_envelope('Running', child_1))
         await asyncio.sleep(configuration['node']['time']['starting'])
         assert receive.node.state == State.Running
 

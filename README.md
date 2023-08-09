@@ -286,6 +286,12 @@ Orange:
 }
 ```
 
+#### Validation
+
+There is implemented custom validator for all envelopes since documentation suggest that approach: "You should consider writing application-specific custom validation routines for your buffers" but there exist also some 3rd part libraries: 
+
+- [protoc-gen-validate](https://github.com/bufbuild/protoc-gen-validate) - only proto3 supported
+
 ![internal implementation](resources/rabbitmq_implementation.png)
 
 # Prerequisite

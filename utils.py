@@ -171,6 +171,7 @@ def get_white_envelope(requested_action: str = 'get_state') -> str:
 def set_architecture(architecture: str):
     """
     Edit selected architecture in configuration file
+
     :param architecture: newly selected architecture
     :return: original architecture
     """
@@ -189,6 +190,7 @@ def set_architecture(architecture: str):
 def set_message_format(new_format: str):
     """
     Edit selected architecture in configuration file
+
     :param new_format: newly selected architecture
     :return: original envelope format
     """
@@ -199,6 +201,7 @@ def set_message_format(new_format: str):
 def set_configuration(new_value: str, path: list):
     """
     Edit selected value in configuration file
+
     :param path: path to get the selected value
     :param new_value: newly selected value
     :return: original value
@@ -225,6 +228,7 @@ def set_configuration(new_value: str, path: list):
 def set_time(time: str, value: int):
     """
     Edit selected architecture in configuration file
+
     :param value: newly selected value
     :param time: specifier
     :return: original architecture
@@ -241,13 +245,16 @@ def set_time(time: str, value: int):
     return original_value
 
 
-def get_dict_from_envelope(message, accepted_types: list = ['white', 'blue', 'red', 'orange']):
+def get_dict_from_envelope(message: str, accepted_types: list = ['white', 'blue', 'red', 'orange']):
     """
+    Convert string data (envelope) to dictionary
 
-    :param accepted_types:
-    :param message:
-    :return:
+    :param accepted_types: which envelope type can be accepted
+    :param message: data to convert
+    :return: dictionary with key = envelope attribute and its value
     """
+    import envelope as env
+
     if get_configuration()['rabbitmq']['envelope_format'] == 'json':
         return json.loads(message)
     envelope = envelope_pb2.Rainbow()
@@ -266,5 +273,6 @@ def get_dict_from_envelope(message, accepted_types: list = ['white', 'blue', 're
         data = envelope.blue
     else:
         raise Exception('Unsupported envelope type arrived')
+    env.validator(data, envelope.color)
 
     return MessageToDict(data, preserving_proto_field_name=True)
