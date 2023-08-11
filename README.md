@@ -288,7 +288,8 @@ Orange:
 
 #### Validation
 
-There is implemented custom validator for all envelopes since documentation suggest that approach: "You should consider writing application-specific custom validation routines for your buffers" but there exist also some 3rd part libraries: 
+There is implemented custom validator for all envelopes since documentation suggest that approach: "You should consider
+writing application-specific custom validation routines for your buffers" but there exist also some 3rd part libraries:
 
 Note: To disable RabbitMQ envelopes validation update `configuration.yaml` file.
 
@@ -890,7 +891,30 @@ which need to be done on both sides of the communication and consistent of 3 ste
 
 # Kubernetes
 
+Following tutorial will create virtual cluster named `rabbit` with 4 replicas of RabbitMQ pod using rabbitmq:
+3.8-management image. There are 4 configuration files ({ConfigMap}, {ServiceAccount, Role, RoleBinding}, {Secret},
+{StatefulSet, Service}) defined
+in `kuberbernetes` directory.
+
+## Start Docker
+
+Running Docker is necessary for creating cluster using kind.
+
+```shell
+sudo systemctl start docker
+```
+
 ## Create a cluster
+
+### [Kind](https://kind.sigs.k8s.io/)
+
+Development tool for running local Kubernetes clusters using Docker container “nodes”. Should not be used for
+production!
+
+Alternatives:
+
+- [minikube](https://minikube.sigs.k8s.io/docs/start/)
+- [k3s](https://k3s.io/) VM /[k3d](https://k3d.io/) Docker
 
 Create Kubernetes cluster with specific name `rabbit` running in Docker container using KinD (Kubernetes in Docker).
 
@@ -926,11 +950,22 @@ sudo kubectl create ns rabbits --context kind-rabbit
 
 ## Deployment
 
+### Apply configuration files
+
 ```shell
 sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-rbac.yaml --context kind-rabbit
 sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-configmap.yaml --context kind-rabbit
 sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-secret.yaml --context kind-rabbit
 sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-statefulset.yaml --context kind-rabbit
+```
+
+### Delete configuration files
+
+```shell
+sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-rbac.yaml --context kind-rabbit
+sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-configmap.yaml --context kind-rabbit
+sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-secret.yaml --context kind-rabbit
+sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-statefulset.yaml --context kind-rabbit
 ```
 
 ## Test
@@ -953,4 +988,16 @@ Connect to the web GUI:
 sudo kubectl -n rabbits port-forward rabbitmq-0 8080:15672 --context kind-rabbit
 ```
 
-Note: Username & Password: Z3Vlc3q=
+Note: This is an example so default Username & Password: `guest` remained the same, but we need to use Base64 values in
+Secret:
+
+```shell
+echo -n 'guest' | base64
+```
+
+result
+
+```text
+Z3Vlc3Q=
+```
+
