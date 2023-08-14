@@ -984,9 +984,60 @@ sudo kubectl -n rabbits get pvc --context kind-rabbit
 
 Connect to the web GUI:
 
+### Port forwarding
+
 ```shell
-sudo kubectl -n rabbits port-forward rabbitmq-0 8080:15672 --context kind-rabbit
+sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672 --context kind-rabbit
 ```
+
+##### Access web GUI
+- use node internal IP from previous step to access management GUI on port 30000
+
+[localhost:30000](http://127.0.0.1:30000)
+
+### Exposing internal port
+
+#### Install Installing MetalLB
+
+It is prerequisite in order to expose internal ports while running cluster using kind.
+
+##### Install
+```shell
+sudo kubectl apply -n metallb-system -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+```
+
+##### Setup
+```shell
+sudo kubectl wait --namespace metallb-system \
+                --for=condition=ready pod \
+                --selector=app=metallb \
+                --timeout=90s
+```
+
+##### Get IP range
+- get docker image IP range
+```shell
+sudo docker network inspect -f '{{.IPAM.Config}}' kind
+```
+
+##### Update configuration file
+
+- update `./kubernetes/metallb-adresspool.yaml` IP range based on IP range from previous command
+
+##### Apply IP range
+```shell
+sudo kubectl apply -n metallb-system -f ./kubernetes/metallb-addresspool.yaml
+```
+
+##### Show internal node IP
+```shell
+sudo kubectl get node rabbit-control-plane -n rabbit -o wide
+```
+
+##### Access web GUI
+- use node internal IP from previous step to access management GUI on port 30000
+
+[internal_IP:30000](http://172.18.0.2:30000)
 
 Note: This is an example so default Username & Password: `guest` remained the same, but we need to use Base64 values in
 Secret:
@@ -1000,4 +1051,3 @@ result
 ```text
 Z3Vlc3Q=
 ```
-
