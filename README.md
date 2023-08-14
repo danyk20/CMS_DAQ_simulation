@@ -997,13 +997,13 @@ sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672
 
 ### Exposing internal port
 
-#### Install Installing MetalLB
+#### Install Installing MetalLB (only for LoadBalancer - external IP)
 
 It is prerequisite in order to expose internal ports while running cluster using kind.
 
-##### Install
+##### Install 
 ```shell
-sudo kubectl apply -n metallb-system -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+sudo kubectl apply -n metallb-system -f ./kubernetes/metallb-loadbalancer.yaml
 ```
 
 ##### Setup
@@ -1032,6 +1032,12 @@ sudo kubectl apply -n metallb-system -f ./kubernetes/metallb-addresspool.yaml
 ##### Show internal node IP
 ```shell
 sudo kubectl get node rabbit-control-plane -n rabbit -o wide
+```
+
+#### Expose the port
+
+```shell
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
 ```
 
 ##### Access web GUI
