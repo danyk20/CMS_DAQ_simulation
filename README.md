@@ -953,19 +953,19 @@ sudo kubectl create ns rabbits --context kind-rabbit
 ### Apply configuration files
 
 ```shell
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-rbac.yaml --context kind-rabbit
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-configmap.yaml --context kind-rabbit
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-secret.yaml --context kind-rabbit
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-statefulset.yaml --context kind-rabbit
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-rbac.yaml 
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-configmap.yaml 
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-secret.yaml 
+sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-statefulset.yaml 
 ```
 
 ### Delete configuration files
 
 ```shell
-sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-rbac.yaml --context kind-rabbit
-sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-configmap.yaml --context kind-rabbit
-sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-secret.yaml --context kind-rabbit
-sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-statefulset.yaml --context kind-rabbit
+sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-rbac.yaml 
+sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-configmap.yaml 
+sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-secret.yaml 
+sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-statefulset.yaml 
 ```
 
 ## Test
@@ -973,13 +973,13 @@ sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-statefulset.yaml --context
 Verify pods:
 
 ```shell
-sudo kubectl -n rabbits get pods --context kind-rabbit
+sudo kubectl -n rabbits get pods 
 ```
 
 Verify storage:
 
 ```shell
-sudo kubectl -n rabbits get pvc --context kind-rabbit
+sudo kubectl -n rabbits get pvc 
 ```
 
 Connect to the web GUI:
@@ -987,7 +987,7 @@ Connect to the web GUI:
 ### Port forwarding
 
 ```shell
-sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672 --context kind-rabbit
+sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672
 ```
 
 ##### Access web GUI
