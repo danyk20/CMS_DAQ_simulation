@@ -1053,7 +1053,7 @@ sudo kubectl apply -f ./kubernetes/metallb-addresspool.yaml
 sudo kubectl get node rabbit-control-plane -n rabbit -o wide
 ```
 
-#### Expose the port
+#### Expose the port via LoadBalancer Service (with implicit NodePort)
 
 ```shell
 sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
@@ -1068,7 +1068,7 @@ sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
 [localhost:30000](http://127.0.0.1:30000) or [internal_IP:30000](http://172.18.0.2:30000)
 
 Note: This is an example so default Username & Password: `guest` remained the same, but we need to use Base64 values in
-Secret:
+Kubernetes `Secret` file:
 
 ```shell
 echo -n 'guest' | base64
