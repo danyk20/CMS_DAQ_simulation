@@ -893,10 +893,9 @@ which need to be done on both sides of the communication and consistent of 3 ste
 
 Following tutorial will create virtual cluster named `rabbit` with 4 replicas of RabbitMQ pod using rabbitmq:
 3.8-management image and MetalLB for KinD. There are 4 configuration files for RabbitMQ ({ConfigMap}, {ServiceAccount,
-Role, RoleBinding},
-{Secret}, {StatefulSet, Service}), 2 configuration files for Metal Load Balancer - MetalLB ({IPAddressPool,
-L2Advertisement}, {<Load Balancer Configuration>}) and 1 configuration file for KinD (Cluster) defined in
-`kuberbernetes` directory.
+Role, RoleBinding}, {Secret}, {StatefulSet, Service}), 2 configuration files for Metal Load Balancer - MetalLB (
+{IPAddressPool, L2Advertisement}, {<Load Balancer Configuration>}) and 1 configuration file for KinD (Cluster) defined
+in `kuberbernetes` directory.
 
 ![Kubernetes cluster architecture](resources/Kubernetes_architecture.png)
 
@@ -963,7 +962,7 @@ sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-secret.yaml
 sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-statefulset.yaml 
 ```
 
-### Delete configuration files 
+### Delete configuration files
 
 ```shell
 sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-rbac.yaml 
@@ -988,15 +987,15 @@ sudo kubectl -n rabbits get pvc
 
 Connect to the web GUI by:
 
-### Port forwarding 
+### Port forwarding
 
 ```shell
 sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672
 ```
 
-##### Access web GUI 
+##### Access web GUI
 
-- use tunnel to access management GUI on localhost port 30000
+- use tunnel to access web management GUI on localhost port 30000
 
 [localhost:30000](http://127.0.0.1:30000)
 
@@ -1004,17 +1003,18 @@ sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672
 
 #### Install Installing [MetalLB](https://metallb.universe.tf/) (only for LoadBalancer - external IP)
 
-There are 2 options how to expose the internal port using the Kubernetes `Service`:
+There are 2 options how to expose the internal port using the Kubernetes `Service` component:
 
 - NodePort (skip this step `Install Installing MetalLB (only for LoadBalancer - external IP)`
   to [implicit creation of NodePort](#expose-the-port))
 - LoadBalancer (follow all the steps)
 
-In production is LoadBalancer type preferred over NodePort which is used mostly for testing purposes mainly because of security reasons.
+In production is LoadBalancer type preferred over NodePort which is used mostly for testing purposes mainly because of
+security reasons.
 
 ##### Install Load Balancer
 
-Load Balancer is prerequisite in order to expose internal ports with `Loadbalancer` Service.
+Load Balancer is prerequisite in order to expose internal ports with `Loadbalancer` Service component.
 
 ```shell
 sudo kubectl apply -f ./kubernetes/metallb-loadbalancer.yaml
@@ -1059,9 +1059,10 @@ sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
 sudo kubectl get node rabbit-control-plane -n rabbit -o wide
 ```
 
-##### Access web GUI 
+##### Access web GUI
 
-- use external IP of the Load Balancer with the port 15672, node internal Node IP from previous step or localhost to access management GUI on port 30000 via NodePort Service
+- use external IP of the Load Balancer with the port 15672, Node component internal Node IP from previous step or 
+localhost to access management GUI on port 30000 via NodePort Service component
 
 [Load Balancer:15672](http://172.18.0.200:15672)
 
