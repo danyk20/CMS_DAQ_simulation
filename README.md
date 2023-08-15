@@ -963,7 +963,7 @@ sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-secret.yaml
 sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-statefulset.yaml 
 ```
 
-### Delete configuration files
+### Delete configuration files 
 
 ```shell
 sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-rbac.yaml 
@@ -988,13 +988,13 @@ sudo kubectl -n rabbits get pvc
 
 Connect to the web GUI by:
 
-### Port forwarding
+### Port forwarding 
 
 ```shell
 sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672
 ```
 
-##### Access web GUI
+##### Access web GUI 
 
 - use tunnel to access management GUI on localhost port 30000
 
@@ -1002,7 +1002,7 @@ sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672
 
 ### Exposing internal port for RabbitMQ management
 
-#### Install Installing MetalLB (only for LoadBalancer - external IP)
+#### Install Installing [MetalLB](https://metallb.universe.tf/) (only for LoadBalancer - external IP)
 
 There are 2 options how to expose the internal port using the Kubernetes `Service`:
 
@@ -1010,17 +1010,17 @@ There are 2 options how to expose the internal port using the Kubernetes `Servic
   to [implicit creation of NodePort](#expose-the-port))
 - LoadBalancer (follow all the steps)
 
-Since the NodePort should be used in
+In production is LoadBalancer type preferred over NodePort which is used mostly for testing purposes mainly because of security reasons.
 
-It is prerequisite in order to expose internal ports while running cluster using kind.
+##### Install Load Balancer
 
-##### Install
+Load Balancer is prerequisite in order to expose internal ports with `Loadbalancer` Service.
 
 ```shell
 sudo kubectl apply -f ./kubernetes/metallb-loadbalancer.yaml
 ```
 
-##### Setup
+##### Setup Load Balancer
 
 ```shell
 sudo kubectl wait --namespace metallb-system \
@@ -1029,7 +1029,7 @@ sudo kubectl wait --namespace metallb-system \
                 --timeout=90s
 ```
 
-##### Get IP range
+##### Get IP range dedicated by docker
 
 - get docker image IP range
 
@@ -1047,19 +1047,19 @@ sudo docker network inspect -f '{{.IPAM.Config}}' kind
 sudo kubectl apply -f ./kubernetes/metallb-addresspool.yaml
 ```
 
-##### Show internal node IP
-
-```shell
-sudo kubectl get node rabbit-control-plane -n rabbit -o wide
-```
-
 #### Expose the port via LoadBalancer Service (with implicit NodePort)
 
 ```shell
 sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
 ```
 
-##### Access web GUI
+##### Show internal node IP to access via NodePort Service \[optional]
+
+```shell
+sudo kubectl get node rabbit-control-plane -n rabbit -o wide
+```
+
+##### Access web GUI 
 
 - use external IP of the Load Balancer with the port 15672, node internal Node IP from previous step or localhost to access management GUI on port 30000 via NodePort Service
 
