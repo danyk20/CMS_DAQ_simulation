@@ -892,9 +892,13 @@ which need to be done on both sides of the communication and consistent of 3 ste
 # Kubernetes
 
 Following tutorial will create virtual cluster named `rabbit` with 4 replicas of RabbitMQ pod using rabbitmq:
-3.8-management image. There are 4 configuration files ({ConfigMap}, {ServiceAccount, Role, RoleBinding}, {Secret},
-{StatefulSet, Service}) defined
-in `kuberbernetes` directory.
+3.8-management image and MetalLB for KinD. There are 4 configuration files for RabbitMQ ({ConfigMap}, {ServiceAccount,
+Role, RoleBinding},
+{Secret}, {StatefulSet, Service}), 2 configuration files for Metal Load Balancer - MetalLB ({IPAddressPool,
+L2Advertisement}, {<Load Balancer Configuration>}) and 1 configuration file for KinD (Cluster) defined in
+`kuberbernetes` directory.
+
+![Kubernetes cluster architecture](resources/Kubernetes_architecture.png)
 
 ## Start Docker
 
@@ -919,7 +923,7 @@ Alternatives:
 Create Kubernetes cluster with specific name `rabbit` running in Docker container using KinD (Kubernetes in Docker).
 
 ```shell
-sudo kind create cluster --name rabbit
+sudo kind create cluster --name rabbit --config=./kubernetes/kind.yaml
 ```
 
 Verify that it is running:
@@ -982,7 +986,7 @@ Verify storage:
 sudo kubectl -n rabbits get pvc 
 ```
 
-Connect to the web GUI:
+Connect to the web GUI by:
 
 ### Port forwarding
 
@@ -991,22 +995,33 @@ sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672
 ```
 
 ##### Access web GUI
-- use node internal IP from previous step to access management GUI on port 30000
+
+- use tunnel to access management GUI on localhost port 30000
 
 [localhost:30000](http://127.0.0.1:30000)
 
-### Exposing internal port
+### Exposing internal port for RabbitMQ management
 
 #### Install Installing MetalLB (only for LoadBalancer - external IP)
 
+There are 2 options how to expose the internal port using the Kubernetes `Service`:
+
+- NodePort (skip this step `Install Installing MetalLB (only for LoadBalancer - external IP)`
+  to [implicit creation of NodePort](#expose-the-port))
+- LoadBalancer (follow all the steps)
+
+Since the NodePort should be used in
+
 It is prerequisite in order to expose internal ports while running cluster using kind.
 
-##### Install 
+##### Install
+
 ```shell
-sudo kubectl apply -n metallb-system -f ./kubernetes/metallb-loadbalancer.yaml
+sudo kubectl apply -f ./kubernetes/metallb-loadbalancer.yaml
 ```
 
 ##### Setup
+
 ```shell
 sudo kubectl wait --namespace metallb-system \
                 --for=condition=ready pod \
@@ -1015,7 +1030,9 @@ sudo kubectl wait --namespace metallb-system \
 ```
 
 ##### Get IP range
+
 - get docker image IP range
+
 ```shell
 sudo docker network inspect -f '{{.IPAM.Config}}' kind
 ```
@@ -1025,11 +1042,13 @@ sudo docker network inspect -f '{{.IPAM.Config}}' kind
 - update `./kubernetes/metallb-adresspool.yaml` IP range based on IP range from previous command
 
 ##### Apply IP range
+
 ```shell
-sudo kubectl apply -n metallb-system -f ./kubernetes/metallb-addresspool.yaml
+sudo kubectl apply -f ./kubernetes/metallb-addresspool.yaml
 ```
 
 ##### Show internal node IP
+
 ```shell
 sudo kubectl get node rabbit-control-plane -n rabbit -o wide
 ```
@@ -1041,9 +1060,12 @@ sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
 ```
 
 ##### Access web GUI
-- use node internal IP from previous step to access management GUI on port 30000
 
-[internal_IP:30000](http://172.18.0.2:30000)
+- use external IP of the Load Balancer with the port 15672, node internal Node IP from previous step or localhost to access management GUI on port 30000 via NodePort Service
+
+[Load Balancer:15672](http://172.18.0.200:15672)
+
+[localhost:30000](http://127.0.0.1:30000) or [internal_IP:30000](http://172.18.0.2:30000)
 
 Note: This is an example so default Username & Password: `guest` remained the same, but we need to use Base64 values in
 Secret:
