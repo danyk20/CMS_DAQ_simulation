@@ -1082,11 +1082,11 @@ Z3Vlc3Q=
 
 ### RabbitMQ Cluster Kubernetes Operator deployment
 
-#### Deployment with kubectl `rabbitmq` plugin
+#### Deployment with kubectl `rabbitmq` [plugin](https://www.rabbitmq.com/kubernetes/operator/kubectl-plugin.html#using)
 
 - provides a consistent and easy way to deploy RabbitMQ clusters to Kubernetes and run them, including "day two" (continuous) operations
 
-##### a) Install Krew
+##### 1. Install Krew
 
 - Krew itself is a kubectl plugin
 
@@ -1103,7 +1103,7 @@ Z3Vlc3Q=
 export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
 ```
 
-##### b) Install kubectl RabbitMQ plugin
+##### 2. Install kubectl RabbitMQ plugin
 
 ```shell
 sudo su -
@@ -1111,26 +1111,26 @@ kubectl krew install rabbitmq
 ```
 
 
-##### c) Install operator
+##### 3. Install operator
 
 ```shell
 kubectl rabbitmq install-cluster-operator
 ```
 ---
-##### d) Create cluster with 3 replicas and expose all open ports via LoadBalancer
+##### 4. Create cluster with 3 replicas and expose all open ports via LoadBalancer in rabbit-operator namespace
 
 Note: Number of the replicas must be odd and Load Balancer implementation is required (e.g. [MetalLB](#install-metallb-only-for-loadbalancer---external-ip))
 
 ```shell
-kubectl rabbitmq -n rabbit-operator create rabbit-operator --replicas 3 --image rabbitmq:3.12-management --service LoadBalancer
+kubectl rabbitmq -n rabbits create rabbit-operator --replicas 3 --image rabbitmq:3.12-management --service LoadBalancer
 ```
 
-#### Connect to management web GUI
+##### 5. Connect to management web GUI
 
 **a) Using plugin**
 
 ```shell
-kubectl rabbitmq -n rabbit-operator manage rabbit-operator
+kubectl rabbitmq -n rabbits manage rabbit-operator
 ```
 
 **b) Using Service component external IP**
@@ -1138,8 +1138,9 @@ kubectl rabbitmq -n rabbit-operator manage rabbit-operator
 Get LoadBalancer IP
 
 ```shell
-kubectl -n rabbit-operator get service rabbit-operator
+kubectl -n rabbits get service rabbit-operator
 ```
 
 [Load Balancer:15672](http://172.18.0.200:15672)
+
 
