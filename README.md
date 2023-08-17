@@ -1125,7 +1125,21 @@ Note: Number of the replicas must be odd and Load Balancer implementation is req
 kubectl rabbitmq -n rabbits create rabbit-operator --replicas 3 --image rabbitmq:3.12-management --service LoadBalancer
 ```
 
-##### 5. Connect to management web GUI
+#### Deployment without kubectl `rabbitmq` plugin
+
+##### 1. Create Operator component in the cluster
+
+```shell
+kubectl apply -f ./kubernetes/rabbit-cluster-operator.yaml
+```
+
+##### 2. Deploy RabbitMQ
+
+```shell
+kubectl -n rabbits apply -f ./kubernetes/rabbit-definition.yaml
+```
+
+#### Connect to management web GUI
 
 **a) Using plugin**
 
@@ -1142,5 +1156,3 @@ kubectl -n rabbits get service rabbit-operator
 ```
 
 [Load Balancer:15672](http://172.18.0.200:15672)
-
-

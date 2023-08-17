@@ -1,0 +1,9 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbit-operator
+spec:
+  replicas: 3
+  image: rabbitmq:3.12-management
+  service:
+    type: LoadBalancer
