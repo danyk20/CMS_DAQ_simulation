@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-operator-expose
+spec:
+  selector:
+    app.kubernetes.io/name: rabbit-operator
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 15672
+      targetPort: 15672
+      nodePort: 31000

@@ -921,14 +921,20 @@ Alternatives:
 
 Create Kubernetes cluster with specific name `rabbit` running in Docker container using KinD (Kubernetes in Docker).
 
+Note: All commands have to be executed from root environment
 ```shell
-sudo kind create cluster --name rabbit --config=./kubernetes/kind.yaml
+sudo su -
+```
+
+
+```shell
+kind create cluster --name rabbit --config=./kubernetes/kind.yaml
 ```
 
 Verify that it is running:
 
 ```shell
-sudo kind get clusters
+kind get clusters
 ```
 
 result:
@@ -940,7 +946,7 @@ rabbit
 Delete cluster with specific name `rabbit`.
 
 ```shell
-sudo kind delete cluster --name rabbit
+kind delete cluster --name rabbit
 ```
 
 ## Namespace
@@ -948,118 +954,111 @@ sudo kind delete cluster --name rabbit
 Create namespaces on created cluster.
 
 ```shell
-sudo kubectl create ns rabbits --context kind-rabbit
+kubectl create ns rabbits --context kind-rabbit
 ```
 
 ## Deployment
 
-### Apply configuration files
+There are several options how to deploy RabbitMQ in Kubernetes. The most straight forward one is to use manually configured yaml files with definitions of Kubernetes components. The main disadvantage is maintenance since there is no mechanism which start new pod if original crash. The solution can be using RabbitMQ operator which can handle that automatically in the background. Operator can be used as standalone Kubernetes component or as plugin for kubectl. 
+
+### Manual component deployment
+
+#### 1. Apply configuration files
 
 ```shell
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-rbac.yaml 
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-configmap.yaml 
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-secret.yaml 
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-statefulset.yaml 
+kubectl apply -n rabbits -f ./kubernetes/rabbit-rbac.yaml 
+kubectl apply -n rabbits -f ./kubernetes/rabbit-configmap.yaml 
+kubectl apply -n rabbits -f ./kubernetes/rabbit-secret.yaml 
+kubectl apply -n rabbits -f ./kubernetes/rabbit-statefulset.yaml 
 ```
 
-### Delete configuration files
-
-```shell
-sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-rbac.yaml 
-sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-configmap.yaml 
-sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-secret.yaml 
-sudo kubectl delete -n rabbits -f ./kubernetes/rabbit-statefulset.yaml 
-```
-
-## Test
+##### Test deployment
 
 Verify pods:
 
 ```shell
-sudo kubectl -n rabbits get pods 
+kubectl -n rabbits get pods 
 ```
 
 Verify storage:
 
 ```shell
-sudo kubectl -n rabbits get pvc 
+kubectl -n rabbits get pvc 
 ```
 
-Connect to the web GUI by:
+#### 2. Connect to the web GUI by:
 
-### Port forwarding
-
-```shell
-sudo kubectl -n rabbits port-forward rabbitmq-0 30000:15672
-```
-
-##### Access web GUI
+##### a) Port forwarding
 
 - use tunnel to access web management GUI on localhost port 30000
 
+```shell
+kubectl -n rabbits port-forward rabbitmq-0 30000:15672
+```
+
 [localhost:30000](http://127.0.0.1:30000)
 
-### Exposing internal port for RabbitMQ management
+##### b) Exposing internal port for RabbitMQ management via Service component
 
-#### Install Installing [MetalLB](https://metallb.universe.tf/) (only for LoadBalancer - external IP)
+###### Install [MetalLB](https://metallb.universe.tf/) (only for LoadBalancer - external IP)
 
 There are 2 options how to expose the internal port using the Kubernetes `Service` component:
 
 - NodePort (skip this step `Install Installing MetalLB (only for LoadBalancer - external IP)`
-  to [implicit creation of NodePort](#expose-the-port))
+  to [expose the port](#expose-the-port-via-loadbalancer-service-with-implicit-nodeport) section)
 - LoadBalancer (follow all the steps)
 
 In production is LoadBalancer type preferred over NodePort which is used mostly for testing purposes mainly because of
 security reasons.
 
-##### Install Load Balancer
+**I. Install Load Balancer**
 
 Load Balancer is prerequisite in order to expose internal ports with `Loadbalancer` Service component.
 
 ```shell
-sudo kubectl apply -f ./kubernetes/metallb-loadbalancer.yaml
+kubectl apply -f ./kubernetes/metallb-loadbalancer.yaml
 ```
 
-##### Setup Load Balancer
+**II. Setup Load Balancer**
 
 ```shell
-sudo kubectl wait --namespace metallb-system \
+kubectl wait --namespace metallb-system \
                 --for=condition=ready pod \
                 --selector=app=metallb \
                 --timeout=90s
 ```
 
-##### Get IP range dedicated by docker
+**III. Get IP range dedicated by docker**
 
 - get docker image IP range
 
 ```shell
-sudo docker network inspect -f '{{.IPAM.Config}}' kind
+docker network inspect -f '{{.IPAM.Config}}' kind
 ```
 
-##### Update configuration file
+**IV. Update configuration file**
 
 - update `./kubernetes/metallb-adresspool.yaml` IP range based on IP range from previous command
 
-##### Apply IP range
+**V. Apply IP range**
 
 ```shell
-sudo kubectl apply -f ./kubernetes/metallb-addresspool.yaml
+kubectl apply -f ./kubernetes/metallb-addresspool.yaml
 ```
 
-#### Expose the port via LoadBalancer Service (with implicit NodePort)
+###### Expose the port via LoadBalancer Service (with implicit NodePort)
 
 ```shell
-sudo kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
+kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
 ```
 
-##### Show internal node IP to access via NodePort Service \[optional]
+**Show internal node IP to access via NodePort Service \[optional]**
 
 ```shell
-sudo kubectl get node rabbit-control-plane -n rabbit -o wide
+kubectl get node rabbit-control-plane -n rabbit -o wide
 ```
 
-##### Access web GUI
+**Access web GUI**
 
 - use external IP of the Load Balancer with the port 15672, Node component internal Node IP from previous step or 
 localhost to access management GUI on port 30000 via NodePort Service component
@@ -1080,3 +1079,74 @@ result
 ```text
 Z3Vlc3Q=
 ```
+
+### RabbitMQ Cluster Kubernetes Operator deployment
+
+#### Deployment with kubectl `rabbitmq` plugin
+
+- provides a consistent and easy way to deploy RabbitMQ clusters to Kubernetes and run them, including "day two" (continuous) operations
+
+##### a) Install Krew
+
+- Krew itself is a kubectl plugin
+
+```shell
+(
+  set -x; cd "$(mktemp -d)" &&
+  OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
+  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
+  KREW="krew-${OS}_${ARCH}" &&
+  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+  tar zxvf "${KREW}.tar.gz" &&
+  sudo ./"${KREW}" install krew
+)
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+```
+
+##### b) Install kubectl RabbitMQ plugin
+
+```shell
+sudo su -
+kubectl krew install rabbitmq
+```
+
+
+##### c) Install operator
+
+```shell
+kubectl rabbitmq install-cluster-operator
+```
+---
+##### d) Create cluster
+
+```shell
+kubectl rabbitmq create rabbit-operator --replicas 3
+```
+
+
+#### Connect to management web GUI
+
+**a) Using plugin**
+
+```shell
+kubectl rabbitmq manage rabbit-operator
+```
+
+**b) Using Service component**
+
+Create Service Component.
+
+Note: it requires some Load Balancer to be installed (e.g. [MetalLB](#install-metallb-only-for-loadbalancer---external-ip))
+
+```shell
+kubectl apply -f kubernetes/operator-loadbalancer.yaml
+```
+
+Get LoadBalancer IP
+
+```shell
+kubectl get service rabbitmq-operator-expose
+```
+
+[Load Balancer:15672](http://172.18.0.200:15672)
+
