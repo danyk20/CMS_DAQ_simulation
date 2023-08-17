@@ -1117,35 +1117,28 @@ kubectl krew install rabbitmq
 kubectl rabbitmq install-cluster-operator
 ```
 ---
-##### d) Create cluster
+##### d) Create cluster with 3 replicas and expose all open ports via LoadBalancer
+
+Note: Number of the replicas must be odd and Load Balancer implementation is required (e.g. [MetalLB](#install-metallb-only-for-loadbalancer---external-ip))
 
 ```shell
-kubectl rabbitmq create rabbit-operator --replicas 3
+kubectl rabbitmq -n rabbit-operator create rabbit-operator --replicas 3 --image rabbitmq:3.12-management --service LoadBalancer
 ```
-
 
 #### Connect to management web GUI
 
 **a) Using plugin**
 
 ```shell
-kubectl rabbitmq manage rabbit-operator
+kubectl rabbitmq -n rabbit-operator manage rabbit-operator
 ```
 
-**b) Using Service component**
-
-Create Service Component.
-
-Note: it requires some Load Balancer to be installed (e.g. [MetalLB](#install-metallb-only-for-loadbalancer---external-ip))
-
-```shell
-kubectl apply -f kubernetes/operator-loadbalancer.yaml
-```
+**b) Using Service component external IP**
 
 Get LoadBalancer IP
 
 ```shell
-kubectl get service rabbitmq-operator-expose
+kubectl -n rabbit-operator get service rabbit-operator
 ```
 
 [Load Balancer:15672](http://172.18.0.200:15672)
