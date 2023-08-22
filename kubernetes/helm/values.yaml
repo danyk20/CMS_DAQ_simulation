@@ -1,0 +1,3 @@
+image.tag: 3.12.2-debian-11-r8
+replicaCount: 5
+service.type: LoadBalancer

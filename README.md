@@ -1055,7 +1055,7 @@ kubectl apply -n rabbits -f ./kubernetes/rabbit-externalservice.yaml
 **Show internal node IP to access via NodePort Service \[optional]**
 
 ```shell
-kubectl get node rabbit-control-plane -n rabbit -o wide
+kubectl get node rabbit-control-plane -n rabbits -o wide
 ```
 
 **Access web GUI**
@@ -1139,15 +1139,34 @@ kubectl apply -f ./kubernetes/rabbit-cluster-operator.yaml
 kubectl -n rabbits apply -f ./kubernetes/rabbit-definition.yaml
 ```
 
-#### Connect to management web GUI
+#### Deployment using [Helm](https://helm.sh/)
 
-**a) Using plugin**
+##### 0. Install Helm
+
+-Installation for Fedora:
 
 ```shell
-kubectl rabbitmq -n rabbits manage rabbit-operator
+sudo dnf install helm
 ```
 
-**b) Using Service component external IP**
+##### 1. Install Cluster Operator using Bitnami Helm chart
+```shell
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install -f ./kubernetes/helm/values.yaml rabbit-helm bitnami/rabbitmq-cluster-operator -n rabbits --create-namespace
+```
+
+```shell
+helm delete -n rabbits rabbit-helm
+```
+
+##### 2. Deploy a RabbitMQ cluster
+```shell
+kubectl apply -n rabbits -f ./kubernetes/helm/rabbitmq-cluster.yaml
+```
+
+#### Connect to management web GUI
+
+**a) Using Service component external IP**
 
 Get LoadBalancer IP
 
@@ -1156,3 +1175,9 @@ kubectl -n rabbits get service rabbit-operator
 ```
 
 [Load Balancer:15672](http://172.18.0.200:15672)
+
+**b) Using plugin**
+
+```shell
+kubectl rabbitmq -n rabbits manage rabbit-operator
+```
