@@ -1,9 +1,9 @@
 apiVersion: rabbitmq.com/v1beta1
 kind: RabbitmqCluster
 metadata:
- name: rabbit-operator
+ name: {{.Values.name}}
 spec:
- replicas: 3
+ replicas: {{.Values.replicaCount}}
  resources:
    requests:
      cpu: 500m
@@ -17,4 +17,4 @@ spec:
                  channel_max = 1700
                  default_user_tags.administrator = true
  service:
-   type: LoadBalancer
+   type: {{.Values.service.type}}

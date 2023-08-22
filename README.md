@@ -1161,7 +1161,12 @@ helm delete -n rabbits rabbit-helm
 
 ##### 2. Deploy a RabbitMQ cluster
 ```shell
-kubectl apply -n rabbits -f ./kubernetes/helm/rabbitmq-cluster.yaml
+helm install rabbit-cluster ./kubernetes/helm/rabbit-cluster -n rabbits
+```
+
+##### 3. Change a RabbitMQ cluster parameters
+```shell
+helm upgrade rabbit-cluster ./kubernetes/helm/rabbit-cluster -n rabbits --set replicaCount=5
 ```
 
 #### Connect to management web GUI

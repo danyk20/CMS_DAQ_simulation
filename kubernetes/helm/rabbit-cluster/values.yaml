@@ -1,0 +1,6 @@
+replicaCount: 3
+image:
+  tag: rabbitmq:3.12-management
+service:
+  type: LoadBalancer
+name: rabbit-operator
