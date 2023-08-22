@@ -959,6 +959,8 @@ kubectl create ns rabbits --context kind-rabbit
 
 ## Deployment
 
+![RabbitMQ deployment options](./resources/RabbitMQ_deployment.png)
+
 There are several options how to deploy RabbitMQ in Kubernetes. The most straight forward one is to use manually configured yaml files with definitions of Kubernetes components. The main disadvantage is maintenance since there is no mechanism which start new pod if original crash. The solution can be using RabbitMQ operator which can handle that automatically in the background. Operator can be used as standalone Kubernetes component or as plugin for kubectl. 
 
 ### Manual component deployment
@@ -1080,11 +1082,16 @@ result
 Z3Vlc3Q=
 ```
 
-### RabbitMQ Cluster Kubernetes Operator deployment
+### RabbitMQ [Cluster Kubernetes Operator](https://www.rabbitmq.com/kubernetes/operator/operator-overview.html)
+
+-  Provisioning of single-node and multi-node RabbitMQ clusters
+-  Automatic reconciliation of deployed clusters whenever their actual state does not match the expected state
+-  Monitoring of RabbitMQ clusters using Prometheus and Grafana
+-  Scaling up and automated rolling upgrades of RabbitMQ clusters
 
 #### Deployment with kubectl `rabbitmq` [plugin](https://www.rabbitmq.com/kubernetes/operator/kubectl-plugin.html#using)
 
-- provides a consistent and easy way to deploy RabbitMQ clusters to Kubernetes and run them, including "day two" (continuous) operations
+The least effort required to deploy RabbitMQ cluster with selected parameters.
 
 ##### 1. Install Krew
 
@@ -1110,7 +1117,6 @@ sudo su -
 kubectl krew install rabbitmq
 ```
 
-
 ##### 3. Install operator
 
 ```shell
@@ -1127,6 +1133,8 @@ kubectl rabbitmq -n rabbits create rabbit-operator --replicas 3 --image rabbitmq
 
 #### Deployment without kubectl `rabbitmq` plugin
 
+Most straight forward solution where all kubernetes components are directly stored in yaml files.
+
 ##### 1. Create Operator component in the cluster
 
 ```shell
@@ -1141,6 +1149,8 @@ kubectl -n rabbits apply -f ./kubernetes/rabbit-definition.yaml
 
 #### Deployment using [Helm](https://helm.sh/)
 
+Ideal deployment for easy updating attributes values like replica count, name, etc. See [example](#3-change-a-rabbitmq-cluster-parameters)
+
 ##### 0. Install Helm
 
 -Installation for Fedora:
@@ -1154,6 +1164,8 @@ sudo dnf install helm
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm install -f ./kubernetes/helm/values.yaml rabbit-helm bitnami/rabbitmq-cluster-operator -n rabbits --create-namespace
 ```
+
+Note: All attributes are described in the [documentation](https://artifacthub.io/packages/helm/bitnami/rabbitmq-cluster-operator)
 
 ```shell
 helm delete -n rabbits rabbit-helm
