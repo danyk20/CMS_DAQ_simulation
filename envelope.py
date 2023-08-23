@@ -28,8 +28,8 @@ def validator(data: envelope_pb2.White | envelope_pb2.Blue | envelope_pb2.Red | 
     elif color == 'red':
         if data.type != 'Notification':
             raise ValidationError('Red envelope contains wrong type', data.type)
-        # if not is_valid_routing_key(data.sender):
-        #     raise ValidationError('Red envelope contains wrong sender', data.sender)
+        if not is_valid_id(data.sender):
+            raise ValidationError('Red envelope contains wrong sender', data.sender)
         if data.toState.split(".")[-1] not in model.State._member_names_:
             raise ValidationError('Red envelope contains wrong state', data.toState)
     elif color == 'orange':
@@ -41,23 +41,22 @@ def validator(data: envelope_pb2.White | envelope_pb2.Blue | envelope_pb2.Red | 
             raise ValidationError('Orange envelope contains wrong fail probability', data.parameters.chance_to_fail)
 
 
-def is_valid_routing_key(routing_key) -> bool:
+def is_valid_id(port) -> bool:
     """
-    Check that routing key contains exactly 5 digits [0-9] separated by dot and in valid range defined in configuration
+    Check that id contains exactly 5 digits [0-9] separated by dot and in valid range defined in configuration
     file
 
-    :param routing_key: input t check
+    :param port: input to check
     :return: True if the message is valid otherwise raise ValidationError
     """
     from utils import get_port, get_configuration
     configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
-    digits = routing_key.split('.')
-    if len(digits) != 5:
-        raise ValidationError('Red envelope contains invalid routing key length', routing_key)
-    for digit in digits:
+    if len(port) != 5:
+        raise ValidationError('Red envelope contains invalid routing key length', port)
+    for digit in port:
         if '0' > digit > '9':
-            raise ValidationError('Red envelope contains invalid routing key character', routing_key)
-    port = get_port(routing_key)
+            raise ValidationError('Red envelope contains invalid routing key character', port)
+    port = get_port(port)
     if configuration['node']['port']['min'] > int(port) > configuration['node']['port']['max']:
-        raise ValidationError('Red envelope contains routing key out of range', routing_key)
+        raise ValidationError('Red envelope contains routing key out of range', port)
     return True

@@ -240,20 +240,21 @@ class Node:
 
     async def notify_parent(self):
         """
-        Notify parent about current state based on selected architecture in  configuration.yaml
+        Notify parent about current state based on selected architecture in configuration.yaml if node has parent
 
         :return: None
         """
-        if configuration['architecture'] == 'MOM':
-            routing_key = utils.get_bounding_key(self.get_parent().get_port())
-            sender_id = utils.get_bounding_key(self.address.get_port())
-            send.post_state_notification(current_state=str(self.state),
-                                         routing_key=routing_key,
-                                         sender_id=sender_id)
-        else:
-            # REST
-            await client.post_notification(address=self.get_parent().get_full_address(),
-                                           state=str(self.state), sender_address=self.address.get_full_address())
+        if self.get_parent().address:
+            if configuration['architecture'] == 'MOM':
+                routing_key = utils.get_bounding_key(self.get_parent().get_port())
+                sender_id = utils.get_bounding_key(self.address.get_port())
+                send.post_state_notification(current_state=str(self.state),
+                                             routing_key=routing_key,
+                                             sender_id=sender_id)
+            else:
+                # REST
+                await client.post_notification(address=self.get_parent().get_full_address(),
+                                               state=str(self.state), sender_address=self.address.get_full_address())
 
     def get_parent(self) -> NodeAddress:
         """

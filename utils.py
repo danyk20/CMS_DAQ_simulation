@@ -68,11 +68,10 @@ def get_bounding_key(port: str) -> str:
     Convert port into associated binding key
 
     :param port: number in string format
-    :return: string value of binding key
+    :return: string value of binding key if port is not None
     """
     if port:
         return '.'.join(list(port))
-    return ''
 
 
 def get_port(bounding_key: str) -> str:
