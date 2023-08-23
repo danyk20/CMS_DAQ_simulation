@@ -288,7 +288,7 @@ Orange:
 
 #### Validation
 
-There is implemented custom validator for all envelopes since documentation suggest that approach: "You should consider
+There is implemented custom Protocol Buffer validator for all envelopes since documentation suggest that approach: "You should consider
 writing application-specific custom validation routines for your buffers" but there exist also some 3rd part libraries:
 
 Note: To disable RabbitMQ envelopes validation update `configuration.yaml` file.
@@ -736,6 +736,8 @@ sudo docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.
     ```
 
 ## Protocol Buffer
+
+Note: In current version it is implemented just for MOM architecture.
 
 1. Create `<name>.proto` file: e.g.
 
