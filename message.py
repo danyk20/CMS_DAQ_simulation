@@ -2,15 +2,10 @@ from typing import Optional
 
 import pydantic
 
+from errors import ValidationError
 from utils import get_configuration
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
-
-
-class ValidationError(Exception):
-    def __init__(self, message, errors=None):
-        super().__init__(message)
-        self.errors = errors
 
 
 class ChangeState(pydantic.BaseModel):
