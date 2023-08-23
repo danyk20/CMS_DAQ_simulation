@@ -90,7 +90,8 @@ class TestNode:
         error_initiator = sorted(list(get_children_ports(PORT)))[0]
         await post_state(params, error_initiator)
         assert await get_state(error_initiator) == {"State": "State.Starting"}
-        await asyncio.sleep(configuration['node']['time']['starting'])
+        # waiting for processing of all levels bellow + 1s for message propagation between nodes
+        await asyncio.sleep(configuration['node']['time']['starting'] * int(LEVELS) + 1)
         assert await get_state(error_initiator) == {"State": "State.Error"}
         # check that error was propagated to the parent
         assert await get_state() == {"State": "State.Error"}

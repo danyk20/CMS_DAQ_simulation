@@ -1,14 +1,7 @@
 import envelope_pb2
 import model
 
-
-class ValidationError(Exception):
-    """
-    Custom Error that occurs when MOM envelope validation fails
-    """
-    def __init__(self, message, errors=None):
-        super().__init__(message)
-        self.errors = errors
+from errors import ValidationError
 
 
 def validator(data: envelope_pb2.White | envelope_pb2.Blue | envelope_pb2.Red | envelope_pb2.Orange, color: str):

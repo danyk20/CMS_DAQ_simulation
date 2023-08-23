@@ -1,4 +1,6 @@
 import argparse
+import sys
+
 import yaml
 import json
 import os
@@ -6,6 +8,7 @@ import os
 from google.protobuf.json_format import MessageToDict
 
 import envelope_pb2
+from errors import ValidationError
 
 
 def check_address(address: str) -> str:
@@ -167,7 +170,7 @@ def get_white_envelope(requested_action: str = 'get_state') -> str:
         return envelope.SerializeToString()
 
 
-def set_architecture(architecture: str):
+def set_architecture(architecture: str) -> str:
     """
     Edit selected architecture in configuration file
 
@@ -186,7 +189,7 @@ def set_architecture(architecture: str):
     return original_architecture
 
 
-def set_message_format(new_format: str):
+def set_message_format(new_format: str) -> str:
     """
     Edit selected architecture in configuration file
 
@@ -197,7 +200,7 @@ def set_message_format(new_format: str):
     return set_configuration(new_format, ['rabbitmq', 'envelope_format'])
 
 
-def set_configuration(new_value: str, path: list):
+def set_configuration(new_value: str, path: list) -> str | int:
     """
     Edit selected value in configuration file
 
@@ -224,13 +227,13 @@ def set_configuration(new_value: str, path: list):
     return original_value
 
 
-def set_time(time: str, value: int):
+def set_time(time: str, value: int) -> int:
     """
     Edit selected architecture in configuration file
 
     :param value: newly selected value
     :param time: specifier
-    :return: original architecture
+    :return: original value
     """
     with open(get_configuration_full_path()) as f:
         list_doc = yaml.safe_load(f)
@@ -244,7 +247,7 @@ def set_time(time: str, value: int):
     return original_value
 
 
-def get_dict_from_envelope(message: str, accepted_types: list = ['white', 'blue', 'red', 'orange']):
+def get_dict_from_envelope(message: str, accepted_types: list = ['white', 'blue', 'red', 'orange']) -> dict:
     """
     Convert string data (envelope) to dictionary
 
@@ -260,7 +263,7 @@ def get_dict_from_envelope(message: str, accepted_types: list = ['white', 'blue'
     envelope.ParseFromString(message)
 
     if envelope.color not in accepted_types:
-        raise Exception('Unexpected envelope type arrived')
+        raise ValidationError('Unexpected envelope type arrived')
 
     if envelope.color == 'white':
         data = envelope.white
@@ -271,8 +274,23 @@ def get_dict_from_envelope(message: str, accepted_types: list = ['white', 'blue'
     elif envelope.color == 'blue':
         data = envelope.blue
     else:
-        raise Exception('Unsupported envelope type arrived')
+        raise ValidationError('Unsupported envelope type arrived')
     if get_configuration()['rabbitmq']['validation']:
         env.validator(data, envelope.color)
 
     return MessageToDict(data, preserving_proto_field_name=True)
+
+
+def exception_filter(func):
+    """
+    Execute function and print Validation Error in case it occurs
+
+    :param func: function to execute
+    :return: return value of the function
+    """
+    try:
+        return func()
+    except ValidationError as e:
+        if e.errors:
+            print(e.errors, file=sys.stderr)
+        print(e.args[0], file=sys.stderr)
