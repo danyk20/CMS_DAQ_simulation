@@ -13,8 +13,9 @@ connection = None
 
 def open_chanel():
     global channel, connection
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
-    channel = connection.channel()
+    if not channel:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
+        channel = connection.channel()
 
 
 def close_connection():

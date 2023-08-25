@@ -81,7 +81,7 @@ class Node:
         self.kill_rpc_serer = None
         self.kill_consumer = None
         send.open_chanel()
-        self.initialisation_timestamp = time.time()
+        self.initialisation_timestamp = None
 
     async def set_state(self, new_state: State, probability_to_fail: float = 0, transition_time: int = 0) -> None:
         """
@@ -137,6 +137,8 @@ class Node:
         :param new_state: propagated state
         :return: None
         """
+        if not self.initialisation_timestamp:
+            self.initialisation_timestamp = time.time()
         for child_address in self.children:
             if configuration['debug']:
                 print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + child_address.get_port())
@@ -207,16 +209,16 @@ class Node:
         elif initialisation:
             self.state = State.Initialisation
         elif stopped:
-            if configuration['measurement']['write']:
-                add_measurement(configuration['architecture'] + '_duration.txt',
-                                self.address.get_port(),
-                                time.time() - self.initialisation_timestamp, len(self.children), Node.depth)
             self.state = State.Stopped
         elif starting:
             self.state = State.Starting
         elif running == len(self.children):
             if self.state != State.Running:
                 self.state = State.Running
+                if configuration['measurement']['write']:
+                    add_measurement(configuration['architecture'] + '_duration.txt',
+                                    self.address.get_port(),
+                                    time.time() - self.initialisation_timestamp, len(self.children), Node.depth)
                 asyncio.get_running_loop().create_task(self.run())
             self.state = State.Running
 
