@@ -38,3 +38,13 @@ REST:
   pydantic: true
 
 debug: True
+
+measurement:
+  architecture:
+  - MOM
+  - REST
+  runs: 10
+  tree:
+    children: 3
+    depth: 2
+  write: true
