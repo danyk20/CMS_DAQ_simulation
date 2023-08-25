@@ -7,6 +7,9 @@ NOTIFICATION_EXCHANGE = 'state_notification'
 
 configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
 
+connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
+channel = connection.channel()
+
 
 def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 0) -> None:
     """
@@ -44,10 +47,6 @@ def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> 
     :return: None
     """
     if routing_key:
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host=configuration['URL']['address']))
-        channel = connection.channel()
-
         channel.exchange_declare(exchange=('%s' % exchange_name), exchange_type='topic')
 
         channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message,
