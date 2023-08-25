@@ -19,6 +19,7 @@ class TestNode:
 
         :return: None
         """
+        original = utils.set_configuration('proto', ['rabbitmq', 'envelope_format'])
         init_node = generate_node(State.Initialisation)
         white_envelope = utils.get_white_envelope('get_state')
         chanel = ChannelStub()
@@ -27,6 +28,7 @@ class TestNode:
         assert response['state'] == 'Initialisation' and len(response) == 1
         assert chanel.routing_key == 'reply_to'
         assert chanel.properties.correlation_id == 'correlation_id'
+        utils.set_configuration(original, ['rabbitmq', 'envelope_format'])
 
     def test_rpc_client_duration(self):
         """
