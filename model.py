@@ -80,6 +80,7 @@ class Node:
         self.build()
         self.kill_rpc_serer = None
         self.kill_consumer = None
+        send.open_chanel()
         self.initialisation_timestamp = time.time()
 
     async def set_state(self, new_state: State, probability_to_fail: float = 0, transition_time: int = 0) -> None:

@@ -7,8 +7,19 @@ NOTIFICATION_EXCHANGE = 'state_notification'
 
 configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
-channel = connection.channel()
+channel = None
+connection = None
+
+
+def open_chanel():
+    global channel, connection
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
+    channel = connection.channel()
+
+
+def close_connection():
+    global connection
+    connection.close()
 
 
 def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 0) -> None:
@@ -46,11 +57,15 @@ def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> 
     :param exchange_name:
     :return: None
     """
-    if routing_key:
-        channel.exchange_declare(exchange=('%s' % exchange_name), exchange_type='topic')
+    global channel
+    try:
+        if routing_key:
+            channel.exchange_declare(exchange=('%s' % exchange_name), exchange_type='topic')
 
-        channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message,
-                              properties=pika.BasicProperties(content_type='application/json'))
-        if configuration['debug']:
-            print(" [x] Sent message: %r -> %r" % (message, routing_key))
-        connection.close()
+            channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message,
+                                  properties=pika.BasicProperties(content_type='application/json'))
+            if configuration['debug']:
+                print(" [x] Sent message: %r -> %r" % (message, routing_key))
+
+    except Exception as e:
+        print(e)
