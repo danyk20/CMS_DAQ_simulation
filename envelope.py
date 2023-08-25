@@ -34,22 +34,23 @@ def validator(data: envelope_pb2.White | envelope_pb2.Blue | envelope_pb2.Red | 
             raise ValidationError('Orange envelope contains wrong fail probability', data.parameters.chance_to_fail)
 
 
-def is_valid_id(port) -> bool:
+def is_valid_id(routing_key) -> bool:
     """
     Check that id contains exactly 5 digits [0-9] separated by dot and in valid range defined in configuration
     file
 
-    :param port: input to check
+    :param routing_key: input to check
     :return: True if the message is valid otherwise raise ValidationError
     """
     from utils import get_port, get_configuration
     configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
+    port = get_port(routing_key)
     if len(port) != 5:
-        raise ValidationError('Red envelope contains invalid routing key length', port)
+        raise ValidationError('Red envelope contains invalid routing key length', routing_key)
     for digit in port:
-        if '0' > digit > '9':
-            raise ValidationError('Red envelope contains invalid routing key character', port)
-    port = get_port(port)
-    if configuration['node']['port']['min'] > int(port) > configuration['node']['port']['max']:
-        raise ValidationError('Red envelope contains routing key out of range', port)
+        if not '0' <= digit <= '9':
+            raise ValidationError('Red envelope contains invalid routing key character', routing_key)
+    routing_key = get_port(routing_key)
+    if configuration['node']['port']['min'] > int(routing_key) > configuration['node']['port']['max']:
+        raise ValidationError('Red envelope contains routing key out of range', routing_key)
     return True

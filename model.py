@@ -9,6 +9,7 @@ import pika
 import send
 import client
 import utils
+from writer import add_measurement
 
 configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
 
@@ -79,6 +80,7 @@ class Node:
         self.build()
         self.kill_rpc_serer = None
         self.kill_consumer = None
+        self.initialisation_timestamp = time.time()
 
     async def set_state(self, new_state: State, probability_to_fail: float = 0, transition_time: int = 0) -> None:
         """
@@ -189,7 +191,7 @@ class Node:
         error: int = 0
         for child in self.children:
             child_status_list = self.children[child]
-            if not child_status_list:
+            if not child_status_list or child_status_list[-1] == State.Initialisation:
                 initialisation += 1
             elif child_status_list[-1] == State.Stopped:
                 stopped += 1
@@ -204,6 +206,8 @@ class Node:
         elif initialisation:
             self.state = State.Initialisation
         elif stopped:
+            add_measurement('./measurements/' + configuration['architecture'] + '_duration.txt', self.address.get_port(),
+                            time.time() - self.initialisation_timestamp)
             self.state = State.Stopped
         elif starting:
             self.state = State.Starting

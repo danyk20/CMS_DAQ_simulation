@@ -1,5 +1,4 @@
 import asyncio
-import json
 import time
 
 import model
@@ -33,7 +32,7 @@ class TestNode:
         """
         Test that rpc_server is responding in expected time (wait x seconds)
 
-        :return: None
+        :return: Noner
         """
         init_node = generate_node(State.Initialisation)
         white_envelope = utils.get_white_envelope('get_state')
