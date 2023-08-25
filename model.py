@@ -206,8 +206,10 @@ class Node:
         elif initialisation:
             self.state = State.Initialisation
         elif stopped:
-            add_measurement('./measurements/' + configuration['architecture'] + '_duration.txt', self.address.get_port(),
-                            time.time() - self.initialisation_timestamp)
+            if configuration['measurement']['write']:
+                add_measurement('./measurements/' + configuration['architecture'] + '_duration.txt',
+                                self.address.get_port(),
+                                time.time() - self.initialisation_timestamp)
             self.state = State.Stopped
         elif starting:
             self.state = State.Starting

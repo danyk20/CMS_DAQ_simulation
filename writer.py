@@ -1,4 +1,5 @@
 import os
+import signal
 
 
 def add_measurement(file_path, node, duration):
@@ -9,3 +10,4 @@ def add_measurement(file_path, node, duration):
         f.close()
     except Exception as e:
         print(e)
+    os.kill(os.getpid(), signal.SIGTERM)

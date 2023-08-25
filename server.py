@@ -43,7 +43,7 @@ async def initialised() -> None:
     """
     if not node.children:
         node.state = model.State.Stopped
-    await post_notification(node.get_parent().get_full_address(), str(model.State.Stopped),
+    await post_notification(node.get_parent().get_full_address(), str(node.state),
                             node.address.get_full_address())
 
 
