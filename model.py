@@ -207,9 +207,9 @@ class Node:
             self.state = State.Initialisation
         elif stopped:
             if configuration['measurement']['write']:
-                add_measurement('./measurements/' + configuration['architecture'] + '_duration.txt',
+                add_measurement(configuration['architecture'] + '_duration.txt',
                                 self.address.get_port(),
-                                time.time() - self.initialisation_timestamp)
+                                time.time() - self.initialisation_timestamp, len(self.children), Node.depth)
             self.state = State.Stopped
         elif starting:
             self.state = State.Starting
