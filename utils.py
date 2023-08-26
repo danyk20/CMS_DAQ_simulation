@@ -200,7 +200,7 @@ def set_message_format(new_format: str) -> str:
     return set_configuration(new_format, ['rabbitmq', 'envelope_format'])
 
 
-def set_configuration(new_value: str, path: list) -> str | int:
+def set_configuration(new_value: str | bool | int, path: list) -> str | int:
     """
     Edit selected value in configuration file
 

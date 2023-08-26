@@ -7,10 +7,10 @@ URL:
 
 node:
   time:
-    starting: 0
+    starting: 10
     running: 10
     shutdown: 20
-    get: 0
+    get: 10
   port:
     # range min - max need to be at least 10 000
     min: 10000
@@ -29,7 +29,7 @@ node:
 architecture: MOM
 
 rabbitmq:
-  rpc_timeout: 3
+  rpc_timeout: 21
   validation: true
   envelope_format: json # supported formats are either json either proto (Protocol Buffer)
 
@@ -47,4 +47,4 @@ measurement:
   tree:
     children: 5
     depth: 4
-  write: true
+  write: false
