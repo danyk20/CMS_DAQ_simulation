@@ -39,6 +39,7 @@ def wait_until_node_is_ready(architecture: str) -> None:
         state = 'State.Initialisation'
         while code != 200 or state != 'State.Stopped':
             try:
+                time.sleep(0.5)
                 url = 'http://127.0.0.1:' + NODE_PORT + configuration['URL']['get_state']
                 response = requests.get(url)
                 code = response.status_code
