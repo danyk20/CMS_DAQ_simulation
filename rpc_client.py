@@ -7,7 +7,7 @@ import uuid
 import utils
 from utils import get_configuration
 
-NODE_ROUTING_KEY = sys.argv[1] if len(sys.argv) else '2.3.3.0.0'
+# NODE_ROUTING_KEY = sys.argv[1] if len(sys.argv) else '2.3.3.0.0'
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
@@ -66,8 +66,8 @@ class StateRpcClient(object):
         return self.response
 
 
-get_state = StateRpcClient()
-
-print(" [->] Requesting state from node " + NODE_ROUTING_KEY)
-response = get_state.call(NODE_ROUTING_KEY)
-print(" [<-] Received %s" % response)
+# get_state = StateRpcClient()
+#
+# print(" [->] Requesting state from node " + NODE_ROUTING_KEY)
+# response = get_state.call(NODE_ROUTING_KEY)
+# print(" [<-] Received %s" % response)

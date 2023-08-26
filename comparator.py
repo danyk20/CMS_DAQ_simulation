@@ -1,3 +1,4 @@
+import json
 import os
 import threading
 import time
@@ -11,37 +12,55 @@ import requests
 import model
 import send
 import utils
+from rpc_client import StateRpcClient
 
 configuration: dict[str, str | dict[str, int | str | dict]] = utils.get_configuration()
+
+NODE_ROUTING_KEY = '2.0.0.0.0'
 
 
 def measurement_runner(depth, children):
     os.system('python service.py --levels ' + str(depth) + ' --children ' + str(children))
 
 
-def start_root(architecture, depth, children):
-
-    print("\nStaring!")
-
+def is_ready(architecture):
     if architecture == 'REST':
         code = 0
-        while code != 200:
+        state = 'State.Initialisation'
+        while code != 200 or state != 'State.Stopped':
             try:
-                url = 'http://127.0.0.1:20000'+ configuration['URL']['change_state']
-                params = {'start': str(0)}
-
-                x = requests.post(url, json=params)
-                code = x.status_code
+                url = 'http://127.0.0.1:20000' + configuration['URL']['get_state']
+                response = requests.get(url)
+                code = response.status_code
+                data = json.loads(response.content)
+                state = data['State']
             except Exception as e:
-                print("failed")
-                time.sleep(0.5)
-
-
+                print("Not initialised yet!")
+                time.sleep(1)
     else:
-        time.sleep(2 + depth * 1 * children)
+        state = 'Initialisation'
+        while state != 'Stopped':
+            get_state = StateRpcClient()
+            print(" [->] Requesting state from node " + NODE_ROUTING_KEY)
+            response = get_state.call(NODE_ROUTING_KEY)
+            print(" [<-] Received %s" % response)
+            if response:
+                state = response['state']
+
+
+def start_root(architecture, depth, children):
+    print("\n Staring " + architecture + ' with ' + str(children) + ' children and ' + str(depth) + ' levels!')
+    is_ready(architecture)
+
+    if architecture == 'REST':
+        url = 'http://127.0.0.1:20000' + configuration['URL']['change_state']
+        params = {'start': str(0)}
+        response = requests.post(url, json=params)
+        if response.status_code != 200:
+            print("Root didn't accept the request!")
+    else:
         send.open_chanel()
         send.post_state_change(str(model.State.Running), '2.0.0.0.0', 0)
-
 
 
 def measurement():
@@ -52,13 +71,10 @@ def measurement():
                 original_architecture = utils.set_configuration('MOM', ['architecture'])
                 for architecture in configuration['measurement']['architecture']:
                     utils.set_configuration(architecture, ['architecture'])
-                    # thread1 = threading.Thread(target=lambda: measurement_runner(depth, children))
-                    thread2 = threading.Thread(target=lambda: start_root(architecture, depth, children))
-                    # thread1.start()
-                    thread2.start()
+                    client = threading.Thread(target=lambda: start_root(architecture, depth, children))
+                    client.start()
                     measurement_runner(depth, children)
-                    # thread1.join()
-                    thread2.join()
+                    client.join()
                 utils.set_configuration(original_architecture, ['architecture'])
     utils.set_configuration(False, ['measurement', 'write'])
 
