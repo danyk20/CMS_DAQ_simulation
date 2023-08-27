@@ -23,7 +23,8 @@ def open_chanel():
 
 def close_connection():
     global connection
-    connection.close()
+    if connection.is_open:
+        connection.close()
 
 
 def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 0) -> None:
