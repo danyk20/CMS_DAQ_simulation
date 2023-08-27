@@ -117,12 +117,14 @@ async def notify(notification: Optional[Notification] = None, state: Optional[st
         received_state = state
         received_from = sender
 
+    state_changed = False
     if received_state:
         node.children[model.NodeAddress(received_from)].append(model.State[received_state.split('.')[-1]])
-        node.update_state()
+        state_changed = node.update_state()
     if node.get_parent().address is None:
         return
-    await post_notification(node.get_parent().get_full_address(), str(node.state), node.address.get_full_address())
+    if state_changed:
+        await post_notification(node.get_parent().get_full_address(), str(node.state), node.address.get_full_address())
 
 
 def run(created_node: Node, shutdown: Callable) -> None:

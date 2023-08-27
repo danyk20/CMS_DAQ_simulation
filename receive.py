@@ -69,19 +69,21 @@ async def notify(state: str = None, sender_port: str = None) -> None:
     :return: None
     """
     full_address = configuration['URL']['address'] + ':' + sender_port
+    state_changed = False
     if state:
         try:
             node.children[model.NodeAddress(full_address)].append(model.State[state.split('.')[-1]])
-            node.update_state()
+            state_changed = node.update_state()
         except KeyError:
             if configuration['debug']:
                 print('Invalid notification! Node remains in : %r' % str(node.state))
 
     if node.get_parent().address is None:
         return
-    send.post_state_notification(current_state=str(node.state),
-                                 routing_key=utils.get_bounding_key(node.get_parent().get_port()),
-                                 sender_id=utils.get_bounding_key(node.address.get_port()))
+    if state_changed:
+        send.post_state_notification(current_state=str(node.state),
+                                     routing_key=utils.get_bounding_key(node.get_parent().get_port()),
+                                     sender_id=utils.get_bounding_key(node.address.get_port()))
 
 
 def callback(_ch, method, _properties, body):

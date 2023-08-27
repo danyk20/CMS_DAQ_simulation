@@ -175,7 +175,7 @@ class Node:
         while self.level < Node.depth and len(self.children) < Node.arity:
             self.add_child()
 
-    def update_state(self) -> None:
+    def update_state(self) -> bool:
         """
         Update own state based on received notifications from the children with following rules:
         At least 1 child in error state -> error
@@ -183,10 +183,11 @@ class Node:
         At least 1 child in starting state -> starting
         All children in running state -> running
 
-        :return: None
+        :return: whether the state was changed
         """
-        if self.state == State.Error:
-            return
+        before = self.state
+        if before == State.Error:
+            return False
         initialisation = 0
         stopped: int = 0
         starting: int = 0
@@ -221,6 +222,7 @@ class Node:
                                     time.time() - self.initialisation_timestamp, len(self.children), Node.depth)
                 asyncio.get_running_loop().create_task(self.run())
             self.state = State.Running
+        return self.state != before
 
     async def run(self) -> None:
         """
