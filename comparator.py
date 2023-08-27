@@ -149,6 +149,7 @@ def plot_data(children, depth) -> None:
     :param depth: max depth
     :return: None
     """
+    colors = ['gray', 'red', 'green', 'blue', 'purple']
     data = collect_data(children, depth)
     rest_data = np.array(data['REST'])
     mom_data = np.array(data['MOM'])
@@ -165,15 +166,28 @@ def plot_data(children, depth) -> None:
     # Create a figure and axis
     fig, ax = plt.subplots()
 
+    custom_legend = [
+        plt.Line2D([0], [0], marker='o', linestyle=':', color='black', markerfacecolor='black',
+                   label='REST'),
+        plt.Line2D([0], [0], marker='x', linestyle='--', color='black', label='MOM')]
+
     # Loop through the data sets and plot them
-    for i, data_set in enumerate(data_list):
-        ax.plot(x_values, data_set, label=f'{i + 1} children', linestyle='--', marker='o')
+    for architecture in ['REST', 'MOM']:
+        for i, data_set in enumerate(data[architecture]):
+            if architecture == 'REST':
+                ax.plot(x_values, data_set, linestyle=':', marker='o',
+                        color=colors[i])
+                custom_legend.append(plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=colors[i],
+                                                label=str(i + 1) + ' children'))
+            else:
+                ax.plot(x_values, data_set, linestyle='--', marker='x',
+                        color=colors[i])
 
     # Add labels and title
     ax.set_xlabel('Tree depth')
     ax.set_ylabel('Time [s]')
-    ax.set_title('Roundtrip from root to the leave node in tree structure (REST - MOM)')
-    ax.legend()
+    ax.set_title('Roundtrip from root to the leave node in tree structure')
+    ax.legend(handles=custom_legend)
 
     # only integer values
     ax.set_xticks(x_values)
