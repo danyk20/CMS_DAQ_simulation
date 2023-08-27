@@ -3,7 +3,6 @@ import os
 import threading
 import time
 
-import numpy as np
 import requests
 
 import model
@@ -134,6 +133,8 @@ def collect_data(children, depth) -> dict:
                 avg = time_sum / len(data)
                 print(architecture + " with " + str(i) + ' children ' + ' and ' + str(j) + ' depth ' + ' took ' + str(
                     avg) + 's')
+                if time_sum == 0:
+                    break
                 if 'REST' == architecture:
                     rest_data[i - 1].append(avg)
                 else:
@@ -151,17 +152,9 @@ def plot_data(children, depth) -> None:
     """
     colors = ['gray', 'red', 'green', 'blue', 'purple']
     data = collect_data(children, depth)
-    rest_data = np.array(data['REST'])
-    mom_data = np.array(data['MOM'])
 
-    diff_time = (mom_data - rest_data).tolist()
     import matplotlib.pyplot as plt
 
-    # Sample nested list containing data
-    data_list = diff_time
-
-    # Assuming each inner list has the same length
-    x_values = list(range(1, 1 + len(data_list[0])))  # Assuming x-axis values are indices
 
     # Create a figure and axis
     fig, ax = plt.subplots()
@@ -174,6 +167,7 @@ def plot_data(children, depth) -> None:
     # Loop through the data sets and plot them
     for architecture in ['REST', 'MOM']:
         for i, data_set in enumerate(data[architecture]):
+            x_values = list(range(1, 1 + len(data_set)))  # Assuming x-axis values are indices
             if architecture == 'REST':
                 ax.plot(x_values, data_set, linestyle=':', marker='o',
                         color=colors[i])
