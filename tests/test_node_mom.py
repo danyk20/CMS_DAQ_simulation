@@ -1,7 +1,6 @@
 import asyncio
 import time
 
-import model
 import receive
 import utils
 from model import Node, NodeAddress, State
@@ -56,7 +55,7 @@ class TestNode:
         """
         sender = '23456'
         raw_state = str(State.Error).split(':')[-1]
-        receive.node = generate_node(State.Running, children={model.NodeAddress('127.0.0.1:' + sender): []},
+        receive.node = generate_node(State.Running, children={sender: None},
                                      address='127.0.0.1:22000')
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
@@ -77,7 +76,7 @@ class TestNode:
         """
         sender = '23456'
         raw_state = str(State.Running).split(':')[-1]
-        receive.node = generate_node(State.Error, children={model.NodeAddress('127.0.0.1:' + sender): []})
+        receive.node = generate_node(State.Error, children={sender: None})
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
                          body=utils.get_red_envelope(raw_state, sender))
@@ -98,7 +97,7 @@ class TestNode:
         sender = '23456'
         for i in range(2):
             raw_state = str(init_states[i - 1]).split(':')[-1]
-            receive.node = generate_node(init_states[1 - i], children={model.NodeAddress('127.0.0.1:' + sender): []})
+            receive.node = generate_node(init_states[1 - i], children={int(sender): None})
             receive.loop = asyncio.get_event_loop()
             receive.callback(_ch=None, method=MethodStub(), _properties=None,
                              body=utils.get_red_envelope(raw_state, sender))
@@ -118,8 +117,8 @@ class TestNode:
         child_1 = '21000'
         child_2 = '22000'
 
-        receive.node = generate_node(State.Stopped, children={model.NodeAddress('127.0.0.1:' + child_1): [],
-                                                              model.NodeAddress('127.0.0.1:' + child_2): []})
+        receive.node = generate_node(State.Stopped, children={int(child_1): None,
+                                                              int(child_2): None})
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
                          body=utils.get_red_envelope('Starting', child_1))
@@ -217,7 +216,7 @@ class TestNode:
         raw_state = str(State.Running).split('.')[-1]
 
         receive.node = generate_node(State.Stopped)
-        receive.node.children = {model.NodeAddress('127.0.0.1:' + child_1): [], model.NodeAddress('127.0.0.1:' + child_2): []}
+        receive.node.children = {int(child_1): [], int(child_2): []}
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
                          body=utils.get_orange_envelope(raw_state))
@@ -239,7 +238,7 @@ class TestNode:
         loop_stop()
 
 
-def generate_node(state: State, address: str = '127.0.0.0:20000', children: dict[NodeAddress, [State]] = None) -> Node:
+def generate_node(state: State, address: str = '127.0.0.0:20000', children: dict[int, State | None] = None) -> Node:
     node_add = NodeAddress(address)
     node = Node(node_add)
     node.state = state

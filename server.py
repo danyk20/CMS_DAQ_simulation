@@ -119,7 +119,7 @@ async def notify(notification: Optional[Notification] = None, state: Optional[st
 
     state_changed = False
     if received_state:
-        node.children[model.NodeAddress(received_from)] = (model.State[received_state.split('.')[-1]])
+        node.children[int(received_from.split(':')[-1])] = (model.State[received_state.split('.')[-1]])
         state_changed = node.update_state()
     if node.get_parent().address is None:
         return

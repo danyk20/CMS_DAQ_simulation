@@ -74,7 +74,7 @@ class Node:
         self.state: State = State.Initialisation
         self.level: int = utils.compute_hierarchy_level(address.get_port())
         self.address: NodeAddress = address
-        self.children: dict[NodeAddress, State] = dict()
+        self.children: dict[int, State] = dict()
         self.started_processes: [Popen] = []
         self.chance_to_fail: float = 0
         self.build()
@@ -139,19 +139,20 @@ class Node:
         """
         if not self.initialisation_timestamp:
             self.initialisation_timestamp = time.time()
-        for child_address in self.children:
+        for child_port in self.children:
             if configuration['debug']:
-                print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + child_address.get_port())
+                print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + str(child_port))
             if configuration['architecture'] == 'MOM':
-                routing_key = utils.get_bounding_key(child_address.get_port())
+                routing_key = utils.get_bounding_key(str(child_port))
                 message = str(new_state)
                 send.post_state_change(message, routing_key, self.chance_to_fail)
             else:
                 if new_state == State.Running:
                     asyncio.create_task(
-                        client.post_start(str(self.chance_to_fail), child_address.get_full_address()))
+                        client.post_start(str(self.chance_to_fail),
+                                          configuration['URL']['address'] + ':' + str(child_port)))
                 elif new_state == State.Stopped:
-                    asyncio.create_task(client.post_stop(child_address.get_full_address()))
+                    asyncio.create_task(client.post_stop(configuration['URL']['address'] + str(child_port)))
 
     def add_child(self) -> None:
         """
@@ -164,7 +165,7 @@ class Node:
         child_offset: int = child_number * (10 ** (Node.MAXIMUM_DEPTH - child_level))
         child_port: int = int(self.address.get_port()) + child_offset
         child_address: NodeAddress = NodeAddress(self.address.get_ip() + ':' + str(child_port))
-        self.children[child_address] = []
+        self.children[child_port] = []
 
     def build(self) -> None:
         """

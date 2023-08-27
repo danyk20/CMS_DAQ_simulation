@@ -71,9 +71,9 @@ def create_children(parent: model.Node) -> None:
 
     :return: None
     """
-    for child_address in parent.children:
+    for child_port in parent.children:
         process: Popen = Popen(
-            ['python', 'service.py', '--port', str(child_address.get_port()), '--levels', str(model.Node.depth),
+            ['python', 'service.py', '--port', str(child_port), '--levels', str(model.Node.depth),
              '--children', str(model.Node.arity), '--parent', parent.address.get_full_address()])
         node.started_processes.append(process)
 
