@@ -3,6 +3,7 @@ import os
 import threading
 import time
 
+import numpy as np
 import requests
 
 import model
@@ -150,11 +151,14 @@ def plot_data(children, depth, architecture) -> None:
     :return: None
     """
     data = collect_data(children, depth)
-    selected_data = data[architecture]
+    rest_data = np.array(data['REST'])
+    mom_data = np.array(data['MOM'])
+
+    diff_time = (mom_data - rest_data).tolist()
     import matplotlib.pyplot as plt
 
     # Sample nested list containing data
-    data_list = selected_data
+    data_list = diff_time
 
     # Assuming each inner list has the same length
     x_values = list(range(1, 1 + len(data_list[0])))  # Assuming x-axis values are indices
@@ -164,13 +168,18 @@ def plot_data(children, depth, architecture) -> None:
 
     # Loop through the data sets and plot them
     for i, data_set in enumerate(data_list):
-        ax.plot(x_values, data_set, label=f'Children {i + 1}')
+        ax.plot(x_values, data_set, label=f'Children {i + 1}', linestyle='--', marker='o')
 
     # Add labels and title
-    ax.set_xlabel('X-axis')
+    ax.set_xlabel('Tree depth')
     ax.set_ylabel('Time [s]')
     ax.set_title('Plot of tree initialisation using ' + architecture)
     ax.legend()
+
+    # only integer values
+    ax.set_xticks(x_values)
+
+    ax.set_yscale('log')
 
     # Show the plot
     plt.show()
