@@ -74,7 +74,7 @@ class Node:
         self.state: State = State.Initialisation
         self.level: int = utils.compute_hierarchy_level(address.get_port())
         self.address: NodeAddress = address
-        self.children: dict[NodeAddress, [State]] = dict()
+        self.children: dict[NodeAddress, State] = dict()
         self.started_processes: [Popen] = []
         self.chance_to_fail: float = 0
         self.build()
@@ -194,16 +194,16 @@ class Node:
         running: int = 0
         error: int = 0
         for child in self.children:
-            child_status_list = self.children[child]
-            if not child_status_list or child_status_list[-1] == State.Initialisation:
+            child_status = self.children[child]
+            if not child_status or child_status == State.Initialisation:
                 initialisation += 1
-            elif child_status_list[-1] == State.Stopped:
+            elif child_status == State.Stopped:
                 stopped += 1
-            elif child_status_list[-1] == State.Starting:
+            elif child_status == State.Starting:
                 starting += 1
-            elif child_status_list[-1] == State.Running:
+            elif child_status == State.Running:
                 running += 1
-            elif child_status_list[-1] == State.Error:
+            elif child_status == State.Error:
                 error += 1
         if error:
             self.state = State.Error

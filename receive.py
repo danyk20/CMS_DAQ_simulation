@@ -72,7 +72,7 @@ async def notify(state: str = None, sender_port: str = None) -> None:
     state_changed = False
     if state:
         try:
-            node.children[model.NodeAddress(full_address)].append(model.State[state.split('.')[-1]])
+            node.children[model.NodeAddress(full_address)] = model.State[state.split('.')[-1]]
             state_changed = node.update_state()
         except KeyError:
             if configuration['debug']:
