@@ -1,4 +1,5 @@
 import asyncio
+import threading
 
 import aiohttp
 from aiohttp import ClientConnectorError
@@ -18,7 +19,7 @@ async def post_start(chance_to_fail: str, address: str) -> None:
     """
     endpoint = address + configuration['URL']['change_state']
     params = {'start': str(chance_to_fail)}
-    await request_node(endpoint, params)
+    asyncio.get_running_loop().create_task(request_node(endpoint, params))
 
 
 async def post_stop(address: str) -> None:
@@ -45,7 +46,7 @@ async def post_notification(address: str, state: str, sender_address: str) -> No
     if address:
         params = {'state': state, 'sender': sender_address}
         endpoint = address + configuration['URL']['notification']
-        await request_node(endpoint, params)
+        asyncio.get_running_loop().create_task(request_node(endpoint, params))
 
 
 async def request_node(endpoint, params) -> None:

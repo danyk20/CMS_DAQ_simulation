@@ -1,3 +1,6 @@
+import asyncio
+import threading
+
 import pika
 
 import utils
@@ -33,7 +36,8 @@ def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 
     :return: None
     """
     raw_state = new_state.split('.')[-1]
-    send_message(utils.get_orange_envelope(raw_state, chance_to_fail), routing_key, STATE_EXCHANGE)
+    threading.Thread(
+        send_message(utils.get_orange_envelope(raw_state, chance_to_fail), routing_key, STATE_EXCHANGE)).start()
 
 
 def post_state_notification(current_state: str, routing_key: str, sender_id: str) -> None:
@@ -46,7 +50,8 @@ def post_state_notification(current_state: str, routing_key: str, sender_id: str
     :return: None
     """
     raw_state = current_state.split('.')[-1]
-    send_message(utils.get_red_envelope(raw_state, sender_id), routing_key, NOTIFICATION_EXCHANGE)
+    threading.Thread(
+        target=send_message(utils.get_red_envelope(raw_state, sender_id), routing_key, NOTIFICATION_EXCHANGE)).start()
 
 
 def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> None:

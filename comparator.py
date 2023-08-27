@@ -141,13 +141,12 @@ def collect_data(children, depth) -> dict:
     return {'REST': rest_data, 'MOM': mom_data}
 
 
-def plot_data(children, depth, architecture) -> None:
+def plot_data(children, depth) -> None:
     """
     Plot data from list [children][depth]
 
     :param children: max number of children
     :param depth: max depth
-    :param architecture: REST or MOM
     :return: None
     """
     data = collect_data(children, depth)
@@ -168,12 +167,12 @@ def plot_data(children, depth, architecture) -> None:
 
     # Loop through the data sets and plot them
     for i, data_set in enumerate(data_list):
-        ax.plot(x_values, data_set, label=f'Children {i + 1}', linestyle='--', marker='o')
+        ax.plot(x_values, data_set, label=f'{i + 1} children', linestyle='--', marker='o')
 
     # Add labels and title
     ax.set_xlabel('Tree depth')
     ax.set_ylabel('Time [s]')
-    ax.set_title('Plot of tree initialisation using ' + architecture)
+    ax.set_title('Roundtrip from root to the leave node in tree structure (REST - MOM)')
     ax.legend()
 
     # only integer values
@@ -213,6 +212,4 @@ def get_node_data(port, children, depth, architecture) -> list:
 
 measurement()
 
-# for architecture_type in configuration['measurement']['architecture']:
-#     plot_data(configuration['measurement']['tree']['children'], configuration['measurement']['tree']['depth'],
-#               architecture_type)
+# plot_data(configuration['measurement']['tree']['children'], configuration['measurement']['tree']['depth'])
