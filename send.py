@@ -17,8 +17,11 @@ connection = None
 def open_chanel():
     global channel, connection
     if not channel:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
-        channel = connection.channel()
+        try:
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
+            channel = connection.channel()
+        except pika.exceptions.AMQPConnectionError:
+            print('No running RabbitMQ instance!')
 
 
 def close_connection():
