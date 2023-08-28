@@ -78,7 +78,6 @@ def start_root(architecture: str, depth: int, children: int) -> None:
         if response.status_code != 200:
             print("Root didn't accept the request!")
     else:
-        send.open_chanel()
         send.post_state_change(str(model.State.Running), NODE_ROUTING_KEY, 0)
 
 

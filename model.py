@@ -80,7 +80,6 @@ class Node:
         self.build()
         self.kill_rpc_serer = None
         self.kill_consumer = None
-        send.open_chanel()
         self.initialisation_timestamp = None
 
     async def set_state(self, new_state: State, probability_to_fail: float = 0, transition_time: int = 0) -> None:
@@ -164,8 +163,7 @@ class Node:
         child_level: int = self.level + 1
         child_offset: int = child_number * (10 ** (Node.MAXIMUM_DEPTH - child_level))
         child_port: int = int(self.address.get_port()) + child_offset
-        child_address: NodeAddress = NodeAddress(self.address.get_ip() + ':' + str(child_port))
-        self.children[child_port] = []
+        self.children[child_port] = State.Initialisation
 
     def build(self) -> None:
         """

@@ -134,7 +134,6 @@ async def shutdown_event(broker_disconnect: bool = True) -> None:
                 print('Child process might still run!')
             print(node.address.get_full_address() + ' is going to be terminated!')
         if broker_disconnect:
-            send.close_connection()
             node.kill_consumer()
             node.kill_rpc_serer()
             loop = asyncio.get_running_loop()

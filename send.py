@@ -1,33 +1,11 @@
 import asyncio
-import threading
-
-import pika
-
+import publisher
 import utils
 
 STATE_EXCHANGE = 'state_change'
 NOTIFICATION_EXCHANGE = 'state_notification'
 
 configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
-
-channel = None
-connection = None
-
-
-def open_chanel():
-    global channel, connection
-    if not channel:
-        try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration['URL']['address']))
-            channel = connection.channel()
-        except pika.exceptions.AMQPConnectionError:
-            print('No running RabbitMQ instance!')
-
-
-def close_connection():
-    global connection
-    if connection.is_open:
-        connection.close()
 
 
 def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 0) -> None:
@@ -40,8 +18,7 @@ def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 
     :return: None
     """
     raw_state = new_state.split('.')[-1]
-    threading.Thread(
-        send_message(utils.get_orange_envelope(raw_state, chance_to_fail), routing_key, STATE_EXCHANGE)).start()
+    send_message(utils.get_orange_envelope(raw_state, chance_to_fail), routing_key, STATE_EXCHANGE)
 
 
 def post_state_notification(current_state: str, routing_key: str, sender_id: str) -> None:
@@ -54,8 +31,22 @@ def post_state_notification(current_state: str, routing_key: str, sender_id: str
     :return: None
     """
     raw_state = current_state.split('.')[-1]
-    threading.Thread(
-        target=send_message(utils.get_red_envelope(raw_state, sender_id), routing_key, NOTIFICATION_EXCHANGE)).start()
+    send_message(utils.get_red_envelope(raw_state, sender_id), routing_key, NOTIFICATION_EXCHANGE)
+
+
+def ensure_async_loop() -> None:
+    """
+    Create asynchronous loop if it does not exist yet.
+
+    :return: None
+    """
+    try:
+        if not asyncio.get_event_loop().is_running():
+            raise Exception('Loop is not running')
+    except Exception:
+        print("New async loop!")
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
 
 def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> None:
@@ -67,15 +58,13 @@ def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> 
     :param exchange_name:
     :return: None
     """
-    global channel
-    try:
-        if routing_key:
-            channel.exchange_declare(exchange=('%s' % exchange_name), exchange_type='topic')
 
-            channel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=message,
-                                  properties=pika.BasicProperties(content_type='application/json'))
-            if configuration['debug']:
-                print(" [x] Sent message: %r -> %r" % (message, routing_key))
-
-    except Exception as e:
-        print(e)
+    if routing_key:
+        ensure_async_loop()
+        try:
+            if asyncio.get_event_loop().is_running():
+                asyncio.get_event_loop().create_task(publisher.new_task(exchange_name, routing_key, message))
+            else:
+                asyncio.get_event_loop().run_until_complete(publisher.new_task(exchange_name, routing_key, message))
+        except Exception as e:
+            print(e)

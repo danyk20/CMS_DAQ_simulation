@@ -68,7 +68,6 @@ async def notify(state: str = None, sender_port: str = None) -> None:
     :param sender_port: child's address
     :return: None
     """
-    full_address = configuration['URL']['address'] + ':' + sender_port
     state_changed = False
     if state:
         try:
