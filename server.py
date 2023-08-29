@@ -89,6 +89,8 @@ async def change_state(state_change_command: Optional[ChangeState] = None, start
 
     if prompt_to_start and node.state == model.State.Stopped:
         node.state = model.State.Starting
+        for child_port in node.children:
+            node.children[child_port] = (model.State.Starting, node.children[child_port][1])
         asyncio.create_task(
             node.set_state(model.State.Running, float(prompt_to_start), configuration['node']['time']['starting']))
     elif prompt_to_stop and node.state == model.State.Running:
@@ -101,13 +103,14 @@ async def change_state(state_change_command: Optional[ChangeState] = None, start
 
 @app.post(configuration['URL']['notification'])
 async def notify(notification: Optional[Notification] = None, state: Optional[str] = None,
-                 sender: Optional[str] = None) -> None:
+                 sender: Optional[str] = None, time_stamp: Optional[float] = 0) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
 
     :param notification: object containing validated state and sender
     :param state: state of the child that sent notification
     :param sender: child's address
+    :param time_stamp: time when notification was created
     :return: None
     """
     if configuration['REST']['pydantic']:
@@ -119,7 +122,7 @@ async def notify(notification: Optional[Notification] = None, state: Optional[st
 
     state_changed = False
     if received_state:
-        node.children[int(received_from.split(':')[-1])] = (model.State[received_state.split('.')[-1]])
+        node.children[int(received_from.split(':')[-1])] = (model.State[received_state.split('.')[-1]], time_stamp)
         state_changed = node.update_state()
     if node.get_parent().address is None:
         return
@@ -138,4 +141,7 @@ def run(created_node: Node, shutdown: Callable) -> None:
     global node, shutdown_handler
     node = created_node
     shutdown_handler = shutdown
-    uvicorn.run(app, host=configuration['URL']['address'], port=int(node.address.get_port()))
+    log_level = 'critical'
+    if configuration['debug']:
+        log_level = 'debug'
+    uvicorn.run(app, host=configuration['URL']['address'], port=int(node.address.get_port()), log_level=log_level)

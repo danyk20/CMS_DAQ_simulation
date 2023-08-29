@@ -1,5 +1,5 @@
 import asyncio
-import threading
+import time
 
 import aiohttp
 from aiohttp import ClientConnectorError
@@ -44,7 +44,7 @@ async def post_notification(address: str, state: str, sender_address: str) -> No
     """
 
     if address:
-        params = {'state': state, 'sender': sender_address}
+        params = {'state': state, 'sender': sender_address, 'time_stamp': time.time()}
         endpoint = address + configuration['URL']['notification']
         asyncio.get_running_loop().create_task(request_node(endpoint, params))
 

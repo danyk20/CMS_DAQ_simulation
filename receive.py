@@ -50,6 +50,8 @@ async def change_state(start: str = None, stop: str = None) -> None:
         return
     if start and node.state == model.State.Stopped:
         node.state = model.State.Starting
+        for child_port in node.children:
+            node.children[child_port] = (model.State.Starting, node.children[child_port][1])
         asyncio.create_task(node.set_state(model.State.Running, float(start),
                                            transition_time=configuration['node']['time']['starting']))
     elif stop and node.state == model.State.Running:
@@ -60,18 +62,19 @@ async def change_state(start: str = None, stop: str = None) -> None:
     # asyncio.get_running_loop() no problem
 
 
-async def notify(state: str = None, sender_port: str = None) -> None:
+async def notify(state: str = None, sender_port: str = None, time_stamp: float = 0) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
 
     :param state: state of the child that sent notification
     :param sender_port: child's address
+    :param time_stamp: when was notification issued
     :return: None
     """
     state_changed = False
-    if state:
+    if state and node.children[int(sender_port)][1] < time_stamp:
         try:
-            node.children[int(sender_port)] = model.State[state.split('.')[-1]]
+            node.children[int(sender_port)] = (model.State[state.split('.')[-1]], time_stamp)
             state_changed = node.update_state()
         except KeyError:
             if configuration['debug']:
@@ -94,7 +97,8 @@ def callback(_ch, method, _properties, body):
         # notification
         sender_id = utils.get_port(message['sender'])
         current_state = message['toState']
-        asyncio.run_coroutine_threadsafe(notify(current_state, sender_id), async_loop)
+        time_stamp = message['time_stamp']
+        asyncio.run_coroutine_threadsafe(notify(current_state, sender_id, time_stamp), async_loop)
     elif message['type'] == 'Input':
         # change state
         start_state = None
@@ -105,7 +109,8 @@ def callback(_ch, method, _properties, body):
             stop_state = True
 
         asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), async_loop)
-    print("Node %r received message: %r" % (method.routing_key, message))
+    if configuration['debug']:
+        print("Node %r received message: %r" % (method.routing_key, message))
 
 
 def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
@@ -135,7 +140,8 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
     channel.queue_bind(exchange=NOTIFICATION_EXCHANGE, queue=queue_name, routing_key=binding_key)
 
     initialised()
-    print(binding_key + ' - initialized')
+    if configuration['debug']:
+        print(binding_key + ' - initialized')
 
     def stop():
         """Stop listening for jobs"""

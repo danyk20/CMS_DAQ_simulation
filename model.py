@@ -74,7 +74,7 @@ class Node:
         self.state: State = State.Initialisation
         self.level: int = utils.compute_hierarchy_level(address.get_port())
         self.address: NodeAddress = address
-        self.children: dict[int, State] = dict()
+        self.children: dict[int, (State, float)] = dict()
         self.started_processes: [Popen] = []
         self.chance_to_fail: float = 0
         self.build()
@@ -163,7 +163,7 @@ class Node:
         child_level: int = self.level + 1
         child_offset: int = child_number * (10 ** (Node.MAXIMUM_DEPTH - child_level))
         child_port: int = int(self.address.get_port()) + child_offset
-        self.children[child_port] = State.Initialisation
+        self.children[child_port] = (State.Initialisation, time.time())
 
     def build(self) -> None:
         """
@@ -193,7 +193,7 @@ class Node:
         running: int = 0
         error: int = 0
         for child in self.children:
-            child_status = self.children[child]
+            child_status = self.children[child][0]
             if not child_status or child_status == State.Initialisation:
                 initialisation += 1
             elif child_status == State.Stopped:

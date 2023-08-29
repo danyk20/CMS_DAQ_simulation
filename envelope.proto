@@ -14,6 +14,7 @@ message Red {
   optional string type = 1;
   optional string sender = 2;
   optional string toState = 3;
+  optional float time_stamp = 4;
 }
 
 message Orange {

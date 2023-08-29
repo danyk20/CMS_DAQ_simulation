@@ -1,5 +1,6 @@
 import argparse
 import sys
+import time
 
 import yaml
 import json
@@ -99,7 +100,7 @@ def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
     """
     envelope_format = get_configuration()['rabbitmq']['envelope_format']
     if envelope_format == 'json':
-        envelope = {'color': 'red', 'type': 'Notification', 'sender': sender, 'toState': transitioned_state}
+        envelope = {'color': 'red', 'type': 'Notification', 'sender': sender, 'toState': transitioned_state, 'time_stamp': time.time()}
         return json.dumps(envelope)
     elif envelope_format == 'proto':
         envelope = envelope_pb2.Rainbow()
@@ -107,6 +108,7 @@ def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
         envelope.red.type = 'Notification'
         envelope.red.sender = sender
         envelope.red.toState = transitioned_state
+        envelope.red.time_stamp = time.time()
 
         return envelope.SerializeToString()
 

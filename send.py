@@ -44,7 +44,8 @@ def ensure_async_loop() -> None:
         if not asyncio.get_event_loop().is_running():
             raise Exception('Loop is not running')
     except Exception:
-        print("New async loop!")
+        if configuration['debug']:
+            print("New async loop!")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
