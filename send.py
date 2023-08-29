@@ -1,11 +1,51 @@
 import asyncio
-import publisher
+
+import aioamqp
+
 import utils
 
 STATE_EXCHANGE = 'state_change'
 NOTIFICATION_EXCHANGE = 'state_notification'
 
 configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
+
+channel = None
+transport = None
+protocol = None
+
+
+async def open_chanel():
+    global channel, transport, protocol
+    try:
+        transport, protocol = await aioamqp.connect(host=configuration['URL']['address'], port=5672, login='guest',
+                                                    password='guest')
+    except aioamqp.AmqpClosedConnection:
+        print('Connection is closed!')
+    channel = await protocol.channel()
+    if configuration['debug']:
+        print('Channel created!')
+
+
+async def close_channel():
+    # TODO not properly closed (protocol.close never finish)
+    if protocol:
+        await protocol.close()
+    if transport:
+        transport.close()
+
+
+async def push_message(exchange_name, routing_key, message):
+    if not channel:
+        await open_chanel()
+
+    await channel.basic_publish(
+        payload=message.encode('utf-8'),
+        exchange_name=exchange_name,
+        routing_key=routing_key
+    )
+
+    if configuration['debug']:
+        print(" [x] Sent message: %r -> %r" % (message, routing_key))
 
 
 def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 0) -> None:
@@ -59,13 +99,12 @@ def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> 
     :param exchange_name:
     :return: None
     """
-
     if routing_key:
         ensure_async_loop()
         try:
             if asyncio.get_event_loop().is_running():
-                asyncio.get_event_loop().create_task(publisher.new_task(exchange_name, routing_key, message))
+                asyncio.get_event_loop().create_task(push_message(exchange_name, routing_key, message))
             else:
-                asyncio.get_event_loop().run_until_complete(publisher.new_task(exchange_name, routing_key, message))
+                asyncio.get_event_loop().run_until_complete(push_message(exchange_name, routing_key, message))
         except Exception as e:
             print(e)
