@@ -11,6 +11,7 @@ from google.protobuf.json_format import MessageToDict
 import envelope_pb2
 from errors import ValidationError
 
+
 def check_address(address: str) -> str:
     """
     Validate whether address is in correct format, otherwise throw an error.
@@ -24,7 +25,6 @@ def check_address(address: str) -> str:
     port = address.split(':')[1]
     if len(ip.split('.')) != 4 or any(0 > int(octet) or int(octet) > 255 for octet in ip.split('.')):
         raise argparse.ArgumentTypeError("%s is an invalid IP address value" % ip)
-    configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
     if int(port) < configuration['node']['port']['min'] or int(port) >= configuration['node']['port']['max']:
         raise argparse.ArgumentTypeError("%s is out of range valid port values" % port)
     return address
@@ -88,7 +88,9 @@ def get_port(bounding_key: str) -> str:
         return ''.join(bounding_key.split('.'))
     return ''
 
+
 configuration = get_configuration()
+
 
 def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
     """
@@ -260,7 +262,7 @@ def get_dict_from_envelope(message: str, accepted_types: list = ['white', 'blue'
     """
     import envelope as env
 
-    if get_configuration()['rabbitmq']['envelope_format'] == 'json':
+    if configuration['rabbitmq']['envelope_format'] == 'json':
         return json.loads(message)
     envelope = envelope_pb2.Rainbow()
     envelope.ParseFromString(message)
@@ -278,7 +280,7 @@ def get_dict_from_envelope(message: str, accepted_types: list = ['white', 'blue'
         data = envelope.blue
     else:
         raise ValidationError('Unsupported envelope type arrived')
-    if get_configuration()['rabbitmq']['validation']:
+    if configuration['rabbitmq']['validation']:
         env.validator(data, envelope.color)
 
     return MessageToDict(data, preserving_proto_field_name=True)
