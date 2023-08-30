@@ -93,7 +93,7 @@ def measurement() -> None:
     original_timeout = utils.set_configuration(3, ['rabbitmq', 'rpc_timeout'])
     original_starting = utils.set_configuration(0, ['node', 'time', 'starting'])
     original_get = utils.set_configuration(0, ['node', 'time', 'get'])
-    original_debug = utils.set_configuration(True, ['debug'])
+    original_debug = utils.set_configuration(False, ['debug'])
     for children in range(1, configuration['measurement']['tree']['children'] + 1):
         for depth in range(1, configuration['measurement']['tree']['depth'] + 1):
             for i in range(configuration['measurement']['runs']):

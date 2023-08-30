@@ -137,7 +137,7 @@ class Node:
         :return: None
         """
         if not self.initialisation_timestamp:
-            self.initialisation_timestamp = time.time()
+            self.initialisation_timestamp = time.perf_counter()
         tasks = []
         for child_port in self.children:
             if configuration['debug']:
@@ -152,7 +152,7 @@ class Node:
                         client.post_start(str(self.chance_to_fail),
                                           configuration['URL']['address'] + ':' + str(child_port)))
                 elif new_state == State.Stopped:
-                    asyncio.create_task(client.post_stop(configuration['URL']['address'] + str(child_port)))
+                    tasks.append(client.post_stop(configuration['URL']['address'] + str(child_port)))
         await asyncio.gather(*tasks)
 
     def add_child(self) -> None:
@@ -220,7 +220,7 @@ class Node:
                 if configuration['measurement']['write']:
                     add_measurement(configuration['architecture'] + '_duration.txt',
                                     self.address.get_port(),
-                                    time.time() - self.initialisation_timestamp, len(self.children), Node.depth)
+                                    time.perf_counter() - self.initialisation_timestamp, len(self.children), Node.depth)
                 asyncio.get_running_loop().create_task(self.run())
             self.state = State.Running
         return self.state != before
