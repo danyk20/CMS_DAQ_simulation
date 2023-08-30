@@ -18,8 +18,8 @@ async def post_start(chance_to_fail: str, address: str) -> None:
     :return: None
     """
     endpoint = address + configuration['URL']['change_state']
-    params = {'start': str(chance_to_fail)}
-    asyncio.get_running_loop().create_task(request_node(endpoint, params))
+    params = {'start': chance_to_fail}
+    await request_node(endpoint, params)
 
 
 async def post_stop(address: str) -> None:
@@ -46,7 +46,7 @@ async def post_notification(address: str, state: str, sender_address: str) -> No
     if address:
         params = {'state': state, 'sender': sender_address, 'time_stamp': time.time()}
         endpoint = address + configuration['URL']['notification']
-        asyncio.get_running_loop().create_task(request_node(endpoint, params))
+        await request_node(endpoint, params)
 
 
 async def request_node(endpoint, params) -> None:
@@ -56,12 +56,11 @@ async def request_node(endpoint, params) -> None:
     :param params: attributes
     :return: None
     """
-    delivered = False
     attempts = 0
     url = configuration['URL']['protocol'] + endpoint
     headers = {'content-type': 'application/json'} if configuration['REST']['pydantic'] else {}
     async with aiohttp.ClientSession(headers=headers) as session:
-        while not delivered:
+        while True:
             if attempts > configuration['REST']['timeout']:
                 if configuration['debug']:
                     print(str(params) + ' - message cannot be delivered to ' + url)
