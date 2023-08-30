@@ -148,9 +148,8 @@ class Node:
                 tasks.append(send.post_state_change(message, routing_key, self.chance_to_fail))
             else:
                 if new_state == State.Running:
-                    asyncio.create_task(
-                        client.post_start(str(self.chance_to_fail),
-                                          configuration['URL']['address'] + ':' + str(child_port)))
+                    tasks.append(client.post_start(str(self.chance_to_fail),
+                                                   configuration['URL']['address'] + ':' + str(child_port)))
                 elif new_state == State.Stopped:
                     tasks.append(client.post_stop(configuration['URL']['address'] + str(child_port)))
         await asyncio.gather(*tasks)
@@ -179,9 +178,9 @@ class Node:
     def update_state(self) -> bool:
         """
         Update own state based on received notifications from the children with following rules:
-        At least 1 child in error state -> error
-        At least 1 child in stopped state -> stopped
-        At least 1 child in starting state -> starting
+        At least 1 child_port in error state -> error
+        At least 1 child_port in stopped state -> stopped
+        At least 1 child_port in starting state -> starting
         All children in running state -> running
 
         :return: whether the state was changed
@@ -189,13 +188,13 @@ class Node:
         before = self.state
         if before == State.Error:
             return False
-        initialisation = 0
+        initialisation: int = 0
         stopped: int = 0
         starting: int = 0
         running: int = 0
         error: int = 0
-        for child in self.children:
-            child_status = self.children[child][0]
+        for child_port in self.children:
+            child_status = self.children[child_port][0]
             if not child_status or child_status == State.Initialisation:
                 initialisation += 1
             elif child_status == State.Stopped:
@@ -222,7 +221,6 @@ class Node:
                                     self.address.get_port(),
                                     time.perf_counter() - self.initialisation_timestamp, len(self.children), Node.depth)
                 asyncio.get_running_loop().create_task(self.run())
-            self.state = State.Running
         return self.state != before
 
     async def run(self) -> None:
