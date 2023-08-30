@@ -70,13 +70,16 @@ def start_root(architecture: str, depth: int, children: int) -> None:
     :param children: number of children per node
     :return: None
     """
-    print("\n Staring " + architecture + ' with ' + str(children) + ' children and ' + str(depth) + ' levels!')
+    print("\n Starting " + architecture + ' with ' + str(children) + ' children and ' + str(depth) + ' levels!')
     wait_until_node_is_ready(architecture)
 
     if architecture == 'REST':
         url = 'http://127.0.0.1:' + NODE_PORT + configuration['URL']['change_state']
         params = {'start': str(0)}
-        response = requests.post(url, json=params)
+        if configuration['REST']['pydantic']:
+            response = requests.post(url, json=params)
+        else:
+            response = requests.post(url, params=params)
         if response.status_code != 200:
             print("Root didn't accept the request!")
     else:
