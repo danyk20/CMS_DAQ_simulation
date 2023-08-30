@@ -29,7 +29,11 @@ async def open_chanel():
 async def close_channel():
     # TODO not properly closed (protocol.close never finish)
     if protocol:
-        await protocol.close()
+        try:
+            await protocol.close(timeout=1)
+        except asyncio.exceptions.TimeoutError:
+            if configuration['debug']:
+                print('Connection still in use!')
     if transport:
         transport.close()
 
@@ -38,11 +42,16 @@ async def push_message(exchange_name, routing_key, message):
     if not channel:
         await open_chanel()
 
-    await channel.basic_publish(
-        payload=message.encode('utf-8'),
-        exchange_name=exchange_name,
-        routing_key=routing_key
-    )
+    try:
+        await channel.basic_publish(
+            payload=message.encode('utf-8'),
+            exchange_name=exchange_name,
+            routing_key=routing_key
+        )
+    except Exception as e:
+        if configuration['debug']:
+            print(str(e))
+            print('message: ' + str(message))
 
     if configuration['debug']:
         print(" [x] Sent message: %r -> %r" % (message, routing_key))
@@ -108,3 +117,6 @@ def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> 
                 asyncio.get_event_loop().run_until_complete(push_message(exchange_name, routing_key, message))
         except Exception as e:
             print(e)
+    else:
+        if configuration['debug']:
+            print('No routing key - discarding: ' + str(message))
