@@ -148,9 +148,18 @@ def run(created_node: model.Node, async_loop: AbstractEventLoop) -> None:
         connection.add_callback_threadsafe(_stop)
 
     def _stop():
-        channel.stop_consuming()
-        channel.close()
-        connection.close()
+        try:
+            channel.stop_consuming()
+        except Exception as e:
+            print('Channel cannot stop consuming on node:' + node.address.get_port() + str(e))
+        try:
+            channel.close()
+        except Exception as e:
+            print('Channel cannot be closed on node:' + node.address.get_port() + str(e))
+        try:
+            connection.close()
+        except Exception as e:
+            print('Connection cannot be closed on node:' + node.address.get_port() + str(e))
 
     node.kill_consumer = stop
 
