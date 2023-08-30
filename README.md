@@ -270,7 +270,8 @@ Red:
 {
   "type": "Notification",
   "sender": "2.0.0.0.0",
-  "toState": "Running"
+  "toState": "Running",
+  "time_stamp": 1693389087.1995819
 }
 ```
 
@@ -796,7 +797,7 @@ Note: In current version it is implemented just for MOM architecture.
 |:---------|:-------:|:--------------:|----------:|
 | White    |  90 B   |      53 B      |      41 % |
 | Blue     | 93.2 B  |     57.2 B     |      39 % |
-| Red      | 141.2 B |     81.2 B     |      42 % |
+| Red      |  175 B  |     86.2 B     |      51 % |
 | Orange   | 155.2 B |     73.2 B     |      53 % |
 | Average  | 119.9 B |    66.15 B     |      45 % |
 
