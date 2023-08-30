@@ -138,13 +138,14 @@ class Node:
         """
         if not self.initialisation_timestamp:
             self.initialisation_timestamp = time.time()
+        tasks = []
         for child_port in self.children:
             if configuration['debug']:
                 print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + str(child_port))
             if configuration['architecture'] == 'MOM':
                 routing_key = utils.get_bounding_key(str(child_port))
                 message = str(new_state)
-                send.post_state_change(message, routing_key, self.chance_to_fail)
+                tasks.append(send.post_state_change(message, routing_key, self.chance_to_fail))
             else:
                 if new_state == State.Running:
                     asyncio.create_task(
@@ -152,6 +153,7 @@ class Node:
                                           configuration['URL']['address'] + ':' + str(child_port)))
                 elif new_state == State.Stopped:
                     asyncio.create_task(client.post_stop(configuration['URL']['address'] + str(child_port)))
+        await asyncio.gather(*tasks)
 
     def add_child(self) -> None:
         """
@@ -258,9 +260,9 @@ class Node:
             if configuration['architecture'] == 'MOM':
                 routing_key = utils.get_bounding_key(self.get_parent().get_port())
                 sender_id = utils.get_bounding_key(self.address.get_port())
-                send.post_state_notification(current_state=str(self.state),
-                                             routing_key=routing_key,
-                                             sender_id=sender_id)
+                await send.post_state_notification(current_state=str(self.state),
+                                                   routing_key=routing_key,
+                                                   sender_id=sender_id)
             else:
                 # REST
                 await client.post_notification(address=self.get_parent().get_full_address(),

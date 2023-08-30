@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import threading
@@ -79,7 +80,7 @@ def start_root(architecture: str, depth: int, children: int) -> None:
         if response.status_code != 200:
             print("Root didn't accept the request!")
     else:
-        send.post_state_change(str(model.State.Running), NODE_ROUTING_KEY, 0)
+        asyncio.new_event_loop().run_until_complete(send.post_state_change(str(model.State.Running), NODE_ROUTING_KEY, 0))
 
 
 def measurement() -> None:
@@ -92,7 +93,7 @@ def measurement() -> None:
     original_timeout = utils.set_configuration(3, ['rabbitmq', 'rpc_timeout'])
     original_starting = utils.set_configuration(0, ['node', 'time', 'starting'])
     original_get = utils.set_configuration(0, ['node', 'time', 'get'])
-    original_debug = utils.set_configuration(False, ['debug'])
+    original_debug = utils.set_configuration(True, ['debug'])
     for children in range(1, configuration['measurement']['tree']['children'] + 1):
         for depth in range(1, configuration['measurement']['tree']['depth'] + 1):
             for i in range(configuration['measurement']['runs']):
@@ -156,7 +157,6 @@ def plot_data(children, depth) -> None:
     data = collect_data(children, depth)
 
     import matplotlib.pyplot as plt
-
 
     # Create a figure and axis
     fig, ax = plt.subplots()

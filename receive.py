@@ -24,9 +24,11 @@ def initialised() -> None:
     """
     if not node.children:
         node.state = model.State.Stopped
-    send.post_state_notification(current_state=str(node.state),
-                                 routing_key=utils.get_bounding_key(node.get_parent().get_port()),
-                                 sender_id=utils.get_bounding_key(node.address.get_port()))
+    asyncio.new_event_loop().run_until_complete(send.post_state_notification(current_state=str(node.state),
+                                                                             routing_key=utils.get_bounding_key(
+                                                                                 node.get_parent().get_port()),
+                                                                             sender_id=utils.get_bounding_key(
+                                                                                 node.address.get_port())))
 
 
 def get_state() -> dict[str, str]:
@@ -83,9 +85,9 @@ async def notify(state: str = None, sender_port: str = None, time_stamp: float =
     if node.get_parent().address is None:
         return
     if state_changed:
-        send.post_state_notification(current_state=str(node.state),
-                                     routing_key=utils.get_bounding_key(node.get_parent().get_port()),
-                                     sender_id=utils.get_bounding_key(node.address.get_port()))
+        await send.post_state_notification(current_state=str(node.state),
+                                           routing_key=utils.get_bounding_key(node.get_parent().get_port()),
+                                           sender_id=utils.get_bounding_key(node.address.get_port()))
 
 
 def callback(_ch, method, _properties, body):

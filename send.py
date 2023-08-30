@@ -57,7 +57,7 @@ async def push_message(exchange_name, routing_key, message):
         print(" [x] Sent message: %r -> %r" % (message, routing_key))
 
 
-def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 0) -> None:
+async def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 0) -> None:
     """
     Send new state to the children node
 
@@ -67,10 +67,10 @@ def post_state_change(new_state: str, routing_key: str, chance_to_fail: float = 
     :return: None
     """
     raw_state = new_state.split('.')[-1]
-    send_message(utils.get_orange_envelope(raw_state, chance_to_fail), routing_key, STATE_EXCHANGE)
+    await send_message(utils.get_orange_envelope(raw_state, chance_to_fail), routing_key, STATE_EXCHANGE)
 
 
-def post_state_notification(current_state: str, routing_key: str, sender_id: str) -> None:
+async def post_state_notification(current_state: str, routing_key: str, sender_id: str) -> None:
     """
     Update parent about current state
 
@@ -80,26 +80,10 @@ def post_state_notification(current_state: str, routing_key: str, sender_id: str
     :return: None
     """
     raw_state = current_state.split('.')[-1]
-    send_message(utils.get_red_envelope(raw_state, sender_id), routing_key, NOTIFICATION_EXCHANGE)
+    await send_message(utils.get_red_envelope(raw_state, sender_id), routing_key, NOTIFICATION_EXCHANGE)
 
 
-def ensure_async_loop() -> None:
-    """
-    Create asynchronous loop if it does not exist yet.
-
-    :return: None
-    """
-    try:
-        if not asyncio.get_event_loop().is_running():
-            raise Exception('Loop is not running')
-    except Exception:
-        if configuration['debug']:
-            print("New async loop!")
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-
-def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> None:
+async def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> None:
     """
     Transfer message to the destination node's queue using exchange and routing key
 
@@ -109,12 +93,8 @@ def send_message(message: str | bytes, routing_key: str, exchange_name: str) -> 
     :return: None
     """
     if routing_key:
-        ensure_async_loop()
         try:
-            if asyncio.get_event_loop().is_running():
-                asyncio.get_event_loop().create_task(push_message(exchange_name, routing_key, message))
-            else:
-                asyncio.get_event_loop().run_until_complete(push_message(exchange_name, routing_key, message))
+            await push_message(exchange_name, routing_key, message)
         except Exception as e:
             print(e)
     else:

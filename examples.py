@@ -1,3 +1,5 @@
+import asyncio
+
 import requests
 
 from send import post_state_change, post_state_notification
@@ -90,7 +92,7 @@ def send_invalid_state_mom() -> None:
 
     :return: None
     """
-    post_state_change('invalid', '2.0.0.0.0')
+    asyncio.new_event_loop().run_until_complete(post_state_change('invalid', '2.0.0.0.0'))
 
 
 def send_invalid_notification_mom() -> None:
@@ -99,4 +101,4 @@ def send_invalid_notification_mom() -> None:
 
     :return: None
     """
-    post_state_notification('state.invalid', '2.0.0.0.0', '2.1.0.0.0')
+    asyncio.new_event_loop().run_until_complete(post_state_notification('state.invalid', '2.0.0.0.0', '2.1.0.0.0'))
