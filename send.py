@@ -14,7 +14,7 @@ transport = None
 protocol = None
 
 
-async def open_chanel():
+async def open_chanel() -> None:
     global channel, transport, protocol
     try:
         transport, protocol = await aioamqp.connect(host=configuration['URL']['address'], port=5672, login='guest',
@@ -26,8 +26,12 @@ async def open_chanel():
         print('Channel created!')
 
 
-async def close_channel():
-    # TODO not properly closed (protocol.close never finish)
+async def close_channel() -> None:
+    """
+    Closed opened and unused resources
+
+    :return: None
+    """
     if protocol:
         try:
             await protocol.close(timeout=1)
@@ -38,7 +42,15 @@ async def close_channel():
         transport.close()
 
 
-async def push_message(exchange_name, routing_key, message):
+async def push_message(exchange_name, routing_key, message) -> None:
+    """
+    Push message to the broker asynchronously
+
+    :param exchange_name: exchange name
+    :param routing_key: recipient queue id
+    :param message: string message
+    :return: None
+    """
     if not channel:
         await open_chanel()
 

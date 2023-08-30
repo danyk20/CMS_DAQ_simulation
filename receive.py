@@ -61,10 +61,9 @@ async def change_state(start: str = None, stop: str = None) -> None:
             node.set_state(model.State.Stopped, transition_time=configuration['node']['time']['starting']))
     elif configuration['debug']:
         print('Wrong operation! Node remains in : %r' % str(node.state))
-    # asyncio.get_running_loop() no problem
 
 
-async def notify(state: str = None, sender_port: str = None, time_stamp: float = 0) -> None:
+async def notify(state: str = None, sender_port: int = None, time_stamp: float = 0) -> None:
     """
     Child current state notification that is recursively propagating to the root and updating states on the way
 
@@ -74,9 +73,9 @@ async def notify(state: str = None, sender_port: str = None, time_stamp: float =
     :return: None
     """
     state_changed = False
-    if state and node.children[int(sender_port)][1] < time_stamp:
+    if state and node.children[sender_port][1] < time_stamp:
         try:
-            node.children[int(sender_port)] = (model.State[state.split('.')[-1]], time_stamp)
+            node.children[sender_port] = (model.State[state.split('.')[-1]], time_stamp)
             state_changed = node.update_state()
         except KeyError:
             if configuration['debug']:
@@ -94,13 +93,12 @@ def callback(_ch, method, _properties, body):
     message = utils.exception_filter(lambda: utils.get_dict_from_envelope(body, ['orange', 'red']))
     if not message:
         return
-    async_loop = loop
     if message['type'] == 'Notification':
         # notification
         sender_id = utils.get_port(message['sender'])
         current_state = message['toState']
         time_stamp = message['time_stamp']
-        asyncio.run_coroutine_threadsafe(notify(current_state, sender_id, time_stamp), async_loop)
+        asyncio.run_coroutine_threadsafe(notify(current_state, int(sender_id), time_stamp), loop)
     elif message['type'] == 'Input':
         # change state
         start_state = None
@@ -109,8 +107,7 @@ def callback(_ch, method, _properties, body):
             start_state = str(message['parameters']['chance_to_fail'])
         elif message['name'] == 'Stopped':
             stop_state = True
-
-        asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), async_loop)
+        asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), loop)
     if configuration['debug']:
         print("Node %r received message: %r" % (method.routing_key, message))
 
