@@ -97,6 +97,8 @@ def measurement() -> None:
     original_starting = utils.set_configuration(0, ['node', 'time', 'starting'])
     original_get = utils.set_configuration(0, ['node', 'time', 'get'])
     original_debug = utils.set_configuration(False, ['debug'])
+    original_pydantic = utils.set_configuration(False, ['REST', 'pydantic'])
+    original_validation = utils.set_configuration(False, ['rabbitmq', 'validation'])
     for children in range(1, configuration['measurement']['tree']['children'] + 1):
         for depth in range(1, configuration['measurement']['tree']['depth'] + 1):
             for i in range(configuration['measurement']['runs']):
@@ -113,6 +115,8 @@ def measurement() -> None:
     utils.set_configuration(original_starting, ['node', 'time', 'starting'])
     utils.set_configuration(original_get, ['node', 'time', 'get'])
     utils.set_configuration(original_debug, ['debug'])
+    utils.set_configuration(original_pydantic, ['REST', 'pydantic'])
+    utils.set_configuration(original_validation, ['rabbitmq', 'validation'])
 
 
 def collect_data(children, depth) -> dict:
