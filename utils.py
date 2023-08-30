@@ -11,7 +11,6 @@ from google.protobuf.json_format import MessageToDict
 import envelope_pb2
 from errors import ValidationError
 
-
 def check_address(address: str) -> str:
     """
     Validate whether address is in correct format, otherwise throw an error.
@@ -89,6 +88,7 @@ def get_port(bounding_key: str) -> str:
         return ''.join(bounding_key.split('.'))
     return ''
 
+configuration = get_configuration()
 
 def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
     """
@@ -98,9 +98,10 @@ def get_red_envelope(transitioned_state: str, sender: str = '') -> str:
     :param sender: origin node id as bind key
     :return: string representation of red envelope
     """
-    envelope_format = get_configuration()['rabbitmq']['envelope_format']
+    envelope_format = configuration['rabbitmq']['envelope_format']
     if envelope_format == 'json':
-        envelope = {'color': 'red', 'type': 'Notification', 'sender': sender, 'toState': transitioned_state, 'time_stamp': time.time()}
+        envelope = {'color': 'red', 'type': 'Notification', 'sender': sender, 'toState': transitioned_state,
+                    'time_stamp': time.time()}
         return json.dumps(envelope)
     elif envelope_format == 'proto':
         envelope = envelope_pb2.Rainbow()
@@ -121,7 +122,7 @@ def get_orange_envelope(state: str, chance_to_fail: float = 0) -> str:
     :param chance_to_fail: chance to end up in Error state
     :return: string representation of orange envelope
     """
-    envelope_format = get_configuration()['rabbitmq']['envelope_format']
+    envelope_format = configuration['rabbitmq']['envelope_format']
     if envelope_format == 'json':
         envelope = {'color': 'orange', 'type': 'Input', 'name': state, 'parameters': {'chance_to_fail': chance_to_fail}}
         return json.dumps(envelope)
@@ -141,7 +142,7 @@ def get_blue_envelope(current_state: str) -> str:
     :param current_state: node current state
     :return: string representation of blue envelope
     """
-    envelope_format = get_configuration()['rabbitmq']['envelope_format']
+    envelope_format = configuration['rabbitmq']['envelope_format']
     if envelope_format == 'json':
         envelope = {'color': 'blue', 'state': current_state}
         return json.dumps(envelope)
@@ -161,7 +162,7 @@ def get_white_envelope(requested_action: str = 'get_state') -> str:
     :param requested_action: type of request
     :return: string representation of white envelope
     """
-    envelope_format = get_configuration()['rabbitmq']['envelope_format']
+    envelope_format = configuration['rabbitmq']['envelope_format']
     if envelope_format == 'json':
         envelope = {'color': 'white', 'action': requested_action}
         return json.dumps(envelope)
