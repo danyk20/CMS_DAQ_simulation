@@ -85,7 +85,7 @@ def start_root(architecture: str, depth: int, children: int) -> None:
         if response.status_code != 200:
             print("Root didn't accept the request!")
     else:
-        asyncio.new_event_loop().run_until_complete(send.post_state_change(str(model.State.Running), NODE_ROUTING_KEY, 0))
+        loop.run_until_complete(send.post_state_change(str(model.State.Running), NODE_ROUTING_KEY, 0))
 
 
 def measurement() -> None:
