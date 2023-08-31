@@ -15,6 +15,7 @@ configuration: dict[str, str | dict[str, int | str | dict]] = utils.get_configur
 
 NODE_ROUTING_KEY = '2.0.0.0.0'
 NODE_PORT = '20000'
+loop = asyncio.new_event_loop()
 
 
 def measurement_runner(depth: int, children: int):
@@ -120,6 +121,7 @@ def measurement() -> None:
     utils.set_configuration(original_pydantic, ['REST', 'pydantic'])
     utils.set_configuration(original_validation, ['rabbitmq', 'validation'])
     utils.set_configuration(original_format, ['rabbitmq', 'envelope_format'])
+    loop.close()
 
 
 def collect_data(children, depth) -> dict:
