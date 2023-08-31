@@ -68,7 +68,7 @@ async def notify(state: str = None, sender_port: int = None, time_stamp: float =
     :return: None
     """
     state_changed = False
-    if state and node.children[sender_port][1] < time_stamp:
+    if state and node.children[sender_port][1] <= time_stamp:
         try:
             node.children[sender_port] = (model.State[state.split('.')[-1]], time_stamp)
             state_changed = node.update_state()

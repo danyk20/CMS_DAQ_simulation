@@ -9,6 +9,7 @@ import pytest
 
 pytest_plugins = ('pytest_asyncio',)
 configuration: dict[str, str | dict[str, str | dict]] = utils.get_configuration()
+utils.set_configuration(False, ['measurement', 'write'])
 
 
 class TestNode:
@@ -53,13 +54,13 @@ class TestNode:
 
         :return: None
         """
-        sender = '23456'
+        sender = 23456
         raw_state = str(State.Error).split(':')[-1]
-        receive.node = generate_node(State.Running, children={sender: None},
+        receive.node = generate_node(State.Running, children={sender: (State.Running, 0)},
                                      address='127.0.0.1:22000')
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope(raw_state, sender))
+                         body=utils.get_red_envelope(raw_state, str(sender)))
         assert receive.node.state == State.Running
         await asyncio.sleep(1)
         assert receive.node.state == State.Error
@@ -74,12 +75,12 @@ class TestNode:
 
         :return: None
         """
-        sender = '23456'
+        sender = 23456
         raw_state = str(State.Running).split(':')[-1]
         receive.node = generate_node(State.Error, children={sender: None})
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                         body=utils.get_red_envelope(raw_state, sender))
+                         body=utils.get_red_envelope(raw_state, str(sender)))
         assert receive.node.state == State.Error
         await asyncio.sleep(1)
         assert receive.node.state == State.Error
@@ -94,13 +95,13 @@ class TestNode:
         :return: None
         """
         init_states = [State.Stopped, State.Running]
-        sender = '23456'
+        sender = 23456
         for i in range(2):
             raw_state = str(init_states[i - 1]).split(':')[-1]
             receive.node = generate_node(init_states[1 - i], children={int(sender): None})
             receive.loop = asyncio.get_event_loop()
             receive.callback(_ch=None, method=MethodStub(), _properties=None,
-                             body=utils.get_red_envelope(raw_state, sender))
+                             body=utils.get_red_envelope(raw_state, str(sender)))
             assert receive.node.state == init_states[1 - i]
             await asyncio.sleep(1)
             assert receive.node.state == init_states[i - 1]
@@ -117,8 +118,8 @@ class TestNode:
         child_1 = '21000'
         child_2 = '22000'
 
-        receive.node = generate_node(State.Stopped, children={int(child_1): None,
-                                                              int(child_2): None})
+        receive.node = generate_node(State.Stopped, children={int(child_1): (None, 0),
+                                                              int(child_2): (None, 0)})
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
                          body=utils.get_red_envelope('Starting', child_1))
@@ -216,7 +217,7 @@ class TestNode:
         raw_state = str(State.Running).split('.')[-1]
 
         receive.node = generate_node(State.Stopped)
-        receive.node.children = {int(child_1): [], int(child_2): []}
+        receive.node.children = {int(child_1): (None, 0), int(child_2): (None, 0)}
         receive.loop = asyncio.get_event_loop()
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
                          body=utils.get_orange_envelope(raw_state))
@@ -229,7 +230,7 @@ class TestNode:
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
                          body=utils.get_red_envelope('Running', child_2))
         await asyncio.sleep(1)
-        assert receive.node.state == State.Initialisation  # one child Running one no notification -> Initialisation
+        assert receive.node.state == State.Starting  # one child Running one is expedited to be in Starting -> Starting
         receive.callback(_ch=None, method=MethodStub(), _properties=None,
                          body=utils.get_red_envelope('Running', child_1))
         await asyncio.sleep(configuration['node']['time']['starting'])
@@ -238,7 +239,7 @@ class TestNode:
         loop_stop()
 
 
-def generate_node(state: State, address: str = '127.0.0.0:20000', children: dict[int, State | None] = None) -> Node:
+def generate_node(state: State, address: str = '127.0.0.0:20000', children: dict[int, (State, int)] = None) -> Node:
     node_add = NodeAddress(address)
     node = Node(node_add)
     node.state = state
