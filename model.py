@@ -91,25 +91,26 @@ class Node:
         :param transition_time: how long should transition last
         :return: None
         """
+
+        if new_state == State.Running:
+            self.chance_to_fail = probability_to_fail
+            self.state = State.Starting
+            await asyncio.sleep(transition_time)
+            if len(self.children):
+                await self.send_to_children(new_state)
+            else:
+                await self.enter_running_state()
+
+        elif new_state == State.Stopped:
+            if len(self.children):
+                await self.send_to_children(new_state)
+            else:
+                self.state = State.Stopped
+                await self.notify_parent()
         if configuration['debug']:
             now = datetime.now()
             print(
                 "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(" %H:%M:%S"))
-        if new_state == State.Running:
-            self.chance_to_fail = probability_to_fail
-            await asyncio.sleep(transition_time)
-
-            if len(self.children):
-                asyncio.get_running_loop().create_task(self.send_to_children(new_state))
-            else:
-                asyncio.get_running_loop().create_task(self.enter_running_state())
-
-        elif new_state == State.Stopped:
-            if len(self.children):
-                asyncio.get_running_loop().create_task(self.send_to_children(new_state))
-            else:
-                self.state = State.Stopped
-                asyncio.get_running_loop().create_task(self.notify_parent())
 
     async def enter_running_state(self) -> None:
         """
@@ -117,12 +118,12 @@ class Node:
 
         :return: None
         """
-        if float(self.chance_to_fail) > random.uniform(0, 1):
+        if self.chance_to_fail > random.uniform(0, 1):
             await self.change_state(State.Error)
         else:
             self.state = State.Running
-            asyncio.get_running_loop().create_task(self.notify_parent())
-            asyncio.get_running_loop().create_task(self.run())
+            await self.notify_parent()
+            asyncio.create_task(self.run())
         if configuration['debug']:
             now = datetime.now()
             print(

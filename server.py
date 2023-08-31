@@ -89,7 +89,6 @@ async def change_state(state_change_command: Optional[ChangeState] = None, start
 
     sending_tasks = []
     if prompt_to_start and node.state == model.State.Stopped:
-        node.state = model.State.Starting
         sending_tasks.append(asyncio.create_task(
             node.set_state(model.State.Running, float(prompt_to_start), configuration['node']['time']['starting'])))
     elif prompt_to_stop and node.state == model.State.Running:
