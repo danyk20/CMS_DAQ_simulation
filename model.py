@@ -96,7 +96,7 @@ class Node:
             print(
                 "Node " + self.address.get_port() + " is in " + str(self.state) + " at" + now.strftime(" %H:%M:%S"))
         if new_state == State.Running:
-            self.chance_to_fail = float(probability_to_fail)
+            self.chance_to_fail = probability_to_fail
             await asyncio.sleep(transition_time)
 
             if len(self.children):
@@ -140,6 +140,7 @@ class Node:
             self.initialisation_timestamp = time.perf_counter()
         tasks = []
         for child_port in self.children:
+            self.children[child_port] = (State.Starting, self.children[child_port][1])
             if configuration['debug']:
                 print(self.address.get_port() + ' is sending ' + str(new_state) + ' to ' + str(child_port))
             if configuration['architecture'] == 'MOM':
