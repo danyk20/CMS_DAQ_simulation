@@ -75,6 +75,9 @@ async def notify(state: str = None, sender_port: int = None, time_stamp: float =
         except KeyError:
             if configuration['debug']:
                 print('Invalid notification! Node remains in : %r' % str(node.state))
+    else:
+        print('Message is being ignored { state: ' + str(state) + ', sender: ' + str(sender_port) + ', timestamp: ' +
+              str(time_stamp) + '}')
 
     if node.get_parent().address is None:
         return
