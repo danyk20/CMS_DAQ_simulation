@@ -40,7 +40,7 @@ def wait_until_node_is_ready(architecture: str) -> None:
         state = 'State.Initialisation'
         while code != 200 or state != 'State.Stopped':
             try:
-                time.sleep(0.5)
+                time.sleep(1)
                 url = 'http://127.0.0.1:' + NODE_PORT + configuration['URL']['get_state']
                 response = requests.get(url)
                 code = response.status_code
@@ -57,6 +57,7 @@ def wait_until_node_is_ready(architecture: str) -> None:
             print(" [->] Requesting state from node " + NODE_ROUTING_KEY)
             response = get_state.call(NODE_ROUTING_KEY)
             print(" [<-] Received %s" % response)
+            time.sleep(2)
             if response:
                 state = response['state']
 
