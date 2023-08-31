@@ -61,9 +61,8 @@ async def push_message(exchange_name, routing_key, message) -> None:
             routing_key=routing_key
         )
     except Exception as e:
-        if configuration['debug']:
-            print(str(e))
-            print('message: ' + str(message))
+        print(str(e))
+        print('message: ' + str(message))
 
     if configuration['debug']:
         print(" [x] Sent message: %r -> %r" % (message, routing_key))
