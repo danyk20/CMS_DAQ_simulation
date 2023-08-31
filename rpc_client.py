@@ -7,7 +7,7 @@ import uuid
 import utils
 from utils import get_configuration
 
-# NODE_ROUTING_KEY = sys.argv[1] if len(sys.argv) else '2.3.3.0.0'
+# NODE_ROUTING_KEY = sys.argv[1] if len(sys.argv) > 1 else '2.1.0.0.0'
 
 configuration: dict[str, str | dict[str, str | dict]] = get_configuration()
 
