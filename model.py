@@ -121,8 +121,7 @@ class Node:
         if self.chance_to_fail > random.uniform(0, 1):
             await self.change_state(State.Error)
         else:
-            self.state = State.Running
-            await self.notify_parent()
+            await self.change_state(State.Running)
             asyncio.create_task(self.run())
         if configuration['debug']:
             now = datetime.now()
@@ -185,7 +184,7 @@ class Node:
         At least 1 child_port in starting state -> starting
         All children in running state -> running
 
-        :return: whether the state was changed
+        :return: whether there is a need to notify parent
         """
         before = self.state
         if before == State.Error:
@@ -217,12 +216,12 @@ class Node:
             self.state = State.Starting
         elif running == len(self.children):
             if self.state != State.Running:
-                self.state = State.Running
                 if configuration['measurement']['write']:
                     add_measurement(configuration['architecture'] + '_duration.txt',
                                     self.address.get_port(),
                                     time.perf_counter() - self.initialisation_timestamp, len(self.children), Node.depth)
-                asyncio.get_running_loop().create_task(self.run())
+                asyncio.create_task(self.enter_running_state())
+                return False
         return self.state != before
 
     async def run(self) -> None:
