@@ -54,7 +54,7 @@ async def change_state(start_argument: float = None, stop: bool = False) -> None
         print('Wrong operation! Node remains in : %r' % str(node.state))
     if configuration['debug']:
         now = datetime.now()
-        new_state = 'State.Running' if start_argument else 'State.Stopped'
+        new_state = 'State.Running' if start_argument is not None else 'State.Stopped'
         print("Node " + node.address.get_port() + " received " + new_state + " at " + now.strftime(" %H:%M:%S"))
 
 
