@@ -100,6 +100,7 @@ def measurement() -> None:
     original_debug = utils.set_configuration(False, ['debug'])
     original_pydantic = utils.set_configuration(False, ['REST', 'pydantic'])
     original_validation = utils.set_configuration(False, ['rabbitmq', 'validation'])
+    original_format = utils.set_configuration('json', ['rabbitmq', 'envelope_format'])
     for children in range(1, configuration['measurement']['tree']['children'] + 1):
         for depth in range(1, configuration['measurement']['tree']['depth'] + 1):
             for i in range(configuration['measurement']['runs']):
@@ -118,6 +119,7 @@ def measurement() -> None:
     utils.set_configuration(original_debug, ['debug'])
     utils.set_configuration(original_pydantic, ['REST', 'pydantic'])
     utils.set_configuration(original_validation, ['rabbitmq', 'validation'])
+    utils.set_configuration(original_format, ['rabbitmq', 'envelope_format'])
 
 
 def collect_data(children, depth) -> dict:
