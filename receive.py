@@ -36,31 +36,26 @@ def get_state() -> dict[str, str]:
     return {"State": str(node.state)}
 
 
-async def change_state(start: str = None, stop: str = None) -> None:
+async def change_state(start_argument: float = None, stop: bool = False) -> None:
     """
     Endpoint to change node state.
 
-    :param start: probability between 0 and 1 of getting into Error state
+    :param start_argument: probability between 0 and 1 of getting into Error state
     :param stop: any non None input means stop
     :return: None
     """
-    new_state = 'State.Running' if start else 'State.Stopped'
-    if configuration['debug']:
-        now = datetime.now()
-        print("Node " + node.address.get_port() + " received " + new_state + " at " + now.strftime(" %H:%M:%S"))
     if node.state == model.State.Error:
         return
-    if start and node.state == model.State.Stopped:
-        node.state = model.State.Starting
-        for child_port in node.children:
-            node.children[child_port] = (model.State.Starting, node.children[child_port][1])
-        asyncio.create_task(node.set_state(model.State.Running, float(start),
-                                           transition_time=configuration['node']['time']['starting']))
+    if start_argument is not None and node.state == model.State.Stopped:
+        await node.set_state(model.State.Running, start_argument, configuration['node']['time']['starting'])
     elif stop and node.state == model.State.Running:
-        asyncio.create_task(
-            node.set_state(model.State.Stopped, transition_time=configuration['node']['time']['starting']))
+        await node.set_state(model.State.Stopped)
     elif configuration['debug']:
         print('Wrong operation! Node remains in : %r' % str(node.state))
+    if configuration['debug']:
+        now = datetime.now()
+        new_state = 'State.Running' if start_argument else 'State.Stopped'
+        print("Node " + node.address.get_port() + " received " + new_state + " at " + now.strftime(" %H:%M:%S"))
 
 
 async def notify(state: str = None, sender_port: int = None, time_stamp: float = 0) -> None:
@@ -101,13 +96,13 @@ def callback(_ch, method, _properties, body):
         asyncio.run_coroutine_threadsafe(notify(current_state, int(sender_id), time_stamp), loop)
     elif message['type'] == 'Input':
         # change state
-        start_state = None
-        stop_state = None
+        start_state: float | None = None
+        stop_state: bool | None = None
         if message['name'] == 'Running':
-            start_state = str(message['parameters']['chance_to_fail'])
+            start_state = message['parameters']['chance_to_fail']
         elif message['name'] == 'Stopped':
             stop_state = True
-        asyncio.run_coroutine_threadsafe(change_state(start=start_state, stop=stop_state), loop)
+        asyncio.run_coroutine_threadsafe(change_state(start_argument=start_state, stop=stop_state), loop)
     if configuration['debug']:
         print("Node %r received message: %r" % (method.routing_key, message))
 
