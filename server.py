@@ -87,16 +87,13 @@ async def change_state(state_change_command: Optional[ChangeState] = None, start
         prompt_to_start = start
         prompt_to_stop = stop
 
-    sending_tasks = []
     if prompt_to_start and node.state == model.State.Stopped:
-        sending_tasks.append(asyncio.create_task(
-            node.set_state(model.State.Running, float(prompt_to_start), configuration['node']['time']['starting'])))
+        asyncio.create_task(
+            node.set_state(model.State.Running, float(prompt_to_start), configuration['node']['time']['starting']))
     elif prompt_to_stop and node.state == model.State.Running:
-        sending_tasks.append(asyncio.create_task(
-            node.set_state(model.State.Stopped, transition_time=configuration['node']['time']['starting'])))
+        asyncio.create_task(node.set_state(model.State.Stopped))
     else:
         raise HTTPException(status_code=400, detail="Combination of current state and transition state is not allowed!")
-    await asyncio.gather(*sending_tasks)
     return node.state
 
 
