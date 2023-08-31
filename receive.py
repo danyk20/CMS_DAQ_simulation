@@ -67,18 +67,18 @@ async def notify(state: str = None, sender_port: int = None, time_stamp: float =
     :param time_stamp: when was notification issued
     :return: None
     """
-    state_changed = False
+    notification_needed = False
     if state and node.children[sender_port][1] <= time_stamp:
         try:
             node.children[sender_port] = (model.State[state.split('.')[-1]], time_stamp)
-            state_changed = node.update_state()
+            notification_needed = node.update_state()
         except KeyError:
             if configuration['debug']:
                 print('Invalid notification! Node remains in : %r' % str(node.state))
 
     if node.get_parent().address is None:
         return
-    if state_changed:
+    if notification_needed:
         await send.post_state_notification(current_state=str(node.state),
                                            routing_key=utils.get_bounding_key(node.get_parent().get_port()),
                                            sender_id=utils.get_bounding_key(node.address.get_port()))
