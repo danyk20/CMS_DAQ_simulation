@@ -579,7 +579,7 @@ python rabbitmqadmin --help
 # Logging of RabbiMQ
 
 - enabled by default
-    - log file stored in `var/log/rabbitmq`
+    - log file stored in `/var/log/rabbitmq`
         - possible to have one log file per category -> `log.<category>.file` where category can be one of the:
             - connection
             - channel
